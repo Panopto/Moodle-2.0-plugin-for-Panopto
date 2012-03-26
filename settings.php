@@ -1,8 +1,8 @@
 <?php
 /* Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
- * 
+ *
  * This file is part of the Panopto plugin for Moodle.
- * 
+ *
  * The Panopto plugin for Moodle is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,8 +19,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($ADMIN->fulltree)
-{
+if ($ADMIN->fulltree) {
     $settings->add(
         new admin_setting_configtext(
             'block_panopto_instance_name',
