@@ -59,7 +59,7 @@ class block_panopto extends block_base {
 
     // Generate HTML for block contents
     function get_content() {
-        global $CFG, $COURSE, $USER;
+        global $CFG, $COURSE, $USER, $OUTPUT;
 
         if ($this->content !== NULL) {
             return $this->content;
@@ -156,7 +156,7 @@ class block_panopto extends block_base {
                     if($course_info->AudioPodcastURL) {
                         $this->content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') . "</b></div>
                                                  <div class='listItem'>
-                                                    <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
+                                                    <img src='" . $OUTPUT->pix_url('feed_icon', 'panopto') . "' />
                                                     <a href='$course_info->AudioPodcastURL'>" . get_string('podcast_audio', 'block_panopto') . "</a>
                                                     <span class='rssParen'>(</span><a href='$course_info->AudioRssURL' target='_blank' class='rssLink'>RSS</a
                                                     ><span class='rssParen'>)</span>
@@ -164,7 +164,7 @@ class block_panopto extends block_base {
                         if($course_info->VideoPodcastURL) {
                             $this->content->text .= "
                                                  <div class='listItem'>
-                                                    <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
+                                                    <img src='" . $OUTPUT->pix_url('feed_icon', 'panopto') . "' />
                                                     <a href='$course_info->VideoPodcastURL'>" . get_string('podcast_video', 'block_panopto') . "</a>
                                                     <span class='rssParen'>(</span><a href='$course_info->VideoRssURL' target='_blank' class='rssLink'>RSS</a
                                                     ><span class='rssParen'>)</span>
