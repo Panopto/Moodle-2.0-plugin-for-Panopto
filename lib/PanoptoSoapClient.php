@@ -38,7 +38,7 @@ class PanoptoSoapClient extends SoapClient
 	}
 	
 	// Override SOAP action to work around bug in older PHP SOAP versions.
-	function __doRequest($request, $location, $action, $version)
+	function __doRequest($request, $location, $action, $version, $one_way = null)
 	{
 		return parent::__doRequest($request, $location, $this->current_action, $version);
 	}

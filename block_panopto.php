@@ -52,7 +52,7 @@ class block_panopto extends block_base
     }
 
     // Save per-instance config in custom table instead of mdl_block_instance configdata column
-    function instance_config_save($data)
+    function instance_config_save($data, $nolongerused = false)
     {
         global $COURSE;
 
