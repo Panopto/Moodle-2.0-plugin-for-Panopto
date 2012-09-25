@@ -215,12 +215,14 @@ class block_panopto extends block_base
 				        								>" . get_string('course_settings', 'block_panopto') . "</a>
 			        							 </div>\n";
                         $system_info = $panopto_data->get_system_info();
-                        $this->content->text .= "<div class='listItem'>
-				        							" . get_string('download_recorder', 'block_panopto') . "
-					        							<span class='nowrap'>
-					        								(<a href='$system_info->RecorderDownloadUrl'>Windows</a>
-								   							| <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
-			        							</div>";
+                        if (has_capability('block/panopto:download_recorder', $context)) {
+                            $this->content->text .= "<div class='listItem'>
+                                                        " . get_string('download_recorder', 'block_panopto') . "
+                                                            <span class='nowrap'>
+                                                                (<a href='$system_info->RecorderDownloadUrl'>Windows</a>
+                                                                | <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
+                                                    </div>";
+                        }
                     }
                      
                     $this->content->text .= '
