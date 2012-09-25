@@ -52,3 +52,4 @@ $string['course_settings'] = 'Course Settings';
 $string['download_recorder'] = 'Download Recorder';
 $string['show_all'] = 'Show All';
 $string['show_less'] = 'Show Less';
+$string['portal'] = 'Panopto Portal';
