@@ -33,5 +33,13 @@ $capabilities = array(
         'archetypes' => array(
             'manager' => CAP_ALLOW
         )
-    )
+    ),
+    'block/panopto:download_recorder' => array(
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'manager' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+        )
+    ),
 );
