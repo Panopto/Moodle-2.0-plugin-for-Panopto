@@ -215,12 +215,21 @@ class block_panopto extends block_base
 				        								>" . get_string('course_settings', 'block_panopto') . "</a>
 			        							 </div>\n";
                         $system_info = $panopto_data->get_system_info();
-                        $this->content->text .= "<div class='listItem'>
-				        							" . get_string('download_recorder', 'block_panopto') . "
-					        							<span class='nowrap'>
-					        								(<a href='$system_info->RecorderDownloadUrl'>Windows</a>
-								   							| <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
-			        							</div>";
+                        $portallink = html_writer::link(new moodle_url(
+                            'http://' . $panopto_data->servername . '/Panopto/Pages/Auth/Login.aspx',
+                            array(
+                                'ReturnURL' => $panopto_data->servername . '/Panopto/Pages/Default.aspx',
+                                'instance' => $panopto_data->instancename,
+                        )), get_string('portal', 'block_panopto'));
+                        $this->content->text .= html_writer::tag('div', $portallink , array('class' => 'listItem'));
+                        if (has_capability('block/panopto:download_recorder', $context)) {
+                            $this->content->text .= "<div class='listItem'>
+                                                        " . get_string('download_recorder', 'block_panopto') . "
+                                                            <span class='nowrap'>
+                                                                (<a href='$system_info->RecorderDownloadUrl'>Windows</a>
+                                                                | <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
+                                                    </div>";
+                        }
                     }
                      
                     $this->content->text .= '
