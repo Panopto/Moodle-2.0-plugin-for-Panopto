@@ -17,4 +17,4 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-$plugin->version = 2012040900;
+$plugin->version = 2013051500;
