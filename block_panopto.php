@@ -277,5 +277,12 @@ class block_panopto extends block_base
 
         return $this->content;
     }
+
+    function applicable_formats() {
+        return array(
+            'my' => false,
+            'all' => true,
+        );
+    }
+
 }
-?>
