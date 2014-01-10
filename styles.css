@@ -1,4 +1,4 @@
-﻿/* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+/* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
  * 
@@ -101,3 +101,352 @@
 {
     color: red;
 }
+
+/* Kent Block styles */
+
+.block_panopto.block #panopto-text,
+.block_panopto.block #panopto-footer,
+.block_panopto.block div.content {
+    padding: 0px 0px 0px 0px !important;
+}
+
+.block_panopto.block #panopto-status {
+    margin-top: 10px;
+    background-color: #efefef;
+    border-top: 1px solid #e3e3e3;
+    border-bottom: 1px solid #e3e3e3;
+    padding-top: 10px;
+}
+
+    .block_panopto.block div.content div {
+        padding: 0px 15px 0px 20px;
+    }
+
+    .block_panopto.block div.content .helplink {
+        display: block;
+        margin: 10px 20px;
+    }
+
+    .block_panopto.block div.content .footer {
+        padding: 0px;
+        margin-top: 10px;
+        margin-bottom: 0px;
+    }
+
+    .block_panopto.block div.content a.reprovision {
+        display: block;
+        padding: 10px;
+        font-size: 14px;
+        text-align: center;
+        background: #fafafa;
+        border-top: 1px solid #e3e3e3;
+        -webkit-border-bottom-right-radius: 5px;
+        -webkit-border-bottom-left-radius: 5px;
+        -moz-border-radius-bottomright: 5px;
+        -moz-border-radius-bottomleft: 5px;
+        border-bottom-right-radius: 5px;
+        border-bottom-left-radius: 5px;
+        -webkit-box-shadow: inset 0px 0px 0px 1px #fff;
+        box-shadow: inset 0px 0px 0px 1px #fff;
+    }
+
+    .block_panopto.block div.content a.reprovision:hover {
+        background: #efefef;
+        text-decoration: none !important;
+    }
+
+
+    .block_panopto.block div.content .panoptoextras{
+        margin: 10px 15px;
+        display: block;
+        width: 160px;
+        height: 20px;
+    }
+
+    .block_panopto.block div.content .panoptohelp .helplink,
+    .block_panopto.block div.content .panoptoterms .helplink{
+        margin: 0px;
+        display: inline;
+    }
+
+    .block_panopto.block div.content .panoptohelp{
+        float: left;
+    }
+
+    .block_panopto.block div.content .panoptoterms{
+        float: right;
+    }
+
+    .block_panopto.block div.content .panoptoterms .helptooltip img{
+        visibility: hidden;
+        display: none;
+    }
+
+    #panopto_perm_state {
+        display: block;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 10px;
+        text-align: center;
+        background-color: #fafafa;
+        border-bottom: 1px solid #e3e3e3;
+    }
+
+    #panopto_ts_button {
+        display: block;
+        padding: 10px;
+        margin-top: 10px;
+        color: white;
+        background-color: #2752a0;
+    }
+    .content > #panopto_ts_button {
+        margin: 10px;
+    }
+
+        #page-content #panopto_ts_button:hover {
+            text-decoration: none;
+            background-color: #1e407d;
+        }
+
+    #panoptotac_dialog_overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        opacity: .5;
+        z-index: 100;
+    }
+
+    #panoptotac_dialog {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        height: 500px;
+        width: 600px;
+        margin: -250px 0 0 -300px;
+        background: white;
+        border: 1px solid #aaa;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        z-index: 101;
+    }
+
+        #panoptotac_dialog .panoptotac_wrap {
+            position: relative;
+            overflow: hidden;
+            margin: 20px 30px;
+            height: 460px;
+            width: 540px;
+        }
+
+        #panoptotac_dialog_cancel {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            padding: 0px 10px 5px 10px;
+            font-size: 25px;
+            color: #6f6f6f;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+        }
+
+            #panoptotac_dialog_cancel:hover {
+                background-color: #2752a0;
+                text-decoration: none;
+                color: white;
+            }
+
+            #panoptotac_dialog_cancel:active {
+                background-color: #1e407d;
+                color: white;
+            }
+
+        .panoptotac_content_wrap {
+            position: absolute;
+            top: 30px;
+            left: 0px;
+        }
+
+        .panoptotac_page {
+            float: left;
+            width: 540px;
+            height: 460px;
+        }
+
+        .panoptotac_page h2 {
+            text-align: center;
+        }
+
+
+            .panoptotac_choice_btn, .panoptotac_choice_btn:visited, .panoptotac_choice_btn:link {
+                display: inline-block;
+                width: 210px;
+                padding: 120px 0;
+                margin: 40px 0 0 40px;
+                text-align: center;
+                font-size: 20px;
+                color: #6f6f6f;
+                background-color: lightgrey;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+            }
+
+            .panoptotac_choice_btn:hover {
+                color: white;
+                text-decoration: none;
+                background-color: grey;
+            }
+
+            .panoptotac_choice_btn:active {
+                color: white;
+                background-color: #2752a0;
+            }
+
+        .panoptotac_content {
+            height: 351px;
+        }
+
+        .panoptotac_foot {
+            padding: 10px;
+        }
+
+        .panoptotac_btn, .panoptotac_btn:link, .panoptotac_btn:visited {
+            padding: 10px;
+            color: #6f6f6f;
+            background-color: lightgrey;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+        }
+
+            .panoptotac_btn:hover {
+                color: white;
+                text-decoration: none;
+                background-color: #2752a0;
+            }
+
+            .panoptotac_btn:active {
+                color: white;
+                background-color: #1e407d;
+            }
+
+        .panoptotac_dec, .panoptotac_dec:link, .panoptotac_dec:visited {
+            color: white;
+            background-color: #B75454;
+        }
+
+        .panoptotac_dec:hover {
+            background-color: #A14A4A;
+        }
+
+        .panoptotac_dec:active {
+            background-color: #8A3F3F;
+        }
+
+        .panoptotac_back {
+            display: inline-block;
+            float: left;
+        }
+
+        .panoptotac_acc, .panoptotac_acc:link, .panoptotac_acc:visited {
+            color: white;
+            background-color: #43914C;
+        }
+
+        .panoptotac_acc:hover {
+            text-decoration: none;
+            background-color: #387A40;
+        }
+
+        .panoptotac_acc:active {
+            background-color: #306836;
+        }
+
+        .panoptotac_back {
+            display: inline-block;
+            float: left;
+        }
+
+        .panoptotac_submit_wrap {
+            display: inline-block;
+            padding: 10px 0;
+            height: 16px;
+            float: right;
+        }
+
+        .panoptotac_terms_box {
+            overflow-y: scroll;
+            width: 498px;
+            height: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            color: #6f6f6f;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+        }
+
+            .panoptotac_terms_box:focus {
+                outline: none;
+            } 
+
+
+        .panoptotac_loading {
+            width: 300px;
+            padding-top: 140px;
+            margin: 90px auto 0px auto;
+            font-size: 20px;
+            text-align: center;
+            color: #6f6f6f;
+            background: url([[pix:block_panopto|loading]]) no-repeat center center;
+        }
+
+
+        .panoptotac_error {
+            width: 300px;
+            padding-top: 75px;
+            margin: 70px auto 0px auto;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: #8A3F3F;
+            background: url([[pix:block_panopto|error]]) no-repeat center 20px;
+        }
+
+            .panoptotac_error span {
+                display: block;
+                padding-top: 20px;
+                font-weight: normal;
+                color: #6f6f6f; 
+            }
+
+        .panoptotac_success {
+            width: 300px;
+            padding-top: 75px;
+            margin: 60px auto 0px auto;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            color: #306836;
+            background: url([[pix:block_panopto|success]]) no-repeat center 20px;
+        }
+
+            .panoptotac_success span {
+                display: block;
+                padding-top: 20px;
+                font-weight: normal;
+                color: #6f6f6f; 
+            }
+
+        .panoptotac_scroll_disable {
+            overflow: hidden;
+        }
+
+/* End Kent styles */

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -85,9 +85,48 @@ class panopto_data {
         return $course_info;
     }
 
+    // Kent Change
+    // Provision folders for each of a courses instructors
+    function provision_user_folders($provisioning_info) {
+        global $CFG;
+
+        // Dont do this for 2012
+        if ($CFG->kent->distribution === "2012") {
+            return null;
+        }
+
+        if (empty($provisioning_info->Instructors)) {
+            return array();
+        }
+
+        $folder_infos = array();
+
+        foreach ($provisioning_info->Instructors as $instructor) {
+            $instructor_folder = new stdClass;
+            $userkey = explode("\\", $instructor->UserKey);
+            $instructor_folder->ShortName ='';
+            $instructor_folder->LongName = $userkey[1] . "'s unlisted recordings";
+            $instructor_folder->ExternalCourseID = $this->instancename . ":" . $userkey[1];
+
+            $instructor_folder->Instructors = array();
+            $instructor_folder->Instructors[] = $instructor;
+
+            $folder_infos[] = $this->soap_client->ProvisionCourse($instructor_folder);
+        }
+
+        return $folder_infos;
+    }
+    // End Change
+
     // Fetch course name and membership info from DB in preparation for provisioning operation.
     function get_provisioning_info() {
-        global $DB;
+        // Kent Change
+        global $DB, $CFG;
+        // End Change
+
+        // Kent Change
+        $provisioning_info = new stdClass;
+        // End Change
         $provisioning_info->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodle_course_id));
         $provisioning_info->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodle_course_id));
         $provisioning_info->ExternalCourseID = $this->instancename . ":" . $this->moodle_course_id;
@@ -99,11 +138,26 @@ class panopto_data {
          
         // moodle/course:update capability will include admins along with teachers, course creators, etc.
         // Could also use moodle/legacy:teacher, moodle/legacy:editingteacher, etc. if those turn out to be more appropriate.
-        $instructors = get_users_by_capability($course_context, 'moodle/course:update');
+        // Kent Change
+        $instructors = get_users_by_capability($course_context, 'block/panopto:panoptocreator');
+        // End Change
 
         if(!empty($instructors)) {
+            // Kent Change
+            $ar = $DB->get_record('role', array('shortname' => 'panopto_academic'));
+            $nar = $DB->get_record('role', array('shortname' => 'panopto_non_academic'));
+            // End Change
+
             $provisioning_info->Instructors = array();
             foreach($instructors as $instructor) {
+                // Kent Change
+                if ($CFG->kent->distribution !== "2012" &&
+					!user_has_role_assignment($instructor->id, $ar->id, context_system::instance()->id) && 
+                    !user_has_role_assignment($instructor->id, $nar->id, context_system::instance()->id)) {
+                    continue;
+                }
+                // End Change
+                
                 $instructor_info = new stdClass;
                 $instructor_info->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructor_info->FirstName = $instructor->firstname;
@@ -118,7 +172,9 @@ class panopto_data {
 
         // Give all enrolled users at least student-level access. Instructors will be filtered out below.
         // Use get_enrolled_users because, as of Moodle 2.0, capability moodle/course:view no longer corresponds to a participant list.
-        $students = get_enrolled_users($course_context);
+        // Kent Change
+        $students = get_users_by_capability($course_context, 'block/panopto:panoptoviewer');
+        // End Change
 
         if(!empty($students)) {
             $provisioning_info->Students = array();

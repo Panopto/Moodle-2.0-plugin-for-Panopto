@@ -17,14 +17,99 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once("lib/panopto_data.php");
-
 class block_panopto extends block_base {
     var $blockname = "panopto";
 
     // Set system properties of plugin.
     function init() {
         $this->title = get_string('pluginname', 'block_panopto');
+    }
+
+    /**
+     * Do we have the right grants?
+     */
+    private function has_access() {
+        global $DB, $USER;
+
+        $ar = $DB->get_record('role', array('shortname' => 'panopto_academic'));
+        $ar_check = !empty($ar) ? user_has_role_assignment($USER->id, $ar->id, context_system::instance()->id) : false;
+
+        $nar = $DB->get_record('role', array('shortname' => 'panopto_non_academic'));
+        $nar_check = !empty($nar) ? user_has_role_assignment($USER->id, $nar->id, context_system::instance()->id) : false;
+
+        return $ar_check || $nar_check;
+    }
+
+    /**
+     * Required JS
+     */
+    public function get_required_javascript() {
+        parent::get_required_javascript();
+
+        global $COURSE, $CFG;
+
+        $perm_str = '';
+        $role_assign_bool = false;
+
+        $this->page->requires->string_for_js('show_all', 'block_panopto');
+        $this->page->requires->string_for_js('show_less', 'block_panopto');
+
+        $this->page->requires->string_for_js('ajax_json_error', 'block_panopto');
+        $this->page->requires->string_for_js('ajax_data_error', 'block_panopto');
+        $this->page->requires->string_for_js('ajax_failure', 'block_panopto');
+        $this->page->requires->string_for_js('ajax_busy', 'block_panopto');
+
+        if ($CFG->kent->distribution !== "2012") {
+            $role_assign_bool = $this->has_access();
+
+            $context = context_course::instance($COURSE->id, MUST_EXIST);
+            $hasCreator = has_capability('block/panopto:panoptocreator', $context);
+            $hasViewer = has_capability('block/panopto:panoptoviewer', $context);
+
+            if ($role_assign_bool && $hasCreator) {
+                $perm_str = get_string('access_status_creator', 'block_panopto');
+            } elseif ($hasCreator && $this->page->user_is_editing()) {
+                $perm_str = get_string('access_status_tcs', 'block_panopto') . ' <div id="panopto_ts_button">'.get_string('access_status_tcs_btn', 'block_panopto').'</div>';
+
+                // We need jQuery!
+                $this->page->requires->jquery();
+                $this->page->requires->jquery_plugin('migrate');
+                $this->page->requires->jquery_plugin('ui');
+
+                // Need some langs..
+                $this->page->requires->string_for_js('role_choice_head', 'block_panopto');
+                $this->page->requires->string_for_js('role_choice_ac_btn', 'block_panopto');
+                $this->page->requires->string_for_js('role_choice_nac_btn', 'block_panopto');
+                $this->page->requires->string_for_js('role_choice_cancel', 'block_panopto');
+                $this->page->requires->string_for_js('terms_head', 'block_panopto');
+                $this->page->requires->string_for_js('terms_back_btn', 'block_panopto');
+                $this->page->requires->string_for_js('terms_agree_btn', 'block_panopto');
+                $this->page->requires->string_for_js('terms_decline_btn', 'block_panopto');
+                $this->page->requires->string_for_js('accademic_terms', 'block_panopto');
+                $this->page->requires->string_for_js('non_accademic_terms', 'block_panopto');
+                $this->page->requires->string_for_js('success_roleassign', 'block_panopto');
+                $this->page->requires->string_for_js('success_sync_succ', 'block_panopto');
+                $this->page->requires->string_for_js('success_sync_fail', 'block_panopto');
+                $this->page->requires->string_for_js('success_extras', 'block_panopto');
+                $this->page->requires->string_for_js('error', 'block_panopto');
+
+                // Add in our JS
+                $this->page->requires->js('/blocks/panopto/js/underscore-min.js');
+                $this->page->requires->js('/blocks/panopto/js/panopto_tac.js');
+                $this->page->requires->js('/blocks/panopto/js/panopto_init.js');
+            } elseif ($hasViewer) {
+                $perm_str = get_string('access_status_viewer', 'block_panopto');
+            } else {
+                $perm_str = get_string('access_status_none', 'block_panopto');
+            }
+        }
+
+        // Finally, the init call
+        $this->page->requires->js_init_call('M.local_panopto.init', array($COURSE->id, $perm_str, $role_assign_bool, $this->page->user_is_editing()), false, array(
+            'name' => 'local_panopto',
+            'fullpath' => '/blocks/panopto/js/ajax.js',
+            'requires' => array("node", "io", "dump", "json-parse")
+        ));
     }
 
     // Block has global config (display "Settings" link on blocks admin page)
@@ -49,190 +134,30 @@ class block_panopto extends block_base {
     function instance_config_save($data, $nolongerused = false) {
         global $COURSE;
 
-        if(!empty($data->course)) {
+        if (!empty($data->course)) {
+            require_once(dirname(__FILE__) . '/lib/panopto_data.php');
             return panopto_data::set_panopto_course_id($COURSE->id, $data->course);
-        } else {
-            // If server is not set globally, there will be no other form values to push into config.
-            return true;
         }
+
+        // If server is not set globally, there will be no other form values to push into config.
+        return true;
     }
 
     // Generate HTML for block contents
     function get_content() {
-        global $CFG, $COURSE, $USER;
+        global $CFG, $COURSE;
 
-        if ($this->content !== NULL) {
-            return $this->content;
+        $this->content = new stdClass();
+        $this->content->text = "";
+        $this->content->footer = "";
+
+        // Just return a status message if there is one.
+        if (!empty($CFG->block_panopto_status_message)) {
+            $this->content->text .= "<div id=\"panopto-status\">$CFG->block_panopto_status_message</div>";
         }
 
-        $this->content = new stdClass;
-
-        // Construct the Panopto data proxy object
-        $panopto_data = new panopto_data($COURSE->id);
-
-        if(empty($panopto_data->servername) || empty($panopto_data->instancename) || empty($panopto_data->applicationkey)) {
-            $this->content->text = get_string('unconfigured', 'block_panopto');
-            $this->content->footer = "";
-            	
-            return $this->content;
-        }
-
-        try {
-            if(!$panopto_data->sessiongroup_id) {
-                $this->content->text .= get_string('no_course_selected', 'block_panopto');
-            } else {
-                // Get course info from SOAP service.
-                $course_info = $panopto_data->get_course();
-
-                // Panopto course was deleted, or an exception was thrown while retrieving course data.
-                if($course_info->Access == "Error") {
-                    $this->content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
-                } else {
-                    // SSO form passes instance name in POST to keep URLs portable.
-                    $this->content->text .= "
-		        		<form name='SSO' method='post'>
-							<input type='hidden' name='instance' value='$panopto_data->instancename' />
-						</form>";
-                     
-                    $this->content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
-                    $live_sessions = $panopto_data->get_live_sessions();
-                    if(!empty($live_sessions)) {
-                        $i = 0;
-                        foreach($live_sessions as $live_session) {
-                            // Alternate gray background for readability.
-                            $altClass = ($i % 2) ? "listItemAlt" : "";
-                             
-                            $live_session_display_name = s($live_session->Name);
-                            $this->content->text .= "<div class='listItem $altClass'>
-                            $live_session_display_name
-														 <span class='nowrap'>
-														 	[<a href='javascript:panopto_launchNotes(\"$live_session->LiveNotesURL\")'
-														 		>" . get_string('take_notes', 'block_panopto') . '</a>]';
-                            if($live_session->BroadcastViewerURL) {
-                                $this->content->text .= "[<a href='$live_session->BroadcastViewerURL' onclick='return panopto_startSSO(this)'>" . get_string('watch_live', 'block_panopto') . '</a>]';
-                            }
-                            $this->content->text .= "
-												 	  	 </span>
-													</div>";
-                            $i++;
-                        }
-                    } else {
-                        $this->content->text .= '<div class="listItem">' . get_string('no_live_sessions', 'block_panopto') . '</div>';
-                    }
-                     
-                    $this->content->text .= "<div class='sectionHeader'><b>" . get_string('completed_recordings', 'block_panopto') . '</b></div>';
-                    $completed_deliveries = $panopto_data->get_completed_deliveries();
-                    if(!empty($completed_deliveries)) {
-                        $i = 0;
-                        foreach($completed_deliveries as $completed_delivery) {
-                            // Collapse to 3 lectures by default
-                            if($i == 3) {
-                                $this->content->text .= "<div id='hiddenLecturesDiv'>";
-                            }
-                            	
-                            // Alternate gray background for readability.
-                            $altClass = ($i % 2) ? "listItemAlt" : "";
-                             
-                            $completed_delivery_display_name = s($completed_delivery->DisplayName);
-                            $this->content->text .= "<div class='listItem $altClass'>
-					        							<a href='$completed_delivery->ViewerURL' onclick='return panopto_startSSO(this)'>
-					        							$completed_delivery_display_name
-					        							</a>
-				        							</div>";
-					        							$i++;
-                        }
-
-                        // If some lectures are hidden, display "Show all" link.
-                        if($i > 3) {
-                            $this->content->text .= "</div>";
-                            $this->content->text .= "<div id='showAllDiv'>";
-                            $this->content->text .= "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>" . get_string('show_all', 'block_panopto') . '</a>]';
-                            $this->content->text .= "</div>";
-                        }
-                    } else {
-                        $this->content->text .= "<div class='listItem'>" . get_string('no_completed_recordings', 'block_panopto') . '</div>';
-                    }
-                     
-                    if($course_info->AudioPodcastURL) {
-                        $this->content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') . "</b></div>
-				        						 <div class='listItem'>
-				        						 	<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
-				        							<a href='$course_info->AudioPodcastURL'>" . get_string('podcast_audio', 'block_panopto') . "</a>
-				        							<span class='rssParen'>(</span
-				        								><a href='$course_info->AudioRssURL' target='_blank' class='rssLink'>RSS</a
-			        								><span class='rssParen'>)</span>
-		                        				 </div>";
-                        if($course_info->VideoPodcastURL) {
-                            $this->content->text .= "
-				        						 <div class='listItem'>
-			        								<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />	
-				        						 	<a href='$course_info->VideoPodcastURL'>" . get_string('podcast_video', 'block_panopto') . "</a>
-				        							<span class='rssParen'>(</span
-				        								><a href='$course_info->VideoRssURL' target='_blank' class='rssLink'>RSS</a
-			        								><span class='rssParen'>)</span>
-		                        				 </div>";
-                        }
-                    }
-                    $context = context_course::instance($COURSE->id, MUST_EXIST);
-                    if(has_capability('moodle/course:update', $context)) {
-                        $this->content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
-				        						 <div class='listItem'>
-				        							<a href='$course_info->CourseSettingsURL' onclick='return panopto_startSSO(this)'
-				        								>" . get_string('course_settings', 'block_panopto') . "</a>
-			        							 </div>\n";
-                        $system_info = $panopto_data->get_system_info();
-                        $this->content->text .= "<div class='listItem'>
-				        							" . get_string('download_recorder', 'block_panopto') . "
-					        							<span class='nowrap'>
-					        								(<a href='$system_info->RecorderDownloadUrl'>Windows</a>
-								   							| <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
-			        							</div>";
-                    }
-                     
-                    $this->content->text .= '
-						<script type="text/javascript">
-			        // Function to pop up Panopto live note taker.
-			        function panopto_launchNotes(url) {
-						// Open empty notes window, then POST SSO form to it.
-						var notesWindow = window.open("", "PanoptoNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
-						document.SSO.action = url;
-						document.SSO.target = "PanoptoNotes";
-						document.SSO.submit();
-			
-						// Ensure the new window is brought to the front of the z-order.
-						notesWindow.focus();
-					}
-							
-					function panopto_startSSO(linkElem) {
-						document.SSO.action = linkElem.href;
-						document.SSO.target = "_blank";
-						document.SSO.submit();
-								
-						// Cancel default link navigation.
-					  	return false;
-					}
-					  		
-					function panopto_toggleHiddenLectures() {
-					  	var showAllToggle = document.getElementById("showAllToggle");
-					  	var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");
-					  			
-					  	if(hiddenLecturesDiv.style.display == "block") {
-					  		hiddenLecturesDiv.style.display = "none";
-					  		showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";
-					  	} else {
-					  	hiddenLecturesDiv.style.display = "block";
-					  	showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";
-					}
-				}
-				</script>';
-              }
-           }
-        }
-        catch(Exception $e) {
-            $this->content->text .= "<br><br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
-        }
-
-        $this->content->footer = '';
+        $this->content->text .= '<div id="panopto-text">Please Wait</div>';
+        $this->content->footer .= '<div id="panopto-footer"></div>';
 
         return $this->content;
     }

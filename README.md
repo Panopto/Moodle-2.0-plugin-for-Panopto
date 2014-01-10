@@ -36,3 +36,23 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+# Kent specific instructions
+
+## New roles setup
+
+This block now requires two new roles to be setup:
+	
+	-	- shortname: panopto_academic
+		- fullname: Panopto academic user
+		- archetype: Authenticated user
+		- Context types: system
+	
+	-	- shortname: panopto_non_academic
+		- fullname: Panopto non academic user
+		- archetype: Authenticated user
+		- Context types: system
+
+## Permission change on current roles
+
+All roles that currently have panopto write access also need to be given viewer access as well. This is to facilitate their use of the system until they have agreed to the t&cs.
