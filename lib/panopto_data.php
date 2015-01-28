@@ -285,6 +285,8 @@ class panopto_data {
 
     //Used to instantiate a soap client for a given instance of panopto_data. Should be called only the first time a soap client is needed for an instance
     function instantiate_soap_client($username, $servername, $applicationkey){
+    	global $USER;
+
     	if(!empty($this->servername)) {
     		if(isset($USER->username)) {
     			$username = $USER->username;
