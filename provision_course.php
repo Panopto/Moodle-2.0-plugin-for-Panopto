@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  *
  * This file is part of the Panopto plugin for Moodle.
@@ -26,34 +27,32 @@ global $courses;
 //Populate list of servernames to select from
 $aserverArray = array();
 $appKeyArray = array();
-if(isset($_SESSION['numservers'])){
-	$maxval = $_SESSION['numservers'];
+if (isset($_SESSION['numservers'])) {
+    $maxval = $_SESSION['numservers'];
+} else {
+    $maxval = 1;
 }
-else{
-	$maxval = 1;
-}
-for($x = 0; $x < $maxval; $x++){
-	//generate strings corresponding to potential servernames in $CFG
-	$thisServerName = 'block_panopto_server_name'.($x+1);
-	$thisAppKey = 'block_panopto_application_key'.($x+1);
-	if((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey)) )
-	{
-		$aserverArray[$x] = $CFG->$thisServerName;
-		$appKeyArray[$x] = $CFG->$thisAppKey;
-
-	}
+for ($x = 0; $x < $maxval; $x++) {
+    //generate strings corresponding to potential servernames in $CFG
+    $thisServerName = 'block_panopto_server_name' . ($x + 1);
+    $thisAppKey = 'block_panopto_application_key' . ($x + 1);
+    if ((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey))) {
+        $aserverArray[$x] = $CFG->$thisServerName;
+        $appKeyArray[$x] = $CFG->$thisAppKey;
+    }
 }
 
 class panopto_provision_form extends moodleform {
+
     protected $title = '';
     protected $description = '';
 
     function definition() {
 
         global $DB;
-		global $aserverArray;
+        global $aserverArray;
 
-        $mform =& $this->_form;
+        $mform = & $this->_form;
         $courses_raw = $DB->get_records('course', null, '', 'id, shortname, fullname');
         $courses = array();
         if ($courses_raw) {
@@ -70,8 +69,8 @@ class panopto_provision_form extends moodleform {
         $mform->addHelpButton('courses', 'provisioncourseselect', 'block_panopto');
 
         $this->add_action_buttons(true, 'Provision');
-
     }
+
 }
 
 require_login();
@@ -138,7 +137,7 @@ if ($mform->is_cancelled()) {
         $provisioned = array();
         $panopto_data = new panopto_data(null);
         foreach ($courses as $course_id) {
-            if(empty($course_id)) {
+            if (empty($course_id)) {
                 continue;
             }
             // Set the current Moodle course to retrieve info for / provision.
@@ -146,33 +145,29 @@ if ($mform->is_cancelled()) {
 
             //If an application key and server name are pre-set (happens when provisioning from multi-select page) use those, otherwise retrieve
             //values from the db.
-            if(isset($selectedserver)){
-            $panopto_data->servername = $selectedserver;
+            if (isset($selectedserver)) {
+                $panopto_data->servername = $selectedserver;
+            } else {
+                $panopto_data->servername = $panopto_data->get_panopto_servername($panopto_data->moodle_course_id);
             }
-            else{
-            	$panopto_data->servername = $panopto_data->get_panopto_servername($panopto_data->moodle_course_id);
-            }
-            if(isset($selectedkey)){
-            	$panopto_data->applicationkey = $selectedkey;
-            }
-            else{
-            	$panopto_data->applicationkey = $panopto_data->get_panopto_app_key($panopto_data->moodle_course_id);
+            if (isset($selectedkey)) {
+                $panopto_data->applicationkey = $selectedkey;
+            } else {
+                $panopto_data->applicationkey = $panopto_data->get_panopto_app_key($panopto_data->moodle_course_id);
             }
             $provisioning_data = $panopto_data->get_provisioning_info();
-            $provisioned_data  = $panopto_data->provision_course($provisioning_data);
+            $provisioned_data = $panopto_data->provision_course($provisioning_data);
             include 'views/provisioned_course.html.php';
         }
         echo "<a href='$return_url'>Back to config</a>";
     } else {
         $mform->display();
-
     }
 
     echo $OUTPUT->footer();
 }
 
-
-function IsNullOrEmptyString($name){
-    return (!isset($name) || trim($name)==='');
+function IsNullOrEmptyString($name) {
+    return (!isset($name) || trim($name) === '');
 }
 /* End of file provision_course.php */

@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -19,7 +20,7 @@
 
 global $CFG, $USER;
 
-if(empty($CFG)) {
+if (empty($CFG)) {
     require_once("../../config.php");
 }
 require_once ($CFG->libdir . '/weblib.php');
@@ -33,15 +34,15 @@ $action = optional_param("action", "", PARAM_ALPHA);
 
 $relogin = ($action == "relogin");
 
-if($relogin || (isset($USER->username) && ($USER->username == "guest"))) {
+if ($relogin || (isset($USER->username) && ($USER->username == "guest"))) {
     require_logout();
 
     // Return to this page, minus the "action=relogin" parameter.
     redirect($CFG->wwwroot . "/blocks/panopto/SSO.php" .
-				"?authCode=$request_auth_code" .
-				"&serverName=$server_name" .
-				"&expiration=$expiration" .
-				"&callbackURL=" . urlencode($callback_url));
+            "?authCode=$request_auth_code" .
+            "&serverName=$server_name" .
+            "&expiration=$expiration" .
+            "&callbackURL=" . urlencode($callback_url));
     return;
 }
 
@@ -52,7 +53,7 @@ require_login(0, false);
 $request_auth_payload = "serverName=" . $server_name . "&expiration=" . $expiration;
 
 // Verify passed in parameters are properly signed.
-if(panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
+if (panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
     $user_key = panopto_decorate_username($USER->username);
 
     // Generate canonically-ordered auth payload string

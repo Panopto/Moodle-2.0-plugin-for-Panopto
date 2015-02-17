@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  *
  * This file is part of the Panopto plugin for Moodle.
@@ -26,26 +27,24 @@ global $courses;
 //Populate list of servernames to select from
 $aserverArray = array();
 $appKeyArray = array();
-if(isset($_SESSION['numservers'])){
+if (isset($_SESSION['numservers'])) {
     $maxval = $_SESSION['numservers'];
-}
-else{
+} else {
     $maxval = 1;
 }
 
-for($x = 0; $x < $maxval; $x++){
+for ($x = 0; $x < $maxval; $x++) {
     //generate strings corresponding to potential servernames in $CFG
-    $thisServerName = 'block_panopto_server_name'.($x+1);
-    $thisAppKey = 'block_panopto_application_key'.($x+1);
-    if((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey)) )
-    {
+    $thisServerName = 'block_panopto_server_name' . ($x + 1);
+    $thisAppKey = 'block_panopto_application_key' . ($x + 1);
+    if ((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey))) {
         $aserverArray[$x] = $CFG->$thisServerName;
         $appKeyArray[$x] = $CFG->$thisAppKey;
     }
 }
 
 //If only one server, simply provision with that server. Setting these values will circumvent loading the selection form prior to provisioning.
-if(sizeof($aserverArray) == 1){
+if (sizeof($aserverArray) == 1) {
     //get first element from associative array. aServerArray and appKeyArray will have same key values.
     $key = array_keys($aserverArray);
     $selectedserver = $aserverArray[$key[0]];
@@ -60,13 +59,13 @@ class panopto_provision_form extends moodleform {
         global $DB;
         global $aserverArray;
 
-        $mform =& $this->_form;
+        $mform = & $this->_form;
 
         $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverArray);
-        
-        $this->add_action_buttons(true, 'Provision');
 
+        $this->add_action_buttons(true, 'Provision');
     }
+
 }
 
 require_login();
@@ -81,7 +80,7 @@ $context = context_course::instance($course_id, MUST_EXIST);
 $PAGE->set_context($context);
 
 //Return URL is course page
-$return_url = optional_param('return_url', $CFG->wwwroot . '/course/view.php?id=' . $course_id , PARAM_LOCALURL);
+$return_url = optional_param('return_url', $CFG->wwwroot . '/course/view.php?id=' . $course_id, PARAM_LOCALURL);
 $urlparams['return_url'] = $return_url;
 $PAGE->set_url('/blocks/panopto/provision_course_internal.php?id=' . $course_id, $urlparams);
 $PAGE->set_pagelayout('base');
@@ -97,29 +96,29 @@ if ($mform->is_cancelled()) {
     $PAGE->set_pagelayout('base');
     $PAGE->set_title($provision_title);
     $PAGE->set_heading($provision_title);
-        // Course context
-        require_capability('block/panopto:provision_course', $context);
+    // Course context
+    require_capability('block/panopto:provision_course', $context);
     $edit_course_url = new moodle_url($return_url);
     $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $edit_course_url);
     $data = $mform->get_data();
-    
+
     //If there is form data, use it to determine the server and app key to provision to
     if ($data) {
         $selectedserver = $aserverArray[$data->servers];
         $selectedkey = $appKeyArray[$data->servers];
         $CFG->servername = $selectedserver;
         $CFG->appkey = $selectedkey;
-        }
+    }
 
     $manage_blocks = new moodle_url('/admin/blocks.php');
     $panopto_settings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
     $PAGE->navbar->add(get_string('blocks'), $manage_blocks);
-    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panopto_settings);    
+    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panopto_settings);
     $PAGE->navbar->add($provision_title, new moodle_url($PAGE->url));
     echo $OUTPUT->header();
-    
+
     //If there are no servers specified for provisioning, give a failure notice and allow user to return to course page
-    if(sizeof($aserverArray ) < 1){
+    if (sizeof($aserverArray) < 1) {
         echo "There are no servers set up for provisioning. Please contact system administrator. 
         <br/>
         <a href='$return_url'>Back to course</a>";
@@ -136,26 +135,23 @@ if ($mform->is_cancelled()) {
 
         //If an application key and server name are pre-set (happens when provisioning from multi-select page) use those, otherwise retrieve
         //values from the db.
-        if(isset($selectedserver)){
-           $panopto_data->servername = $selectedserver;
+        if (isset($selectedserver)) {
+            $panopto_data->servername = $selectedserver;
+        } else {
+            $panopto_data->servername = $panopto_data->get_panopto_servername($panopto_data->moodle_course_id);
         }
-        else{
-                $panopto_data->servername = $panopto_data->get_panopto_servername($panopto_data->moodle_course_id);
-        }
-        
-        if(isset($selectedkey)){
-            $panopto_data->applicationkey = $selectedkey;
-        }
-        else{
-            $panopto_data->applicationkey = $panopto_data->get_panopto_app_key($panopto_data->moodle_course_id);
-        }            
-        
-        $provisioning_data = $panopto_data->get_provisioning_info();            
-        $provisioned_data  = $panopto_data->provision_course($provisioning_data);
-        
-        include 'views/provisioned_course.html.php';        
-        echo "<a href='$return_url'>Back to course</a>";
 
+        if (isset($selectedkey)) {
+            $panopto_data->applicationkey = $selectedkey;
+        } else {
+            $panopto_data->applicationkey = $panopto_data->get_panopto_app_key($panopto_data->moodle_course_id);
+        }
+
+        $provisioning_data = $panopto_data->get_provisioning_info();
+        $provisioned_data = $panopto_data->provision_course($provisioning_data);
+
+        include 'views/provisioned_course.html.php';
+        echo "<a href='$return_url'>Back to course</a>";
     } else {
         $mform->display();
     }
@@ -163,7 +159,7 @@ if ($mform->is_cancelled()) {
     echo $OUTPUT->footer();
 }
 
-function IsNullOrEmptyString($name){
-    return (!isset($name) || trim($name)==='');
+function IsNullOrEmptyString($name) {
+    return (!isset($name) || trim($name) === '');
 }
 /* End of file provision_course.php */

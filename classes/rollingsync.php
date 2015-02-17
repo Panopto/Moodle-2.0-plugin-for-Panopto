@@ -8,8 +8,8 @@ require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 /**
  * Handlers for each different event type.
  */
-class block_panopto_rollingsync
-{
+class block_panopto_rollingsync {
+
     /**
      * Called when an enrolment has been created.
      */

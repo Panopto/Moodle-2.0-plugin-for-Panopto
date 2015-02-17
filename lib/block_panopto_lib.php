@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  *
  * This file is part of the Panopto plugin for Moodle.
@@ -17,7 +18,6 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 // Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
 function panopto_decorate_course_id($moodle_course_id) {
     global $CFG;
@@ -34,18 +34,18 @@ function panopto_decorate_username($moodle_username) {
 function panopto_generate_auth_code($payload) {
     global $CFG;
     $index = 1;
-    for($x = 0; $x < 10; $x++){
-    	$cfgservername = 'block_panopto_server_name'.($x+1);
-    	if(isset($CFG->$cfgservername)){
-    	$thisservername = $CFG->$cfgservername;
-		if(strpos($payload, $thisservername)){
-			$index = $x + 1;
-			break;
-			}
-    	}
+    for ($x = 0; $x < 10; $x++) {
+        $cfgservername = 'block_panopto_server_name' . ($x + 1);
+        if (isset($CFG->$cfgservername)) {
+            $thisservername = $CFG->$cfgservername;
+            if (strpos($payload, $thisservername)) {
+                $index = $x + 1;
+                break;
+            }
+        }
     }
 
-    $appstring = 'block_panopto_application_key'.$index;
+    $appstring = 'block_panopto_application_key' . $index;
     $sharedSecret = $CFG->$appstring;
 
     $signed_payload = $payload . "|" . $sharedSecret;
