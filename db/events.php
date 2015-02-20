@@ -1,6 +1,15 @@
 <?php
 
+/**
+ * Panopto block events observers.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 defined('MOODLE_INTERNAL') || die();
+
 $observers = array(
     //User enrolled event
     array(

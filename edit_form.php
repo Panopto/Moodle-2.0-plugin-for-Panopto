@@ -18,6 +18,14 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Panopto block instance configuration form.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 require_once("lib/panopto_data.php");
 require_once (dirname(__FILE__) . '/../../lib/accesslib.php');
 

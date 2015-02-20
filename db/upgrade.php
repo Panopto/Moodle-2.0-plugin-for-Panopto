@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Panopto block update routine.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 function xmldb_block_panopto_upgrade($oldversion = 0) {
     global $CFG, $DB;
     $dbman = $DB->get_manager();

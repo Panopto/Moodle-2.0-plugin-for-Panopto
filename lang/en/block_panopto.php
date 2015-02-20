@@ -17,6 +17,14 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Strings for component 'block_panopto', language 'en'.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 $string['pluginname'] = 'Panopto';
 $string['panopto:addinstance'] = 'Add a new Panopto block';
 $string['panopto:myaddinstance'] = 'Add a new Panopto block to my page';

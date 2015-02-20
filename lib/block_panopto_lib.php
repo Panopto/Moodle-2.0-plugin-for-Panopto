@@ -18,6 +18,14 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Panopto block function library.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 // Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
 function panopto_decorate_course_id($moodle_course_id) {
     global $CFG;
