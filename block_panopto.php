@@ -340,4 +340,3 @@ class block_panopto extends block_base {
         }
     }
 }
-// End of block_panopto.php

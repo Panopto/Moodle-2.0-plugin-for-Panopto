@@ -87,4 +87,3 @@ class block_panopto_edit_form extends block_edit_form {
         }
     }
 }
-/* End of file edit_form.php */

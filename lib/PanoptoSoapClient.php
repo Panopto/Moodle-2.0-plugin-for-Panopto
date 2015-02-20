@@ -217,4 +217,3 @@ class PanoptoSoapClient extends SoapClient {
     }
 
 }
-/* End of file PanoptoSoapClient.php */

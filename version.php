@@ -37,4 +37,3 @@ $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = array(
     'mod_forum' => ANY_VERSION
 );
-/* End of file version.php */

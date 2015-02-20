@@ -170,4 +170,3 @@ if ($mform->is_cancelled()) {
 function IsNullOrEmptyString($name) {
     return (!isset($name) || trim($name) === '');
 }
-/* End of file provision_course.php */

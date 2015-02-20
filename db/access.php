@@ -73,4 +73,3 @@ $capabilities = array(
         'clonepermissionsfrom' => 'moodle/my:manageblocks'
     )
 );
-/* End of file access.php */

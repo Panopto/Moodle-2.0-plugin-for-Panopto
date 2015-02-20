@@ -426,4 +426,3 @@ class panopto_data {
     }
 
 }
-/* End of file panopto_data.php */

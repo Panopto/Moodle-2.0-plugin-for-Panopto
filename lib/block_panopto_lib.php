@@ -67,4 +67,3 @@ function panopto_generate_auth_code($payload) {
 function panopto_validate_auth_code($payload, $auth_code) {
     return (panopto_generate_auth_code($payload) == $auth_code);
 }
-/* End of file block_panopto_lib.php */

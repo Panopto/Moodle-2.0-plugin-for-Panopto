@@ -85,4 +85,3 @@ if (panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
 
     echo $OUTPUT->footer();
 }
-/* End of file SSO.php */
