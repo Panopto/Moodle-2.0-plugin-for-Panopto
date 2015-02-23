@@ -257,13 +257,17 @@ class panopto_data {
 
     static function get_course_role_mappings($moodle_course_id) {
         global $DB;
+        $pubroles = array();
+        $creatorroles = array();
+         //get publisher roles as string and explode to array
+        $rolesraw = $DB->get_record('block_panopto_foldermap', array('moodleid' => $moodle_course_id), 'publisher_mapping, creator_mapping');
+        if ($rolesraw && !empty($rolesraw->publisher_mapping)) {
+            $pubroles = explode("," , $rolesraw->publisher_mapping);
+        }
+        if ($rolesraw && !empty($rolesraw->creator_mapping)) {
+            $creatorroles = explode(",", $rolesraw->creator_mapping);
+        }
         //get publisher roles as string and explode to array
-        $pubrolesraw = $DB->get_field('block_panopto_foldermap', 'publisher_mapping', array('moodleid' => $moodle_course_id));
-        $pubroles = explode(",", $pubrolesraw);
-
-        //get creator roles as string, then explode to array
-        $createrolesraw = $DB->get_field('block_panopto_foldermap', 'creator_mapping', array('moodleid' => $moodle_course_id));
-        $creatorroles = explode(",", $createrolesraw);
         return array("publisher" => $pubroles, "creator" => $creatorroles);
     }
 
