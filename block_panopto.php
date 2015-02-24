@@ -60,20 +60,14 @@ class block_panopto extends block_base {
 
     // Save per-instance config in custom table instead of mdl_block_instance configdata column
     function instance_config_save($data, $nolongerused = false) {
-        global $COURSE;
+        // If server is set globally, save instance config.
         if (!empty($data->course)) {
-            panopto_data::set_panopto_course_id($COURSE->id, $data->course);
+            panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
 
-            //If role mapping info is given, map roles
-            if (!empty($data->creator) || !empty($data->publisher)) {
-                block_panopto::set_course_role_permissions($COURSE->id, $data->publisher, $data->creator);
-
-                //get course context
-                $context = context_course::instance($COURSE->id);
-            }
-        } else {
-            // If server is not set globally, there will be no other form values to push into config.
-            return true;
+            // Add roles mapping.
+            $publisher_roles = (isset($data->publisher)) ? $data->publisher : array();
+            $creator_roles = (isset($data->creator)) ? $data->creator : array();
+            block_panopto::set_course_role_permissions($this->page->course->id, $publisher_roles, $creator_roles);
         }
     }
 
