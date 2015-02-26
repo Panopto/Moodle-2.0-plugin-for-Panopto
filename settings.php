@@ -27,13 +27,8 @@
  */
 
 defined('MOODLE_INTERNAL') || die;
-global $CFG;
-global $numservers;
-$numservers = $CFG->block_panopto_server_number;
 
 if ($ADMIN->fulltree) {
-    $_SESSION['numservers'] = $numservers;
-
     // Up to 10 servers can be added.
     $servernumberchoices = array_combine(range(1, 10), range(1, 10));
     $servernumberdefault = 1;
@@ -56,6 +51,11 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configcheckbox('block_panopto_async_tasks',
             get_string('block_panopto_async_tasks', 'block_panopto'), '', 0));
 
-    $link = '<a href="' . $CFG->wwwroot . '/blocks/panopto/provision_course.php">' . get_string('block_global_add_courses', 'block_panopto') . '</a>';
-    $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
+    // It makes sense to show provision link only if configuration has been
+    // saved at least once. Course provisioning is not possible without at least
+    // one panopto server configured anyway.
+    if (!empty($CFG->block_panopto_server_number)) {
+        $link = html_writer::link(new moodle_url('/blocks/panopto/provision_course.php'), get_string('block_global_add_courses', 'block_panopto'));
+        $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
+    }
 }

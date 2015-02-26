@@ -67,3 +67,26 @@ function panopto_generate_auth_code($payload) {
 function panopto_validate_auth_code($payload, $auth_code) {
     return (panopto_generate_auth_code($payload) == $auth_code);
 }
+
+/**
+ * Get a list of configured Panopto servers.
+ *
+ * @return array List of size (int) => server host names, key starts with 1.
+ */
+function panopto_get_servers() {
+    global $CFG;
+
+    $servers = array();
+    if (empty($CFG->block_panopto_server_number)) {
+        // Block has not been configured yet.
+        return $servers;
+    }
+
+    for ($x = 1; $x <= $CFG->block_panopto_server_number; $x++) {
+        // Make sure that server configuration contains both hostname and the key.
+        if (!empty($CFG->{'block_panopto_server_name' . $x}) && !empty($CFG->{'block_panopto_application_key' . $x})) {
+            $servers[$x] = $CFG->{'block_panopto_server_name' . $x};
+        }
+    }
+    return $servers;
+}

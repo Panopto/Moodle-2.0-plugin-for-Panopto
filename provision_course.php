@@ -30,35 +30,13 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib/panopto_data.php');
 
-global $courses;
-
-//Populate list of servernames to select from
-$aserverArray = array();
-$appKeyArray = array();
-if (isset($_SESSION['numservers'])) {
-    $maxval = $_SESSION['numservers'];
-} else {
-    $maxval = 1;
-}
-for ($x = 0; $x < $maxval; $x++) {
-    //generate strings corresponding to potential servernames in $CFG
-    $thisServerName = 'block_panopto_server_name' . ($x + 1);
-    $thisAppKey = 'block_panopto_application_key' . ($x + 1);
-    if ((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey))) {
-        $aserverArray[$x] = $CFG->$thisServerName;
-        $appKeyArray[$x] = $CFG->$thisAppKey;
-    }
-}
-
 class panopto_provision_form extends moodleform {
 
     protected $title = '';
     protected $description = '';
 
     function definition() {
-
         global $DB;
-        global $aserverArray;
 
         $mform = & $this->_form;
         $courses_raw = $DB->get_records('course', null, '', 'id, shortname, fullname');
@@ -70,7 +48,8 @@ class panopto_provision_form extends moodleform {
         }
         asort($courses);
 
-        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverArray);
+        $serverhostnames = panopto_get_servers();
+        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $serverhostnames);
         $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);
         $select->setMultiple(true);
         $select->setSize(32);
@@ -82,7 +61,6 @@ class panopto_provision_form extends moodleform {
 }
 
 require_login();
-
 
 // Set course context if we are in a course, otherwise use system context.
 $course_id_param = optional_param('course_id', 0, PARAM_INT);
@@ -102,6 +80,7 @@ $PAGE->set_url('/blocks/panopto/provision_course.php', $urlparams);
 $PAGE->set_pagelayout('base');
 
 $mform = new panopto_provision_form($PAGE->url);
+$courses = array();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($return_url));
@@ -125,10 +104,8 @@ if ($mform->is_cancelled()) {
         $data = $mform->get_data();
         if ($data) {
             $courses = $data->courses;
-            $selectedserver = $aserverArray[$data->servers];
-            $selectedkey = $appKeyArray[$data->servers];
-            $CFG->servername = $selectedserver;
-            $CFG->appkey = $selectedkey;
+            $selectedserver = $CFG->{'block_panopto_server_name' . $data->servers};
+            $selectedkey = $CFG->{'block_panopto_application_key' . $data->servers};
         }
 
         $manage_blocks = new moodle_url('/admin/blocks.php');
@@ -173,8 +150,4 @@ if ($mform->is_cancelled()) {
     }
 
     echo $OUTPUT->footer();
-}
-
-function IsNullOrEmptyString($name) {
-    return (!isset($name) || trim($name) === '');
 }

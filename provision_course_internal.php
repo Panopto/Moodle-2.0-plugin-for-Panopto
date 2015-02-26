@@ -30,46 +30,16 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib/panopto_data.php');
 
-global $courses;
-
-//Populate list of servernames to select from
-$aserverArray = array();
-$appKeyArray = array();
-if (isset($_SESSION['numservers'])) {
-    $maxval = $_SESSION['numservers'];
-} else {
-    $maxval = 1;
-}
-
-for ($x = 0; $x < $maxval; $x++) {
-    //generate strings corresponding to potential servernames in $CFG
-    $thisServerName = 'block_panopto_server_name' . ($x + 1);
-    $thisAppKey = 'block_panopto_application_key' . ($x + 1);
-    if ((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey))) {
-        $aserverArray[$x] = $CFG->$thisServerName;
-        $appKeyArray[$x] = $CFG->$thisAppKey;
-    }
-}
-
-//If only one server, simply provision with that server. Setting these values will circumvent loading the selection form prior to provisioning.
-if (sizeof($aserverArray) == 1) {
-    //get first element from associative array. aServerArray and appKeyArray will have same key values.
-    $key = array_keys($aserverArray);
-    $selectedserver = $aserverArray[$key[0]];
-    $selectedkey = $appKeyArray[$key[0]];
-}
-
 //Create form for server selection
 class panopto_provision_form extends moodleform {
 
     function definition() {
-
         global $DB;
-        global $aserverArray;
 
         $mform = & $this->_form;
 
-        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverArray);
+        $serverhostnames = panopto_get_servers();
+        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $serverhostnames);
 
         $this->add_action_buttons(true, 'Provision');
     }
@@ -95,6 +65,8 @@ $PAGE->set_pagelayout('base');
 
 
 $mform = new panopto_provision_form($PAGE->url);
+$serverhostnames = panopto_get_servers();
+$courses = array();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($return_url));
@@ -110,12 +82,15 @@ if ($mform->is_cancelled()) {
     $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $edit_course_url);
     $data = $mform->get_data();
 
-    //If there is form data, use it to determine the server and app key to provision to
+    // If there is form data, use it to determine the server and app key to provision to.
     if ($data) {
-        $selectedserver = $aserverArray[$data->servers];
-        $selectedkey = $appKeyArray[$data->servers];
-        $CFG->servername = $selectedserver;
-        $CFG->appkey = $selectedkey;
+        $selectedserver = $CFG->{'block_panopto_server_name' . $data->servers};
+        $selectedkey = $CFG->{'block_panopto_application_key' . $data->servers};
+    } else if (count($serverhostnames) == 1) {
+        // If only one server, simply provision with that server.
+        $servernumber = key($serverhostnames);
+        $selectedserver = $CFG->{'block_panopto_server_name' . $servernumber};
+        $selectedkey = $CFG->{'block_panopto_application_key' . $servernumber};
     }
 
     $manage_blocks = new moodle_url('/admin/blocks.php');
@@ -126,15 +101,13 @@ if ($mform->is_cancelled()) {
     echo $OUTPUT->header();
 
     //If there are no servers specified for provisioning, give a failure notice and allow user to return to course page
-    if (sizeof($aserverArray) < 1) {
+    if (empty($serverhostnames)) {
         echo "There are no servers set up for provisioning. Please contact system administrator. 
         <br/>
         <a href='$return_url'>Back to course</a>";
-    }
-
-    //If a $selected server is set, it means that a server has been chosen and that the provisioning should be done instead of
-    //loading the selection form
-    else if (isset($selectedserver)) {
+    } else if (isset($selectedserver)) {
+        //If a $selected server is set, it means that a server has been chosen and that the provisioning should be done instead of
+        //loading the selection form
         $provisioned = array();
         $panopto_data = new panopto_data(null);
 
@@ -165,8 +138,4 @@ if ($mform->is_cancelled()) {
     }
 
     echo $OUTPUT->footer();
-}
-
-function IsNullOrEmptyString($name) {
-    return (!isset($name) || trim($name) === '');
 }
