@@ -31,23 +31,26 @@ global $CFG;
 global $numservers;
 $numservers = $CFG->block_panopto_server_number;
 
-$default = 0;
 if ($ADMIN->fulltree) {
-    $_SESSION['numservers'] = $numservers + 1;
+    $_SESSION['numservers'] = $numservers;
 
+    // Up to 10 servers can be added.
+    $servernumberchoices = array_combine(range(1, 10), range(1, 10));
+    $servernumberdefault = 1;
     $settings->add(new admin_setting_configselect('block_panopto_server_number',
-            'Number of Panopto Servers', 'Click \'Save Changes\' to update number of servers', $default, range(1, 10, 1)));
+            get_string('block_global_servernumber', 'block_panopto'), get_string('block_global_servernumber_description', 'block_panopto'), $servernumberdefault, $servernumberchoices));
 
     $settings->add(new admin_setting_configtext('block_panopto_instance_name',
             get_string('block_global_instance_name', 'block_panopto'),
             get_string('block_global_instance_description', 'block_panopto'), 'moodle', PARAM_TEXT));
 
-    for ($x = 0; $x <= $numservers; $x++) {
-        $settings->add(new admin_setting_configtext('block_panopto_server_name' . ($x + 1),
-                get_string('block_global_hostname', 'block_panopto') . " " . ($x + 1), '', '', PARAM_TEXT));
+    $numservers = (isset($CFG->block_panopto_server_number)) ? (int)$CFG->block_panopto_server_number : $servernumberdefault;
+    for ($x = 1; $x <= $numservers; $x++) {
+        $settings->add(new admin_setting_configtext('block_panopto_server_name' . $x,
+                get_string('block_global_hostname', 'block_panopto') . " " . $x, '', '', PARAM_TEXT));
 
-        $settings->add(new admin_setting_configtext('block_panopto_application_key' . ($x + 1),
-                get_string('block_global_application_key', 'block_panopto') . " " . ($x + 1), '', '', PARAM_TEXT));
+        $settings->add(new admin_setting_configtext('block_panopto_application_key' . $x,
+                get_string('block_global_application_key', 'block_panopto') . " " . $x, '', '', PARAM_TEXT));
     }
 
     $settings->add(new admin_setting_configcheckbox('block_panopto_async_tasks',

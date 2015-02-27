@@ -51,8 +51,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2014121502, 'panopto');
     }
 
-
-
     if ($oldversion < 2015012901) {
 
         // Define field publisher_mapping to be added to block_panopto_foldermap.
@@ -76,6 +74,14 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2015012901, 'panopto');
+    }
+
+    if ($oldversion < 2015022500) {
+        // Make block_panopto_server_number reflecting the actual number of servers.
+        set_config('block_panopto_server_number', $CFG->block_panopto_server_number + 1);
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2015022500, 'panopto');
     }
 
     return true;
