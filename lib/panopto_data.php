@@ -32,7 +32,7 @@ if (empty($CFG)) {
 }
 require_once ($CFG->libdir . '/dmllib.php');
 
-require_once("block_panopto_lib.php");
+require_once($CFG->dirroot . '/blocks/panopto/lib.php');
 require_once("PanoptoSoapClient.php");
 
 class panopto_data {
@@ -235,7 +235,7 @@ class panopto_data {
         return $completed_deliveries;
     }
 
-    // Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
+    // Instance method caches Moodle instance name from DB (vs. lib.php version).
     function panopto_decorate_username($moodle_username) {
         return ($this->instancename . "\\" . $moodle_username);
     }
@@ -423,8 +423,8 @@ class panopto_data {
             $this->uname = $username;
         }
         // Compute web service credentials for current user.
-        $apiuser_userkey = panopto_decorate_username($username);
-        $apiuser_authcode = panopto_generate_auth_code($apiuser_userkey . "@" . $this->servername, $this->applicationkey);
+        $apiuser_userkey = block_panopto_decorate_username($username);
+        $apiuser_authcode = block_panopto_generate_auth_code($apiuser_userkey . "@" . $this->servername, $this->applicationkey);
 
         // Instantiate our SOAP client.
         return new PanoptoSoapClient($this->servername, $apiuser_userkey, $apiuser_authcode);

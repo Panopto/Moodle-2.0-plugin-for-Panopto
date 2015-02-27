@@ -29,6 +29,7 @@
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib/panopto_data.php');
+require_once('lib.php');
 
 class panopto_provision_form extends moodleform {
 
@@ -48,7 +49,7 @@ class panopto_provision_form extends moodleform {
         }
         asort($courses);
 
-        $serverhostnames = panopto_get_servers();
+        $serverhostnames = block_panopto_get_servers();
         $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $serverhostnames);
         $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);
         $select->setMultiple(true);
