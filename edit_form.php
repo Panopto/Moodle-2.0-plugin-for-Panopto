@@ -26,9 +26,14 @@
  * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
  */
 
-require_once("lib/panopto_data.php");
-require_once (dirname(__FILE__) . '/../../lib/accesslib.php');
+defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Form for editing Panopto block instances.
+ *
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
 class block_panopto_edit_form extends block_edit_form {
 
     protected function specific_definition($mform) {
