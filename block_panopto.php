@@ -26,8 +26,7 @@
  * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
  */
 
-require_once("lib/panopto_data.php");
-require_once (dirname(__FILE__) . '/../../lib/accesslib.php');
+defined('MOODLE_INTERNAL') || die();
 
 class block_panopto extends block_base {
 
@@ -35,7 +34,7 @@ class block_panopto extends block_base {
 
     // Set system properties of plugin.
     function init() {
-        global $COURSE;
+        require_once("lib/panopto_data.php");
         $this->title = get_string('pluginname', 'block_panopto');
     }
 
