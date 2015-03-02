@@ -19,22 +19,24 @@
  */
 
 /**
- * Panopto block data class.
+ * Panopto block data classes.
  *
  * @package     block_panopto
  * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
  */
 
-global $CFG;
-if (empty($CFG)) {
-    require_once("../../config.php");
-}
-require_once ($CFG->libdir . '/dmllib.php');
+defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/blocks/panopto/lib.php');
-require_once("PanoptoSoapClient.php");
-
+/**
+ * Panopto data class.
+ *
+ * Provides data communication with Panopto server.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
 class panopto_data {
 
     var $instancename;
@@ -46,7 +48,10 @@ class panopto_data {
     var $uname;
 
     function __construct($moodle_course_id) {
-        global $USER, $CFG;
+        global $CFG;
+
+        require_once($CFG->dirroot . '/blocks/panopto/lib.php');
+        require_once("PanoptoSoapClient.php");
 
         // Fetch global settings from DB
         $this->instancename = $CFG->block_panopto_instance_name;
