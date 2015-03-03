@@ -54,7 +54,7 @@ class panopto_data {
         require_once("PanoptoSoapClient.php");
 
         // Fetch global settings from DB
-        $this->instancename = $CFG->block_panopto_instance_name;
+        $this->instancename = get_config('block_panopto', 'instance_name');
 
         //get servername and application key specific to moodle course if ID is specified
         if (isset($moodle_course_id)) {

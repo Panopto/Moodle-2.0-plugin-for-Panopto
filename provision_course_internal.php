@@ -85,13 +85,13 @@ if ($mform->is_cancelled()) {
 
     // If there is form data, use it to determine the server and app key to provision to.
     if ($data) {
-        $selectedserver = $CFG->{'block_panopto_server_name' . $data->servers};
-        $selectedkey = $CFG->{'block_panopto_application_key' . $data->servers};
+        $selectedserver = get_config('block_panopto', 'server_name' . $data->servers);
+        $selectedkey = get_config('block_panopto', 'application_key' . $data->servers);
     } else if (count($serverhostnames) == 1) {
         // If only one server, simply provision with that server.
         $servernumber = key($serverhostnames);
-        $selectedserver = $CFG->{'block_panopto_server_name' . $servernumber};
-        $selectedkey = $CFG->{'block_panopto_application_key' . $servernumber};
+        $selectedserver = get_config('block_panopto', 'server_name' . $servernumber);
+        $selectedkey = get_config('block_panopto', 'application_key' . $servernumber);
     }
 
     $manage_blocks = new moodle_url('/admin/blocks.php');

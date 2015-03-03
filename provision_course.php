@@ -105,8 +105,8 @@ if ($mform->is_cancelled()) {
         $data = $mform->get_data();
         if ($data) {
             $courses = $data->courses;
-            $selectedserver = $CFG->{'block_panopto_server_name' . $data->servers};
-            $selectedkey = $CFG->{'block_panopto_application_key' . $data->servers};
+            $selectedserver = get_config('block_panopto', 'server_name' . $data->servers);
+            $selectedkey = get_config('block_panopto', 'application_key' . $data->servers);
         }
 
         $manage_blocks = new moodle_url('/admin/blocks.php');
