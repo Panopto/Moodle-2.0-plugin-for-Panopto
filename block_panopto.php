@@ -61,40 +61,6 @@ class block_panopto extends block_base {
         }
     }
 
-    // Cron function to provision all valid courses at once
-    //Hittesh Ahuja - University of Bath
-    function cron() {
-        global $CFG, $USER, $DB;
-        $panopto_data = new panopto_data(null);
-
-        //Check Panopto Focus API Settings exist    
-        if (empty($panopto_data->servername) || empty($panopto_data->instancename) || empty($panopto_data->applicationkey)) {
-            mtrace(get_string('unconfigured', 'block_panopto'));
-            return true; //Exiting
-        }
-        //Get only those courses that have Panopto folders mapped
-        //For each course, provision the course
-        $panopto_courses = $DB->get_records('block_panopto_foldermap');
-        foreach ($panopto_courses as $course) {
-
-            // Set the  course to retrieve info for / provision.
-            //Check if the course exists
-            $moodlecourse = $DB->get_record('course', array('id' => $course->moodleid));
-            if (!$moodlecourse) {
-                continue;
-            }
-            $panopto_data->moodle_course_id = $course->moodleid;
-            $provisioning_data = $panopto_data->get_provisioning_info();
-            $provisioned_data = $panopto_data->provision_course($provisioning_data);
-            if (!empty($provisioned_data)) {
-                mtrace("Successfully provisioned course for $provisioned_data->ExternalCourseID");
-            } else {
-                mtrace("+++ Error provisioning course for Moodle Course ID : $course->moodleid");
-            }
-        }
-        return true;
-    }
-
     // Generate HTML for block contents
     function get_content() {
         global $CFG, $COURSE, $USER;
