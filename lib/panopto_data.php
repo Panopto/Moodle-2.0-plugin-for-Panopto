@@ -47,8 +47,13 @@ class panopto_data {
     var $sessiongroup_id;
     var $uname;
 
-    function __construct($moodle_course_id) {
-        global $CFG;
+    /**
+     * The class constructor.
+     *
+     * @param int $moodle_course_id course id in Moodle
+     */
+    function __construct($moodle_course_id = null) {
+        global $CFG, $DB;
 
         require_once($CFG->dirroot . '/blocks/panopto/lib.php');
         require_once("PanoptoSoapClient.php");
@@ -56,18 +61,30 @@ class panopto_data {
         // Fetch global settings from DB
         $this->instancename = get_config('block_panopto', 'instance_name');
 
-        //get servername and application key specific to moodle course if ID is specified
-        if (isset($moodle_course_id)) {
-            $this->servername = panopto_data::get_panopto_servername($moodle_course_id);
-            $this->applicationkey = panopto_data::get_panopto_app_key($moodle_course_id);
-        }
-
-        // Fetch current CC course mapping if we have a Moodle course ID.
-        // Course will be null initially for batch-provisioning case.
         if (!empty($moodle_course_id)) {
-            $this->moodle_course_id = $moodle_course_id;
-            $this->sessiongroup_id = panopto_data::get_panopto_course_id($moodle_course_id);
+            // First make sure that course exists in Moodle.
+            $course = $DB->get_record('course', array('id'=>$moodle_course_id), 'id,category', MUST_EXIST);
+            $this->moodle_course_id = $course->id;
+
+            // If course has been provisioned, define its panopto data.
+            if ($panoptofoldermap = $DB->get_record('block_panopto_foldermap', array('moodleid' => $course->id))) {
+                $this->servername = $panoptofoldermap->panopto_server;
+                $this->applicationkey = $panoptofoldermap->panopto_app_key;
+                $this->sessiongroup_id = $panoptofoldermap->panopto_id;
+            }
         }
+    }
+
+    /**
+     * Checks if course has been provisioned.
+     *
+     * @return bool $isprovisioned True if course has been provisioned, false otherwise.
+     */
+    function is_provisioned() {
+        if (empty($this->servername) || empty($this->applicationkey) || empty($this->sessiongroup_id)) {
+            return false;
+        }
+        return true;
     }
 
     // returns SystemInfo
