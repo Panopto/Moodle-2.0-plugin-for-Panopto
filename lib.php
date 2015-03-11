@@ -28,11 +28,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-// Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
-function block_panopto_decorate_course_id($moodle_course_id) {
-    return (get_config('block_panopto', 'instance_name') . ":" . $moodle_course_id);
-}
-
 // Decorate a moodle username with the instancename outside the context of a panopto_data object.
 function block_panopto_decorate_username($moodle_username) {
     return (get_config('block_panopto', 'instance_name') . "\\" . $moodle_username);

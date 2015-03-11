@@ -262,22 +262,6 @@ class panopto_data {
         return ($this->instancename . "\\" . $moodle_username);
     }
 
-    // We need to retrieve the current course mapping in the constructor, so this must be static.
-    static function get_panopto_course_id($moodle_course_id) {
-        global $DB;
-        return $DB->get_field('block_panopto_foldermap', 'panopto_id', array('moodleid' => $moodle_course_id));
-    }
-
-    static function get_panopto_servername($moodle_course_id) {
-        global $DB;
-        return $DB->get_field('block_panopto_foldermap', 'panopto_server', array('moodleid' => $moodle_course_id));
-    }
-
-    static function get_panopto_app_key($moodle_course_id) {
-        global $DB;
-        return $DB->get_field('block_panopto_foldermap', 'panopto_app_key', array('moodleid' => $moodle_course_id));
-    }
-
     static function get_course_role_mappings($moodle_course_id) {
         global $DB;
         $pubroles = array();
