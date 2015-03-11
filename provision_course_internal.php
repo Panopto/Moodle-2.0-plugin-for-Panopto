@@ -115,20 +115,9 @@ if ($mform->is_cancelled()) {
         // Set the current Moodle course to retrieve info for / provision.
         $panopto_data->moodle_course_id = $course_id;
 
-        //If an application key and server name are pre-set (happens when provisioning from multi-select page) use those, otherwise retrieve
-        //values from the db.
-        if (isset($selectedserver)) {
-            $panopto_data->servername = $selectedserver;
-        } else {
-            $panopto_data->servername = $panopto_data->get_panopto_servername($panopto_data->moodle_course_id);
-        }
-
-        if (isset($selectedkey)) {
-            $panopto_data->applicationkey = $selectedkey;
-        } else {
-            $panopto_data->applicationkey = $panopto_data->get_panopto_app_key($panopto_data->moodle_course_id);
-        }
-
+        // Define servername and application key based on selected server.
+        $panopto_data->servername = $selectedserver;
+        $panopto_data->applicationkey = $selectedkey;
         $provisioning_data = $panopto_data->get_provisioning_info();
         $provisioned_data = $panopto_data->provision_course($provisioning_data);
 
