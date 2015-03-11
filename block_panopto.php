@@ -61,6 +61,28 @@ class block_panopto extends block_base {
         }
     }
 
+    /**
+     * Access data cleanup when block is deleted.
+     */
+    function instance_delete() {
+        global $DB;
+        $courseid = $this->page->course->id;
+        // Remove "Viewer" users from Panopto folder access list, but keep others.
+        $panopto_data_instance = new panopto_data($courseid);
+        $users = get_enrolled_users($this->page->context);
+        foreach ($users as $user) {
+            $role = $panopto_data_instance->get_role_from_context($this->page->context, $user->id);
+            if ($role === 'Viewer') {
+                $userkey = $panopto_data_instance->panopto_decorate_username($user->username);
+                $panopto_data_instance->remove_course_user($role, $userkey);
+            }
+        }
+
+        // Remove the record from custom table associated with the block.
+        $DB->delete_records('block_panopto_foldermap', array('moodleid'=>$courseid));
+        return true;
+    }
+
     // Generate HTML for block contents
     function get_content() {
         global $CFG, $COURSE, $USER;

@@ -49,34 +49,21 @@ class update_user extends \core\task\adhoc_task
     }
 
     /**
-     * Return the correct role for a user, given a context.
-     */
-    private function get_role_from_context($contextid, $userid) {
-        $context = \context::instance_by_id($contextid);
-
-        if (has_capability('block/panopto:provision_aspublisher', $context, $userid)) {
-            return "Publisher";
-        } else if (has_capability('block/panopto:provision_asteacher', $context, $userid)) {
-            return "Creator";
-        } else {
-            return "Viewer";
-        }
-    }
-
-    /**
-     * Return user info for this event.
+     * Get information required for enrolment change.
+     *
+     * @param stdClass $event Event object.
+     * @return array role and userkey required for enrolment change.
      */
     private function get_info_for_enrolment_change($panopto, $relateduserid, $contextid) {
         global $DB;
 
         // DB userkey is "[instancename]\\[username]". Get username and use it to create key.
-        $user = get_complete_user_data('id', $relateduserid);
-        $username = $user->username;
+        $username = $DB->get_field('user', 'username', array('id'=>$relateduserid));
         $userkey = $panopto->panopto_decorate_username($username);
 
-        // Get contextID to determine user's role.
-        $contextid = $contextid;
-        $role = $this->get_role_from_context($contextid, $relateduserid);
+        // Get context to determine user's role.
+        $context = \context::instance_by_id($contextid);
+        $role = $panopto->get_role_from_context($context, $relateduserid);
 
         return array(
             "role" => $role,

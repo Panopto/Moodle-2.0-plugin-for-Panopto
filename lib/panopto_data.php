@@ -435,4 +435,21 @@ class panopto_data {
         return new PanoptoSoapClient($this->servername, $apiuser_userkey, $apiuser_authcode);
     }
 
+
+    /**
+     * Return Panopto role for a user, given a context.
+     *
+     * @param context $context Moodle context
+     * @param int $userid Moodle user id
+     * @return string Panopto role
+     */
+    function get_role_from_context($context, $userid) {
+        if (has_capability('block/panopto:provision_aspublisher', $context, $userid)) {
+            return "Publisher";
+        } else if (has_capability('block/panopto:provision_asteacher', $context, $userid)) {
+            return "Creator";
+        } else {
+            return "Viewer";
+        }
+    }
 }
