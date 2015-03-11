@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -17,13 +18,21 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Panopto block SSO implementation.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 global $CFG, $USER;
 
-if(empty($CFG)) {
+if (empty($CFG)) {
     require_once("../../config.php");
 }
 require_once ($CFG->libdir . '/weblib.php');
-require_once("lib/block_panopto_lib.php");
+require_once("lib.php");
 
 $server_name = required_param("serverName", PARAM_HOST);
 $callback_url = required_param("callbackURL", PARAM_URL);
@@ -33,15 +42,15 @@ $action = optional_param("action", "", PARAM_ALPHA);
 
 $relogin = ($action == "relogin");
 
-if($relogin || (isset($USER->username) && ($USER->username == "guest"))) {
+if ($relogin || (isset($USER->username) && ($USER->username == "guest"))) {
     require_logout();
 
     // Return to this page, minus the "action=relogin" parameter.
     redirect($CFG->wwwroot . "/blocks/panopto/SSO.php" .
-				"?authCode=$request_auth_code" .
-				"&serverName=$server_name" .
-				"&expiration=$expiration" .
-				"&callbackURL=" . urlencode($callback_url));
+            "?authCode=$request_auth_code" .
+            "&serverName=$server_name" .
+            "&expiration=$expiration" .
+            "&callbackURL=" . urlencode($callback_url));
     return;
 }
 
@@ -52,13 +61,13 @@ require_login(0, false);
 $request_auth_payload = "serverName=" . $server_name . "&expiration=" . $expiration;
 
 // Verify passed in parameters are properly signed.
-if(panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
-    $user_key = panopto_decorate_username($USER->username);
+if (block_panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
+    $user_key = block_panopto_decorate_username($USER->username);
 
     // Generate canonically-ordered auth payload string
     $response_params = "serverName=" . $server_name . "&externalUserKey=" . $user_key . "&expiration=" . $expiration;
     // Sign payload with shared key and hash.
-    $response_auth_code = panopto_generate_auth_code($response_params);
+    $response_auth_code = block_panopto_generate_auth_code($response_params);
 
     // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence (e.g. in the case of usernames that begin with digits)
     // Maintain the original canonical string to avoid signature mismatch.
@@ -76,4 +85,3 @@ if(panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
 
     echo $OUTPUT->footer();
 }
-/* End of file SSO.php */

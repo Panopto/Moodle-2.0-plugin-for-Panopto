@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  *
  * This file is part of the Panopto plugin for Moodle.
@@ -17,65 +18,44 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Panopto block golobal setings.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 defined('MOODLE_INTERNAL') || die;
-global $CFG;
-global $numservers;
-$numservers = $CFG->block_panopto_server_number;
 
-$default = 0;
 if ($ADMIN->fulltree) {
-	$_SESSION['numservers'] = $numservers + 1;
+    // Up to 10 servers can be added.
+    $servernumberchoices = array_combine(range(1, 10), range(1, 10));
+    $servernumberdefault = 1;
+    $settings->add(new admin_setting_configselect('block_panopto/server_number',
+            get_string('block_global_servernumber', 'block_panopto'), get_string('block_global_servernumber_description', 'block_panopto'), $servernumberdefault, $servernumberchoices));
 
-	$settings->add(
-	new admin_setting_configselect('block_panopto_server_number',
-			 'Number of Panopto Servers',
-			 'Click \'Save Changes\' to update number of servers',
-			 $default,
-			 range(1,10,1)));
-
-
-
-    $settings->add(
-        new admin_setting_configtext(
-            'block_panopto_instance_name',
+    $settings->add(new admin_setting_configtext('block_panopto/instance_name',
             get_string('block_global_instance_name', 'block_panopto'),
-            get_string('block_global_instance_description', 'block_panopto'),
-            'moodle',
-            PARAM_TEXT));
+            get_string('block_global_instance_description', 'block_panopto'), 'moodle', PARAM_TEXT));
 
-    for($x=0; $x<=$numservers; $x++ ){
+    $numservers = (get_config('block_panopto', 'server_number')) ? (int)get_config('block_panopto', 'server_number') : $servernumberdefault;
+    for ($x = 1; $x <= $numservers; $x++) {
+        $settings->add(new admin_setting_configtext('block_panopto/server_name' . $x,
+                get_string('block_global_hostname', 'block_panopto') . " " . $x, '', '', PARAM_TEXT));
 
-        $settings->add(
-        new admin_setting_configtext(
-            'block_panopto_server_name'.($x+1),
-            get_string('block_global_hostname', 'block_panopto') ." " . ($x+1),
-            '',
-            '',
-            PARAM_TEXT));
-
-        $settings->add(
-        		new admin_setting_configtext(
-        				'block_panopto_application_key'.($x+1),
-        				get_string('block_global_application_key', 'block_panopto') ." " . ($x+1),
-        				'',
-        				'',
-        				PARAM_TEXT));
+        $settings->add(new admin_setting_configtext('block_panopto/application_key' . $x,
+                get_string('block_global_application_key', 'block_panopto') . " " . $x, '', '', PARAM_TEXT));
     }
 
-    $settings->add(
-        new admin_setting_configcheckbox(
-            'block_panopto_async_tasks',
-            get_string('block_panopto_async_tasks', 'block_panopto'),
-            '',
-            0
-        )
-    );
+    $settings->add(new admin_setting_configcheckbox('block_panopto/async_tasks',
+            get_string('block_panopto_async_tasks', 'block_panopto'), '', 0));
 
-    $link ='<a href="'.$CFG->wwwroot.'/blocks/panopto/provision_course.php">' . get_string('block_global_add_courses', 'block_panopto') . '</a>';
-    $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
-
-    
-    
+    // It makes sense to show provision link only if configuration has been
+    // saved at least once. Course provisioning is not possible without at least
+    // one panopto server configured anyway.
+    if (get_config('block_panopto', 'server_number')) {
+        $link = html_writer::link(new moodle_url('/blocks/panopto/provision_course.php'), get_string('block_global_add_courses', 'block_panopto'));
+        $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
+    }
 }
-
-/* End of file settings.php */

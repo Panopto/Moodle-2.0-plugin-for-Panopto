@@ -14,12 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Panopto block adhock tasks.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 namespace block_panopto\task;
 
-require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
+defined('MOODLE_INTERNAL') || die();
 
 /**
- * Panopto "update user" task.
+ * Panopto adhoc tasks class.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
  */
 class update_user extends \core\task\adhoc_task
 {
@@ -27,7 +39,15 @@ class update_user extends \core\task\adhoc_task
         return 'block_panopto';
     }
 
+    /**
+     * Execute the task.
+     *
+     * @return void
+     */
     public function execute() {
+        global $CFG;
+        require_once($CFG->dirroot . '/blocks/panopto/lib/panopto_data.php');
+
         $eventdata = (array)$this->get_custom_data();
 
         $panopto = new \panopto_data($eventdata['courseid']);
@@ -49,34 +69,21 @@ class update_user extends \core\task\adhoc_task
     }
 
     /**
-     * Return the correct role for a user, given a context.
-     */
-    private function get_role_from_context($contextid, $userid) {
-        $context = \context::instance_by_id($contextid);
-
-        if (has_capability('block/panopto:provision_aspublisher', $context, $userid)) {
-            return "Publisher";
-        } else if (has_capability('block/panopto:provision_asteacher', $context, $userid)) {
-            return "Creator";
-        } else {
-            return "Viewer";
-        }
-    }
-
-    /**
-     * Return user info for this event.
+     * Get information required for enrolment change.
+     *
+     * @param stdClass $event Event object.
+     * @return array role and userkey required for enrolment change.
      */
     private function get_info_for_enrolment_change($panopto, $relateduserid, $contextid) {
         global $DB;
 
         // DB userkey is "[instancename]\\[username]". Get username and use it to create key.
-        $user = get_complete_user_data('id', $relateduserid);
-        $username = $user->username;
+        $username = $DB->get_field('user', 'username', array('id'=>$relateduserid));
         $userkey = $panopto->panopto_decorate_username($username);
 
-        // Get contextID to determine user's role.
-        $contextid = $contextid;
-        $role = $this->get_role_from_context($contextid, $relateduserid);
+        // Get context to determine user's role.
+        $context = \context::instance_by_id($contextid);
+        $role = $panopto->get_role_from_context($context, $relateduserid);
 
         return array(
             "role" => $role,

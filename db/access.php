@@ -1,4 +1,5 @@
 <?php
+
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  *
  * This file is part of the Panopto plugin for Moodle.
@@ -16,6 +17,15 @@
  * You should have received a copy of the GNU General Public License
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * Panopto block capabilities.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
@@ -26,7 +36,6 @@ $capabilities = array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
-
         )
     ),
     'block/panopto:provision_multiple' => array(
@@ -36,38 +45,24 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-	'block/panopto:provision_asteacher' => array(
+    'block/panopto:provision_asteacher' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array()
     ),
-    
     'block/panopto:provision_aspublisher' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array()
     ),
-
     'block/panopto:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
-
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
         ),
-
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
-   'block/panopto:myaddinstance' => array( 'captype' => 'write',
-       'contextlevel' => CONTEXT_SYSTEM,
-       'archetypes' => array(
-           'user' => CAP_ALLOW,
-
-         ),
-        'clonepermissionsfrom' => 'moodle/my:manageblocks'
-   )
 );
-
-/* End of file access.php */

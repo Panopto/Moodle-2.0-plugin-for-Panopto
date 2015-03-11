@@ -17,6 +17,14 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Strings for component 'block_panopto', language 'en'.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 $string['pluginname'] = 'Panopto';
 $string['panopto:addinstance'] = 'Add a new Panopto block';
 $string['panopto:myaddinstance'] = 'Add a new Panopto block to my page';
@@ -39,6 +47,8 @@ $string['block_global_instance_description'] = 'This value is prefixed before us
 $string['block_global_hostname'] = 'Panopto Server Hostname';
 $string['block_global_application_key'] = 'Application Key';
 $string['block_global_add_courses'] = 'Add Moodle courses to Panopto';
+$string['block_global_servernumber'] = 'Number of Panopto Servers';
+$string['block_global_servernumber_description'] = 'Click \'Save Changes\' to update number of servers';
 $string['course'] = 'Course';
 $string['no_course_selected'] = 'No Panopto course selected';
 $string['error_retrieving'] = 'Error retrieving Panopto course.';
@@ -61,5 +71,3 @@ $string['role_map_header'] = 'Change Panopto Role Mappings';
 $string['role_map_info_text'] = "Choose which Panopto roles a user's Moodle role will map to. <br> Unmapped roles will be given the 'Viewer' role in Panopto.
  <br> If a role is mapped to both 'Publisher' and 'Creator', 'Publisher' will take precedence.<br><br> ";
 $string['block_panopto_async_tasks'] = 'Asynchronous enrolment sync';
-
-/* End of file block_panopto.php */
