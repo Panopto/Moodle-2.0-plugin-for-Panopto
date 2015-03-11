@@ -14,12 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Panopto block adhock tasks.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
+ */
+
 namespace block_panopto\task;
 
-require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
+defined('MOODLE_INTERNAL') || die();
 
 /**
- * Panopto "update user" task.
+ * Panopto adhoc tasks class.
+ *
+ * @package     block_panopto
+ * @copyright   Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @license     http://www.gnu.org/licenses/lgpl.html GNU LGPL
  */
 class update_user extends \core\task\adhoc_task
 {
@@ -27,7 +39,15 @@ class update_user extends \core\task\adhoc_task
         return 'block_panopto';
     }
 
+    /**
+     * Execute the task.
+     *
+     * @return void
+     */
     public function execute() {
+        global $CFG;
+        require_once($CFG->dirroot . '/blocks/panopto/lib/panopto_data.php');
+
         $eventdata = (array)$this->get_custom_data();
 
         $panopto = new \panopto_data($eventdata['courseid']);
