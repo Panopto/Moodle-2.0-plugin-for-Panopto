@@ -43,7 +43,8 @@ class panopto_data {
     var $moodle_course_id;
     var $servername;
     var $applicationkey;
-    var $soap_client;
+    /** @var stdClass Keeps PanoptoSoapClient object */
+    private $soap_client;
     var $sessiongroup_id;
     var $uname;
 
@@ -89,23 +90,14 @@ class panopto_data {
 
     // returns SystemInfo
     function get_system_info() {
-        //If no soap client for this instance, instantiate one
-        if (!isset($this->soap_client)) {
-            $this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-
-        return $this->soap_client->GetSystemInfo();
+        $soapclient = $this->get_soap_client();
+        return $soapclient->GetSystemInfo();
     }
 
     // Create the Panopto course and populate its ACLs.
     function provision_course($provisioning_info) {
-        //If no soap client for this instance, instantiate one
-        if (!isset($this->soap_client)) {
-
-            $this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-        $course_info = $this->soap_client->ProvisionCourse($provisioning_info);
-
+        $soapclient = $this->get_soap_client();
+        $course_info = $soapclient->ProvisionCourse($provisioning_info);
 
         if (!empty($course_info) && !empty($course_info->PublicID)) {
             panopto_data::set_panopto_course_id($this->moodle_course_id, $course_info->PublicID);
@@ -198,11 +190,9 @@ class panopto_data {
 
     // Get courses visible to the current user.
     function get_courses() {
-        if (!isset($this->soap_client)) {
-            $this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
+        $soapclient = $this->get_soap_client();
 
-        $courses_result = $this->soap_client->GetCourses();
+        $courses_result = $soapclient->GetCourses();
         $courses = array();
         if (!empty($courses_result->CourseInfo)) {
             $courses = $courses_result->CourseInfo;
@@ -217,17 +207,14 @@ class panopto_data {
 
     // Get info about the currently mapped course.
     function get_course() {
-        //If no soap client for this instance, instantiate one
-        if (!isset($this->soap_client)) {
-            $this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-
-        return $this->soap_client->GetCourse($this->sessiongroup_id);
+        $soapclient = $this->get_soap_client();
+        return $soapclient->GetCourse($this->sessiongroup_id);
     }
 
     // Get ongoing Panopto sessions for the currently mapped course.
     function get_live_sessions() {
-        $live_sessions_result = $this->soap_client->GetLiveSessions($this->sessiongroup_id);
+        $soapclient = $this->get_soap_client();
+        $live_sessions_result = $soapclient->GetLiveSessions($this->sessiongroup_id);
 
         $live_sessions = array();
         if (!empty($live_sessions_result->SessionInfo)) {
@@ -243,7 +230,8 @@ class panopto_data {
 
     // Get recordings available to view for the currently mapped course.
     function get_completed_deliveries() {
-        $completed_deliveries_result = $this->soap_client->GetCompletedDeliveries($this->sessiongroup_id);
+        $soapclient = $this->get_soap_client();
+        $completed_deliveries_result = $soapclient->GetCompletedDeliveries($this->sessiongroup_id);
 
         $completed_deliveries = array();
         if (!empty($completed_deliveries_result->DeliveryInfo)) {
@@ -362,15 +350,10 @@ class panopto_data {
     }
 
     function add_course_user($role, $userkey) {
-        if (!isset($this->soap_client)) {
-
-            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-
-        $result;
-
+        $soapclient = $this->get_soap_client();
+        $result = null;
         try {
-            $result = $this->soap_client->AddUserToCourse($this->sessiongroup_id, $role, $userkey);
+            $result = $soapclient->AddUserToCourse($this->sessiongroup_id, $role, $userkey);
         } catch (Exception $e) {
             error_log("Error: " . $e->getMessage());
             error_log("Code: " . $e->getCode());
@@ -380,15 +363,10 @@ class panopto_data {
     }
 
     function remove_course_user($role, $userkey) {
-        if (!isset($this->soap_client)) {
-
-            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-
-        $result;
-
+        $soapclient = $this->get_soap_client();
+        $result = null;
         try {
-            $result = $this->soap_client->RemoveuserFromCourse($this->sessiongroup_id, $role, $userkey);
+            $result = $soapclient->RemoveuserFromCourse($this->sessiongroup_id, $role, $userkey);
         } catch (Exception $e) {
             error_log("Error: " . $e->getMessage());
             error_log("Code: " . $e->getCode());
@@ -398,17 +376,10 @@ class panopto_data {
     }
 
     function change_user_role($role, $userkey) {
-
-
-        if (!isset($this->soap_client)) {
-
-            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
-        }
-
-        $result;
-
+        $soapclient = $this->get_soap_client();
+        $result = null;
         try {
-            $result = $this->soap_client->ChangeUserRole($this->sessiongroup_id, $role, $userkey);
+            $result = $soapclient->ChangeUserRole($this->sessiongroup_id, $role, $userkey);
         } catch (Exception $e) {
             error_log("Error: " . $e->getMessage());
             error_log("Code: " . $e->getCode());
@@ -453,4 +424,17 @@ class panopto_data {
             return "Viewer";
         }
     }
+
+    /**
+     * Get SOAP client instance.
+     *
+     * @return stdClass PanoptoSoapClient
+     */
+    function get_soap_client() {
+        if (!isset($this->soap_client)) {
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        return $this->soap_client;
+    }
+
 }
