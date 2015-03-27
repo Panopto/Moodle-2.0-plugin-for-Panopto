@@ -51,6 +51,20 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2014121502, 'panopto');
     }
 
+    if ($oldversion < 2014121702) {
+        // Define existing panopto settings as "first server" in multiple server
+        // settings and remove old ones.
+        if (isset($CFG->block_panopto_server_name)) {
+            set_config('block_panopto_server_name1', $CFG->block_panopto_server_name);
+            unset_config('block_panopto_server_name');
+        }
+        if (isset($CFG->block_panopto_application_key)) {
+            set_config('block_panopto_application_key1', $CFG->block_panopto_application_key);
+            unset_config('block_panopto_application_key');
+        }
+        upgrade_block_savepoint(true, 2014121702, 'panopto');
+    }
+
     if ($oldversion < 2015012901) {
 
         // Define field publisher_mapping to be added to block_panopto_foldermap.
