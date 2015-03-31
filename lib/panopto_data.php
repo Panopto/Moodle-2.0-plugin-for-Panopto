@@ -101,6 +101,7 @@ class panopto_data {
 
         if (!empty($course_info) && !empty($course_info->PublicID)) {
             panopto_data::set_panopto_course_id($this->moodle_course_id, $course_info->PublicID);
+            $this->sessiongroup_id = $course_info->PublicID;
             panopto_data::set_panopto_server_name($this->moodle_course_id, $this->servername);
             panopto_data::set_panopto_app_key($this->moodle_course_id, $this->applicationkey);
         }
