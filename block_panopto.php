@@ -341,13 +341,13 @@ class block_panopto extends block_base {
 
         foreach ($publisherroles as $role) {
             if (isset($role) && trim($role)!=='' ){
-                assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $course_context, $overwrite = false);
+                assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $coursecontext, $overwrite = false);
             }
 
         }
         foreach ($creatorroles as $role) {
             if (isset($role) && trim($role)!=='' ){
-                assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $course_context, $overwrite = false);
+                assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $coursecontext, $overwrite = false);
                 }
         }
         // Mark dirty (moodle standard for capability changes at context level).
