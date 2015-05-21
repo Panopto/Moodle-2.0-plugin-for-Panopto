@@ -1,35 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- Copyright Panopto 2009 - 2011 
- 
- This file is part of the Panopto plugin for Moodle.
- 
- The Panopto plugin for Moodle is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- The Panopto plugin for Moodle is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
--->
-
-<XMLDB PATH="blocks/panopto/db" VERSION="20090610" COMMENT="XMLDB file for Panopto Focus block"
+<XMLDB PATH="blocks/panopto/db" VERSION="20150115" COMMENT="XMLDB file for Panopto Focus block"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
-    <TABLES>
-	    <TABLE NAME="block_panopto_foldermap" COMMENT="Map Moodle courses to Panopto folders">
-			<FIELDS>
-				<FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" COMMENT="id of the table, please edit me" NEXT="moodleid"/>
-				<FIELD NAME="moodleid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" COMMENT="ID of Moodle course." PREVIOUS="id" NEXT="panopto_id"/>
-				<FIELD NAME="panopto_id" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false" ENUM="false" COMMENT="Public ID of Panopto folder." PREVIOUS="moodleid"/>
-			</FIELDS>
-			<KEYS>
-				<KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
-			</KEYS>
-	    </TABLE>
-    </TABLES>
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="block_panopto_foldermap" COMMENT="Map Moodle courses to Panopto folders">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the table, please edit me"/>
+            <FIELD NAME="moodleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of Moodle course."/>
+            <FIELD NAME="panopto_id" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false" COMMENT="Public ID of Panopto folder."/>
+            <FIELD NAME="panopto_server" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto server name for course."/>
+            <FIELD NAME="panopto_app_key" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto application key for server."/>
+            <FIELD NAME="publisher_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="1" SEQUENCE="false"/>
+            <FIELD NAME="creator_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="3,4" SEQUENCE="false"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
+        </KEYS>
+    </TABLE>
+  </TABLES>
 </XMLDB>

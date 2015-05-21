@@ -22,13 +22,25 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015051801;
-$plugin->requires = 2010112400;  // Version 2.0 .
-$plugin->cron = 0;
-$plugin->component = 'block_panopto';
-$plugin->maturity = MATURITY_STABLE;
-
-$plugin->dependencies = array(
-    'mod_forum' => ANY_VERSION
+$observers = array(
+    // User enrolled event.
+    array(
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback' => 'block_panopto_rollingsync::enrolmentcreated',
+    ),
+    // User unenrolled event.
+    array(
+        'eventname' => '\core\event\user_enrolment_deleted',
+        'callback' => 'block_panopto_rollingsync::enrolmentdeleted',
+    ),
+    // Event when user has role added to enrollment.
+    array(
+        'eventname' => '\core\event\role_assigned',
+        'callback' => 'block_panopto_rollingsync::roleadded',
+    ),
+    // Event when user has role removed from enrollment.
+    array(
+        'eventname' => '\core\event\role_unassigned',
+        'callback' => 'block_panopto_rollingsync::roledeleted',
+    ),
 );
-/* End of file version.php */
