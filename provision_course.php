@@ -146,7 +146,7 @@ if ($mform->is_cancelled()) {
 
     echo $OUTPUT->header();
 
-    if ($courses) {
+    if (isset($courses)) {
         $provisioned = array();
         $panoptodata = new panopto_data(null);
         foreach ($courses as $courseid) {
@@ -172,7 +172,7 @@ if ($mform->is_cancelled()) {
             $provisioneddata = $panoptodata->provision_course($provisioningdata);
             include('views/provisioned_course.html.php');
         }
-        echo "<a href='$returnurl'>Back to config</a>";
+        echo "<a class='panopto_center' href='$returnurl'>" . get_string('backto', 'block_panopto') . "</a>";
     } else {
         $mform->display();
     }

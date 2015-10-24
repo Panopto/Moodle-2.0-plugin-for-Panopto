@@ -114,6 +114,9 @@ class panopto_data {
     public function get_provisioning_info() {
 
         global $DB;
+        if(!isset($provisioninginfo)) {
+            $provisioninginfo = new stdClass();
+        }
         $provisioninginfo->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodlecourseid));
         $provisioninginfo->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodlecourseid));
         $provisioninginfo->ExternalCourseID = $this->instancename . ":" . $this->moodlecourseid;

@@ -26,6 +26,7 @@ $string['pluginname'] = 'Panopto';
 $string['panopto:addinstance'] = 'Add a new Panopto block';
 $string['panopto:myaddinstance'] = 'Add a new Panopto block to my page';
 $string['panopto:provision_course'] = 'Provision a course';
+$string['panopto:provision_asteacher'] = 'Provision a course';
 $string['panopto:provision_multiple'] = 'Provision multiple courses at once';
 $string['panopto:provision_asteacher'] = 'Provision as a teacher';
 $string['panopto:provision_aspublisher'] = 'Provision as a publisher';
@@ -62,6 +63,9 @@ $string['course_settings'] = 'Course Settings';
 $string['download_recorder'] = 'Download Recorder';
 $string['show_all'] = 'Show All';
 $string['show_less'] = 'Show Less';
+$string['block_add_thiscourse'] = 'Provision this course';
+$string['backto'] = 'Return to previous page';
+$string['panoptorecordings'] = 'All My Panopto Recordings';
 $string['role_map_header'] = 'Change Panopto Role Mappings';
 $string['role_map_info_text'] = "Choose which Panopto roles a user's Moodle role will map to. <br> Unmapped roles will be given the 'Viewer' role in Panopto.
  <br><br> ";
