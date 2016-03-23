@@ -199,6 +199,7 @@ class panopto_data {
                 );
         }
         
+        $provisioninginfo = new stdClass();
         $provisioninginfo->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodlecourseid));
         $provisioninginfo->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodlecourseid));
         $provisioninginfo->ExternalCourseID = $this->instancename . ":" . $this->moodlecourseid;
@@ -531,9 +532,15 @@ class panopto_data {
      * Remove a user's enrollment from the current course
      */
     public function remove_course_user($role, $userkey) {
-        {
-            $this->remove_course_user_soap_call($role, $userkey);
-        }
+        // This is an inelegant solution.  The issue is that this task is only fires after the user has been
+        // unenrolled from the Moodle course.  The $role passed down will always be "Viewer" because that is 
+        // the initial setting for $role.  The \core\event\user_enrolment_deleted event does not pass the
+        // roleid of the enrollment being removed, so there is insufficient data to perform this correctly.
+        // The likelyhood of a user with multiple roles in a course are low, so the vast majority of use cases
+        // will be covered by this "scorched earth" function.
+        $this->remove_course_user_soap_call("Publisher", $userkey);
+        $this->remove_course_user_soap_call("Creator", $userkey);
+        $this->remove_course_user_soap_call("Viewer", $userkey);
     }
 
     /**
