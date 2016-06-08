@@ -32,7 +32,7 @@ class panopto_soap_client extends soap_client_with_timeout {
     // Older PHP SOAP clients fail to pass the SOAPAction header properly.
     // Store the current action so we can insert it in __doRequest.
     public $currentaction;
-    public function panopto_soap_client($servername, $apiuseruserkey, $apiuserauthcode) {
+    public function __construct($servername, $apiuseruserkey, $apiuserauthcode) {
         // Instantiate SoapClient in non-WSDL mode.
         //Set call timeout to 5 minutes.
         parent::__construct
