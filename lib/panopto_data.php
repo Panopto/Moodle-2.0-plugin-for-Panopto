@@ -531,7 +531,11 @@ class panopto_data {
      * Remove a user's enrollment from the current course
      */
     public function remove_course_user($role, $userkey) {
-        {
+        // If user has both publisher and creator roles, remove both.
+        if ($role == "Creator/Publisher") {
+            $this->remove_course_user_soap_call("Publisher", $userkey);
+            $this->remove_course_user_soap_call("Creator", $userkey);
+        } else {
             $this->remove_course_user_soap_call($role, $userkey);
         }
     }
