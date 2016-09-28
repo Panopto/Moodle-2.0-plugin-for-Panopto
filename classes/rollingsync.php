@@ -91,6 +91,43 @@ class block_panopto_rollingsync {
     }
 
     /**
+     * Called when an enrolment has been updated.
+     */
+    public static function enrolmentupdated(\core\event\user_enrolment_updated $event) {
+        global $CFG, $DB;
+        
+        if (\panopto_data::get_panopto_course_id($event->courseid) === false
+            || $CFG->version < self::$requiredVersion) {
+            return;
+        }
+        
+        $task = new \block_panopto\task\update_user();
+
+        $context = context_course::instance($event->courseid);
+        if(is_enrolled($context, $event->relateduserid, '', true)) { // User is enrolled.  Make sure they are added in Panopto
+            $task->set_custom_data(array(
+                'courseid' => $event->courseid,
+                'relateduserid' => $event->relateduserid,
+                'contextid' => $event->contextid,
+                'eventtype' => "enrol_add"
+            ));
+        } else { // User is unenrolled or suspended.  Make sure they are removed from Panopto
+            $task->set_custom_data(array(
+                'courseid' => $event->courseid,
+                'relateduserid' => $event->relateduserid,
+                'contextid' => $event->contextid,
+                'eventtype' => "enrol_remove"
+            ));
+        }
+
+        if ($CFG->block_panopto_async_tasks) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
+    }
+
+    /**
      * Called when an role has been added.
      */
     public static function roleadded(\core\event\role_assigned $event) {

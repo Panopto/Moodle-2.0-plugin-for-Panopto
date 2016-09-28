@@ -199,6 +199,7 @@ class panopto_data {
                 );
         }
         
+        $provisioninginfo = new stdClass();
         $provisioninginfo->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodlecourseid));
         $provisioninginfo->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodlecourseid));
         $provisioninginfo->ExternalCourseID = $this->instancename . ":" . $this->moodlecourseid;
@@ -531,9 +532,9 @@ class panopto_data {
      * Remove a user's enrollment from the current course
      */
     public function remove_course_user($role, $userkey) {
-        {
-            $this->remove_course_user_soap_call($role, $userkey);
-        }
+        $this->remove_course_user_soap_call("Publisher", $userkey);
+        $this->remove_course_user_soap_call("Creator", $userkey);
+        $this->remove_course_user_soap_call("Viewer", $userkey);
     }
 
     /**
