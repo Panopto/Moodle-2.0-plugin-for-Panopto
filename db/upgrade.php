@@ -155,6 +155,22 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2016102709, 'panopto');
     }
+    
+    if ($oldversion < 2017020101) {
+        // Increase size of publisher_mapping and creator_mapping to allow for
+        // more roles to be selected.
+        $table = new xmldb_table('block_panopto_foldermap');
+        $fields = array();
+        $fields[] = new xmldb_field('publisher_mapping', XMLDB_TYPE_CHAR, '255', null, null, null, '1', 'panopto_app_key');
+        $fields[] = new xmldb_field('creator_mapping', XMLDB_TYPE_CHAR, '255', null, null, null, '3,4', 'publisher_mapping');
+        
+        foreach ($fields as $field) {
+            $dbman->change_field_precision($table, $field);            
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2017020101, 'panopto');        
+    }
 
     return true;
 }
