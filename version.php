@@ -29,7 +29,7 @@ $plugin = (isset($plugin) ? $plugin : new stdClass());
 
 // Plugin version should normally be the same as the internal version.
 // If an admin wants to install with an older version number, however, set that here.
-$plugin->version = 2017032000;
+$plugin->version = 2017032201;
 
 // Requires this Moodle version - 2.7.
 $plugin->requires  = 2014051200;
