@@ -22,7 +22,16 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
-require(dirname(__FILE__) . '/soap_client_with_timeout.php');
+
+// Provisioning operations with many users can take longer than the default 30 seconds to finish executing.
+// We disable maximum execution time for running this script so that it will continue to execute for as long as the
+// timeout duration specified.
+set_time_limit(0);
+
+// This class extends php's built in SoapClient class with logic for handling different timeout durations
+// ... for making calls. The default timeout is 60 seconds, but can be changed by including a 'timeout' value
+// ... in the options array passed in as an argument.
+// Timeouts are measured in seconds.
 
 /**
  * Subclasses SoapClient and hand-crafts SOAP parameters to be compatible with ASP.NET web service in non-WSDL mode.
@@ -31,18 +40,30 @@ require(dirname(__FILE__) . '/soap_client_with_timeout.php');
  * @copyright  Panopto 2009 - 2015
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class panopto_soap_client extends soap_client_with_timeout {
+class panopto_soap_client extends SoapClient
+{
+
+    /**
+     * @desc MAX_TIMEOUT Maximum allowed timeout value.
+     */
+    const MAX_TIMEOUT = 300;
+
     /**
      * @var array $authparams
      */
-    public $authparams;
+    private $authparams;
     // Older PHP SOAP clients fail to pass the SOAPAction header properly.
     // Store the current action so we can insert it in __doRequest.
 
     /**
      * @var string $currentaction
      */
-    public $currentaction;
+    private $currentaction;
+
+    /**
+     * @var int $timeout Timeout value in seconds. Default is 300 seconds.
+     */
+    private $timeout = 60;
 
     /**
      * main constructor
@@ -50,46 +71,87 @@ class panopto_soap_client extends soap_client_with_timeout {
      * @param string $servername
      * @param string $apiuseruserkey
      * @param string $apiuserauthcode
+     * @param int    $timeout Number of seconds for SOAP call timeout.
      */
-    public function __construct($servername, $apiuseruserkey, $apiuserauthcode) {
+    public function __construct($servername, $apiuseruserkey, $apiuserauthcode, $timeout = null) {
 
-        // Instantiate SoapClient in non-WSDL mode.
-        // Set call timeout to 5 minutes.
-        parent::__construct(
-            null,
-            array(
-                'location' => "http://$servername/Panopto/Services/ClientData.svc",
-                'uri' => 'http://services.panopto.com',
-                'timeout' => 300000
-            )
-        );
+        // Only set timeout if it is a reasonable value.
+        if (!empty($timeout) && is_numeric($timeout)) {
+            $timeoutoption = (int)$timeout;
+            if ($timeoutoption > 0 && $timeoutoption <= self::MAX_TIMEOUT) {
+                $this->timeout = $timeoutoption;
+            }
+        }
 
         // Cache web service credentials for all calls requiring authentication.
-        $this->authparams = array('ApiUserKey' => $apiuseruserkey,
-            'AuthCode' => $apiuserauthcode);
+        $this->authparams = array('ApiUserKey' => $apiuseruserkey, 'AuthCode' => $apiuserauthcode);
+
+        // Instantiate SoapClient in non-WSDL mode
+        parent::__construct(null, array(
+            'location'  => "http://$servername/Panopto/Services/ClientData.svc",
+            'uri'       => 'http://services.panopto.com'));
+
     }
 
     /**
-     * Keeping this constructor of backwards compatibility
-     * @deprecated
-     * @param string $servername
-     * @param string $apiuseruserkey
-     * @param string $apiuserauthcode
-     */
-    public function panopto_soap_client($servername, $apiuseruserkey, $apiuserauthcode) {
-        self::__construct($servername, $apiuseruserkey, $apiuserauthcode);
-    }
-    /**
-     * Override SOAP action to work around bug in older PHP SOAP versions.
-     * @param string $request
+     * Overrides parent __doRequest function to make SOAP calls with custom timeout.
+     *
+     * @param string $request the request being processed
      * @param string $location
      * @param string $action
-     * @param int $version
-     * @param bool $oneway
+     * @param int    $version
+     * @param bool   $oneway
      */
-    public function __doRequest($request, $location, $action, $version, $oneway = null) {
-        return parent::__doRequest($request, $location, $this->currentaction, $version);
+    public function __doRequest($request, $location, $action, $version, $oneway = false) {
+        // Attempt to intitialize cURL session to make SOAP calls.
+        $curl = curl_init($location);
+
+        // Check cURL was initialized.
+        if ($curl !== false) {
+            // Set standard cURL options.
+            $options = array(
+                CURLOPT_RETURNTRANSFER  => true,
+                CURLOPT_POST            => true,
+                CURLOPT_POSTFIELDS      => $request,
+                CURLOPT_NOSIGNAL        => true,
+                CURLOPT_SSL_VERIFYPEER  => true,            // All of our SOAP calls must be made via ssl.
+                CURLOPT_TIMEOUT         => $this->timeout,  // Set call timeout in seconds.
+                CURLOPT_HTTPHEADER      => array(sprintf('Content-Type: %s', $version == 2 ? 'application/soap+xml' : 'text/xml'),
+                                                 sprintf('SOAPAction: %s', $this->currentaction)),
+            );
+
+            // Attempt to set the options for the cURL call.
+            if (curl_setopt_array($curl, $options) !== false) {
+                // Make call using cURL (including timeout settings).
+                $response = curl_exec($curl);
+
+                // If cURL throws an error, log it.
+                $lasterrno = curl_errno($curl);
+                if ($lasterrno !== 0) {
+                    $lasterrmsg = curl_error($curl);
+                    error_log($lasterrmsg);
+                    curl_close($curl);
+                    // cURL problem, rather than SOAP Fault, exception
+                    // will bubble up to where call to  __soapCall()
+                    // was made, call_web_method() helper
+                    throw new Exception($lasterrmsg, $lasterrno);
+                }
+            } else {
+                // A cURL option could not be set.
+                error_log('Failed setting cURL options.');
+            }
+        } else {
+            // ... cURL was not initialized properly.
+            error_log("Couldn't initialize cURL to make SOAP calls");
+        }
+
+        // Close cURL session.
+        curl_close($curl);
+
+        // Return the SOAP response.
+        return $response;
     }
+
     // Wrapper functions for Panopto ClientData web methods.
     /**
      * Call API function to provision a course with Panopto
@@ -100,7 +162,6 @@ class panopto_soap_client extends soap_client_with_timeout {
         return $this->call_web_method('ProvisionCourse', array('ProvisioningInfo' => $provisioninginfo));
     }
 
-
     // Wrapper functions for Panopto ClientData web methods.
     /**
      * Call API function to provision a course with Panopto
@@ -110,7 +171,6 @@ class panopto_soap_client extends soap_client_with_timeout {
     public function provision_course_with_options($provisioninginfo) {
         return $this->call_web_method('ProvisionCourseWithOptions', array('ProvisioningInfoWithOptions' => $provisioninginfo));
     }
-
 
     /**
      * Provisioning functions that clears members with a particular role from the acl of the course's folder.
@@ -187,15 +247,8 @@ class panopto_soap_client extends soap_client_with_timeout {
      * @param string $userkey the user auth key
      */
     public function add_user_to_course($sessiongroupid, $role, $userkey) {
-        try {
-            return $this->call_web_method('AddUserToCourse', array('CoursePublicID' => $sessiongroupid,
-                'Role' => $role, 'UserKey' => $userkey));
-        } catch (Exception $e) {
-            error_log("Error: " . $e->getMessage());
-            error_log("Code: " . $e->getCode());
-            error_log("Line: " . $e->getLine());
-            error_log("Trace: " . $e->getTraceAsString());
-        }
+        return $this->call_web_method('AddUserToCourse', array('CoursePublicID' => $sessiongroupid,
+            'Role' => $role, 'UserKey' => $userkey));
     }
 
     /**
@@ -206,17 +259,11 @@ class panopto_soap_client extends soap_client_with_timeout {
      * @param string $userkey the user auth key
      */
     public function remove_user_from_course($sessiongroupid, $role, $userkey) {
-        try {
-            return $this->call_web_method('RemoveUserFromCourse', array('CoursePublicID' => $sessiongroupid,
-                'Role' => $role, 'UserKey' => $userkey));
+        return $this->call_web_method('RemoveUserFromCourse', array('CoursePublicID' => $sessiongroupid,
+            'Role' => $role, 'UserKey' => $userkey));
 
-        } catch (Exception $e) {
-            error_log("Error: " . $e->getMessage());
-            error_log("Code: " . $e->getCode());
-            error_log("Line: " . $e->getLine());
-            error_log("Trace: " . $e->getTraceAsString());
-        }
     }
+
     /**
      *  Calls API function to change a user's enrollment in a course
      *
@@ -225,17 +272,10 @@ class panopto_soap_client extends soap_client_with_timeout {
      * @param string $userkey the user auth key
      */
     public function change_user_role($sessiongroupid, $role, $userkey) {
-        try {
-            $ads = $this->call_web_method('ChangeUserRole', array('CoursePublicID' => $sessiongroupid,
-                'Role' => $role, 'UserKey' => $userkey));
-
-        } catch (Exception $e) {
-            error_log("Error: " . $e->getMessage());
-            error_log("Code: " . $e->getCode());
-            error_log("Line: " . $e->getLine());
-            error_log("Trace: " . $e->getTraceAsString());
-        }
+        $this->call_web_method('ChangeUserRole', array('CoursePublicID' => $sessiongroupid,
+            'Role' => $role, 'UserKey' => $userkey));
     }
+
     // Helper functions for calling Panopto ClientData web methods in non-WSDL mode.
     /**
      *  Helper method for making a call to the Panopto API

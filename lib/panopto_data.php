@@ -1146,7 +1146,7 @@ class panopto_data {
         $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $this->servername, $this->applicationkey);
 
         // Instantiate our SOAP client.
-        return new panopto_soap_client($this->servername, $apiuseruserkey, $apiuserauthcode);
+        return new panopto_soap_client($this->servername, $apiuseruserkey, $apiuserauthcode, 300);
     }
 
     /**
