@@ -288,7 +288,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         update_upgrade_progress($currindex, $totalupgradesteps, $upgradestep);
 
         $panoptocourseobjects = array();
-        $errorstring = get_string('upgrade_provision_access_error', 'block_panopto');
+
+        $getunamepanopto = new panopto_data(null);
+        $errorstring = get_string('upgrade_provision_access_error', 'block_panopto', $getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
         $versionerrorstring = get_string('upgrade_panopto_required_version', 'block_panopto');
         $usercanupgrade = true;
 
@@ -306,8 +308,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                                    isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey);
 
             if ($moodlecourseexists && $hasvalidpanoptodata) {
-                if (isset($oldpanoptocourse->panopto->uname) && !empty($oldpanoptocourse->panopto->uname) &&
-                   $oldpanoptocourse->panopto->uname !== 'guest') {
+                if (isset($oldpanoptocourse->panopto->uname) && !empty($oldpanoptocourse->panopto->uname)) {
                     $oldpanoptocourse->panopto->ensure_auth_manager();
                     $activepanoptoserverversion = $oldpanoptocourse->panopto->authmanager->get_server_version();
                     if (!version_compare($activepanoptoserverversion, \panopto_data::$requiredpanoptoversion, '>=')) {

@@ -76,7 +76,6 @@ class block_panopto extends block_base {
      * @param bool $nolongerused depcrecated variable
      */
     public function instance_config_save($data, $nolongerused = false) {
-
         if (!empty($data->course)) {
 
             panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
@@ -123,6 +122,7 @@ class block_panopto extends block_base {
             $panoptodata->moodlecourseid = $course->moodleid;
             $provisioningdata = $panoptodata->get_provisioning_info();
             $provisioneddata = $panoptodata->provision_course($provisioningdata);
+
             if (!empty($provisioneddata)) {
                 mtrace("Successfully provisioned course for $provisioneddata->ExternalCourseID");
             } else {

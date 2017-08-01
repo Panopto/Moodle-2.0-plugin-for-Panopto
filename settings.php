@@ -72,15 +72,6 @@ if ($ADMIN->fulltree) {
             )
         );
     }
-
-    $settings->add(
-        new admin_setting_configcheckbox(
-            'block_panopto/async_tasks',
-            get_string('block_panopto_async_tasks', 'block_panopto'),
-            get_string('block_panopto_async_tasks_desc', 'block_panopto'),
-            1
-        )
-    );
     $settings->add(
         new admin_setting_configcheckbox(
             'block_panopto/prefix_new_folder_names',
@@ -102,14 +93,6 @@ if ($ADMIN->fulltree) {
             'block_panopto/auto_sync_imports',
             get_string('block_panopto_auto_sync_imports', 'block_panopto'),
             get_string('block_panopto_auto_sync_imports_desc', 'block_panopto'),
-            1
-        )
-    );
-    $settings->add(
-        new admin_setting_configcheckbox(
-            'block_panopto/auto_add_admins',
-            get_string('block_panopto_auto_add_admins', 'block_panopto'),
-            get_string('block_panopto_auto_add_admins_desc', 'block_panopto'),
             1
         )
     );
