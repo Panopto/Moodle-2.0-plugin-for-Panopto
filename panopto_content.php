@@ -53,7 +53,7 @@ try {
         $content->text = get_string('unprovisioned', 'block_panopto');
 
         if ($panoptodata->can_user_provision($courseid)) {
-            $content->text .= '<br/><br/>' .
+            $content->text .= '<br/>' .
             "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" .
             get_string('provision_course_link_text', 'block_panopto') . '</a>';
         }
@@ -66,9 +66,10 @@ try {
         try {
             if (!$panoptodata->sessiongroupid) {
                 $content->text = get_string('no_course_selected', 'block_panopto');
+            } else if (!\panopto_data::is_server_alive('https://' . $panoptodata->servername . '/Panopto')) {
+                error_log(get_string('server_not_available', 'block_panopto', $panoptodata->servername));
+                $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
             } else {
-                // Get course info from SOAP service.
-
                 // We can get by external_id but there is no point because atm it calls this method redundantly anyway.
                 $courseinfo = $panoptodata->get_folders_by_id();
 
@@ -212,7 +213,7 @@ try {
                 }
             }
         } catch (Exception $e) {
-            $content->text .= "<br><br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
+            $content->text .= "<br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
         }
 
         $content->footer = '';

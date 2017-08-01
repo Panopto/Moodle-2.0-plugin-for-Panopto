@@ -45,52 +45,6 @@ require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 class block_panopto_rollingsync {
 
     /**
-     * Called when a user has been logged in as.
-     *
-     * @param \core\event\user_loggedinas $event
-     */
-    public static function userloggedinas(\core\event\user_loggedinas $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
-            return;
-        }
-
-        $task = new \block_panopto\task\sync_user();
-        $task->set_custom_data(array(
-            'userid' => $event->relateduserid
-        ));
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
-    }
-
-    /**
-     * Called when a user has been logged in.
-     *
-     * @param \core\event\user_loggedin $event
-     */
-    public static function userloggedin(\core\event\user_loggedin $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
-            return;
-        }
-
-        $task = new \block_panopto\task\sync_user();
-        $task->set_custom_data(array(
-            'userid' => $event->userid
-        ));
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
-    }
-
-    /**
      * Called when a course has been created.
      *
      * @param \core\event\course_created $event
@@ -107,7 +61,7 @@ class block_panopto_rollingsync {
             $selectedserver = get_config('block_panopto', 'server_name1');
             $selectedkey = get_config('block_panopto', 'application_key1');
 
-            $task = new \block_panopto\task\provision_course();
+        $task = new \block_panopto\task\provision_course();
             $task->set_custom_data(array(
                 'courseid' => $event->courseid,
                 'relateduserid' => $event->relateduserid,

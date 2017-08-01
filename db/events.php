@@ -27,14 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 $observers = array(
     // User enrolled event.
     array(
-        'eventname' => '\core\event\user_loggedinas',
-        'callback' => 'block_panopto_rollingsync::userloggedinas',
-    ),
-    array(
-        'eventname' => '\core\event\user_loggedin',
-        'callback' => 'block_panopto_rollingsync::userloggedin',
-    ),
-    array(
         'eventname' => '\core\event\course_created',
         'callback' => 'block_panopto_rollingsync::coursecreated',
     ),

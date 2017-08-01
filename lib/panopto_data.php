@@ -279,9 +279,6 @@ class panopto_data {
                     $provisioninginfo->externalcourseid
                 );
 
-                // Sync access of the privisioning user so they don't need to relog to view the folder.
-                self::sync_external_user($USER->id);
-
                 $this->ensure_auth_manager();
 
                 $currentblockversion = $DB->get_record(
@@ -297,6 +294,11 @@ class panopto_data {
                     $CFG->version
                 );
 
+                // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
+                if ($this->uname !== 'guest') {
+                    // Update permissions so user can see everything they should.
+                    $this->sync_external_user($USER->id);
+                }
             } else {
                 // Give the user some basic info they can use to debug or send to AE.
                 $courseinfo = new stdClass;
@@ -444,8 +446,16 @@ class panopto_data {
         return $importinfo;
     }
 
+    /**
+     * Attempts to get a folder by it's external id
+     *
+     */
     public function get_folders_by_external_id() {
+        global $USER;
         $ret = false;
+
+        // Update permissions so user can see everything they should.
+        $this->sync_external_user($USER->id);
 
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
@@ -457,8 +467,17 @@ class panopto_data {
         return $ret;
     }
 
+    /**
+     * Attempts to get a folder by it's public Guid
+     *
+     */
     public function get_folders_by_id() {
+        global $USER;
+
         $ret = false;
+
+        // Update permissions so user can see everything they should.
+        $this->sync_external_user($USER->id);
 
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
@@ -474,8 +493,17 @@ class panopto_data {
         return $ret;
     }
 
+    /**
+     * Attempts to get all folders the user has access to.
+     *
+     */
     public function get_folders_list() {
+        global $USER;
         $ret = false;
+
+
+        // Update permissions so user can see everything they should.
+        $this->sync_external_user($USER->id);
 
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
@@ -487,162 +515,66 @@ class panopto_data {
     }
 
     /**
-     * Sync a user with all of the courses he is enrolled in
+     * Sync a user with all of the courses he is enrolled in on the current Panopto server
      *
-     * @param int $userid the Moodle id of the user we are trying to sync.
      */
-    public static function sync_external_user($userid) {
-        global $DB, $CFG, $USER;
-
-        if (isset($USER->username)) {
-            $username = $USER->username;
-            $userisguest = false;
-        } else {
-            $userisguest = true;
-            $username = 'guest';
-        }
-
-        $setupasadmin = false;
-        $servergroupidlist = array();
-        $instancename = get_config('block_panopto', 'instance_name');
-
-        $numservers = get_config('block_panopto', 'server_number');
-        $numservers = isset($numservers) ? $numservers : 0;
-
-        // Increment numservers by 1 to take into account starting at 0.
-        ++$numservers;
-
-        for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
-            // Generate strings corresponding to potential servernames in the config.
-            $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
-            $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
-
-            $hasservername = !(!isset($thisservername) || trim($thisservername) === '');
-            $hasappkey = !(!isset($thisappkey) || trim($thisappkey) === '');
-
-            if ($hasservername && $hasappkey) {
-                $panoptodataobj = new panopto_data(null);
-                $panoptodataobj->uname = $username;
-                $panoptodataobj->servername = $thisservername;
-                $panoptodataobj->applicationkey = $thisappkey;
-
-                $servergroupidlist[$panoptodataobj->servername] = array(
-                    'panopto' => $panoptodataobj,
-                    'externalgroupids' => array()
-                );
-            }
-        }
-
-        if (get_config('block_panopto', 'auto_add_admins') && !$userisguest) {
-            // All Moodle administrators should get access to all Panopto course folders as teachers, since they can all provision in the config page.
-            // Whitespace after id is required.
-            $sql = "SELECT id " .
-                "FROM {user} " .
-                "WHERE";
-            $siteadmins = explode(",", $CFG->siteadmins);
-            list($usql, $params) = $DB->get_in_or_equal($siteadmins);
-            $sql .= " id $usql ";
-            $superadmins = $DB->get_records_sql($sql, $params);
-            foreach ($superadmins as $possibleuser) {
-                if ($possibleuser->id === $userid) {
-                    $setupasadmin = true;
-                    break;
-                }
-            }
-        }
-
-        if ($setupasadmin) {
-            $coursestosync = $DB->get_records(
-                'block_panopto_foldermap',
-                null,
-                'moodleid'
-            );
-
-            $currentcourses = array();
-            foreach ($coursestosync as $course) {
-                $moodlecourse = $DB->get_record('course', array('id' => $course->moodleid));
-
-                if (isset($moodlecourse) && !empty($moodlecourse) && $moodlecourse !== false) {
-                    $courseobj = new stdClass;
-                    $courseobj->id = $course->moodleid;
-                    $currentcourses[] = $courseobj;
-                } else {
-                    // The course does not exist in Moodle, move it to the old table for cleanup.
-                    error_log(get_string('moodle_course_not_exist', 'block_panopto'));
-                    self::delete_panopto_relation($course->moodleid, true);
-                }
-            }
-        } else {
-            $currentcourses = enrol_get_users_courses($userid, true);
-        }
-
-        // Go through each course.
-        foreach ($currentcourses as $course) {
-            $coursecontext = context_course::instance($course->id);
-            $coursegroups = array();
-
-            $coursepanopto = new panopto_data($course->id);
-
-            // Check to see if we are already going to provision a specific Panopto server, if we are just add the groups to the already made array
-            // If not add the server to the list of servers.
-            if (isset($coursepanopto->servername) && !empty($coursepanopto->servername) &&
-                isset($coursepanopto->applicationkey) && !empty($coursepanopto->applicationkey) &&
-                isset($coursepanopto->sessiongroupid) && !empty($coursepanopto->sessiongroupid)) {
-
-                $role = self::get_role_from_context($coursecontext, $userid);
-
-                // If the admin is already a creator or publisher do nothing.
-                if ($setupasadmin && $role === 'Viewer') {
-                    $role = 'Creator';
-                }
-
-                // Build a list of ExternalGroupIds using a specific format.
-                // E.g. moodle31:courseId_viewers/moodle31:courseId_creators.
-                $groupname = $coursepanopto->instancename . ':' . $course->id;
-                if (strpos($role, 'Viewer') !== false) {
-                    $coursegroups[] = $groupname . "_viewers";
-                }
-
-                if (strpos($role, 'Creator') !== false) {
-                    $coursegroups[] = $groupname . "_creators";
-                }
-
-                if (strpos($role, 'Publisher') !== false) {
-                    $coursegroups[] = $groupname . "_publishers";
-                }
-
-                if (!array_key_exists($coursepanopto->servername, $servergroupidlist)) {
-                    $servergroupidlist[$coursepanopto->servername] = array(
-                        'panopto' => $coursepanopto,
-                        'externalgroupids' => array_merge(array(), $coursegroups)
-                    );
-                } else {
-                    $servergroupidlist[$coursepanopto->servername]['externalgroupids'] = array_merge(
-                        $servergroupidlist[$coursepanopto->servername]['externalgroupids'],
-                        $coursegroups
-                    );
-                }
-            }
-        }
+    public function sync_external_user($userid) {
+        global $DB, $CFG;
 
         $userinfo = $DB->get_record('user', array('id' => $userid));
-        // For each Panopto server that has groups we need to provision.
-        foreach ($servergroupidlist as $servername => $servergroup) {
+
+        // Only sync if we find an existing user with the given id.
+        if (isset($userinfo) && ($userinfo !== false)) {
+            $instancename = get_config('block_panopto', 'instance_name');
+
+            $currentcourses = enrol_get_users_courses($userid, true);
+
+            // Go through each course.
+            $groupstosync = array();
+            foreach ($currentcourses as $course) {
+                $coursecontext = context_course::instance($course->id);
+
+                $coursepanopto = new panopto_data($course->id);
+
+                // Check to see if we are already going to provision a specific Panopto server, if we are just add the groups to the already made array
+                // If not add the server to the list of servers.
+                if (isset($coursepanopto->servername) && !empty($coursepanopto->servername) && $coursepanopto->servername === $this->servername &&
+                    isset($coursepanopto->applicationkey) && !empty($coursepanopto->applicationkey) &&
+                    isset($coursepanopto->sessiongroupid) && !empty($coursepanopto->sessiongroupid)) {
+
+                    $role = self::get_role_from_context($coursecontext, $userid);
+
+                    // Build a list of ExternalGroupIds using a specific format.
+                    // E.g. moodle31:courseId_viewers/moodle31:courseId_creators.
+                    $groupname = $coursepanopto->instancename . ':' . $course->id;
+                    if (strpos($role, 'Viewer') !== false) {
+                        $groupstosync[] = $groupname . "_viewers";
+                    }
+
+                    if (strpos($role, 'Creator') !== false) {
+                        $groupstosync[] = $groupname . "_creators";
+                    }
+
+                    if (strpos($role, 'Publisher') !== false) {
+                        $groupstosync[] = $groupname . "_publishers";
+                    }
+                }
+            }
+
 
             // Only try to sync the users if he Panopto server is up.
-            if (is_server_alive('https://' . $servername . '/Panopto') || is_server_alive('http://' . $servername . '/Panopto')) {
+            if (self::is_server_alive('https://' . $this->servername . '/Panopto')) {
 
-                $servergroup['panopto']->ensure_user_manager();
+                $this->ensure_user_manager();
 
-                $servergroup['panopto']->usermanager->sync_external_user(
+                $this->usermanager->sync_external_user(
                     $userinfo->firstname,
                     $userinfo->lastname,
                     $userinfo->email,
-                    $servergroup['externalgroupids']
+                    $groupstosync
                 );
             } else {
-                error_log(get_string('panopto_server_error', 'block_panopto', $servername));
+                error_log(get_string('panopto_server_error', 'block_panopto', $this->servername));
             }
         }
 
@@ -1082,6 +1014,7 @@ class panopto_data {
      * Get list of available courses from db based on user's access level on course.
      */
     public function get_course_options() {
+
         $panoptocourses = $this->get_folders_list();
         if (!empty($panoptocourses)) {
             $options = array();
@@ -1233,27 +1166,27 @@ class panopto_data {
             $coursecontext->mark_dirty();
         }
     }
-}
 
-function is_server_alive($url = null) {
-    if ($url == null) {
-        return false;
-    }
-    $ch = curl_init($url);
+    public static function is_server_alive($url = null) {
+        if ($url == null) {
+            return false;
+        }
+        $ch = curl_init($url);
 
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    $data = curl_exec($ch);
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $data = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    curl_close($ch);
+        curl_close($ch);
 
-    if (($httpcode >= 200 && $httpcode < 300) || $httpcode == 302) {
-        return true;
-    } else {
-        return false;
+        if (($httpcode >= 200 && $httpcode < 300) || $httpcode == 302) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 /* End of file panopto_data.php */
