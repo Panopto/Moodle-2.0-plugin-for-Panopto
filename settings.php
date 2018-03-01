@@ -169,7 +169,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/publisher_system_role_mapping',
             get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
             get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
-            null,
+            array(1),
             $systemrolearray
         )
     );
