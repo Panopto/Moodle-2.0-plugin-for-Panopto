@@ -238,6 +238,9 @@ $urlparams['return_url'] = $returnurl;
 $PAGE->set_url('/blocks/panopto/upgrade_all_folders.php', $urlparams);
 $PAGE->set_pagelayout('base');
 
+// Check System context capability before allowing to upgrade the folders.
+require_capability('block/panopto:provision_multiple', $context);
+
 $mform = new panopto_upgrade_all_folders_form($PAGE->url);
 
 if ($mform->is_cancelled()) {
@@ -247,9 +250,6 @@ if ($mform->is_cancelled()) {
     $PAGE->set_pagelayout('base');
     $PAGE->set_title($upgradetitle);
     $PAGE->set_heading($upgradetitle);
-
-    // System context.
-    require_capability('block/panopto:provision_multiple', $context);
 
     $manageblocks = new moodle_url('/admin/blocks.php');
     $panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
