@@ -1250,7 +1250,7 @@ class panopto_data {
         global $CFG;
 
         if (get_config('block_panopto', 'print_log_to_file')) {
-            file_put_contents($CFG->dirroot . '/PanoptoLogs.txt', $logmessage . "\n", FILE_APPEND);
+            file_put_contents($CFG->tempdir . '/PanoptoLogs.txt', $logmessage . "\n", FILE_APPEND);
         } else {
             error_log($logmessage);
 
