@@ -175,6 +175,12 @@ if ($ADMIN->fulltree) {
         )
     );
     $settings->add(
+        new admin_setting_configduration('block_panopto/check_server_interval',
+            get_string('block_panopto_check_server_interval', 'block_panopto'),
+            get_string('block_panopto_check_server_interval_desc', 'block_panopto'),
+            30)
+    );
+    $settings->add(
         new admin_setting_configcheckbox(
             'block_panopto/print_log_to_file',
             get_string('block_panopto_print_log_to_file', 'block_panopto'),

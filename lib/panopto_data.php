@@ -1426,26 +1426,42 @@ class panopto_data {
     }
 
     public static function is_server_alive($url = null) {
-        // Only proceed with the cURL check if this toggle is true. This code is dependent on platform/OS specific calls.
-        if (!get_config('block_panopto', 'check_server_status')) {
-            return true;
-        }
         if ($url == null) {
             return false;
         }
 
-        $curl = new \curl();
-        $options = [
-            'CURLOPT_TIMEOUT' => 10,
-            'CURLOPT_CONNECTTIMEOUT' => 10
-        ];
-        $curl->get($url, null, $options);
-
-        if (!$curl->get_errno()) {
+        // Only proceed with the cURL check if this toggle is true. This code is dependent on platform/OS specific calls.
+        if (!get_config('block_panopto', 'check_server_status')) {
             return true;
-        } else {
-            return false;
         }
+
+        $timenow = time();
+        $nextservercheck = (int)get_config('block_panopto', 'next_server_check');
+
+        if ($nextservercheck < $timenow) {
+            $curl = new \curl();
+            $options = [
+                'CURLOPT_TIMEOUT' => 10,
+                'CURLOPT_CONNECTTIMEOUT' => 10
+            ];
+            $curl->get($url, null, $options);
+            $httpcode = !empty($curl->get_info()['http_code']) ? $curl->get_info()['http_code'] : 'Not found.';
+
+            $result = !$curl->get_errno();
+
+            $checkserverinterval = get_config('block_panopto', 'check_server_interval');
+            $nextservercheck = $timenow + $checkserverinterval;
+            set_config('check_server_result', $result, 'block_panopto');
+            set_config('next_server_check', $nextservercheck, 'block_panopto');
+
+            if (!$result) {
+                self::print_log('ERROR: failed to check Panopto server health. URL: ' . $url . ' HTTP code: ' . $httpcode);
+            }
+
+             return $result;
+        }
+
+        return get_config('block_panopto', 'check_server_result');
     }
 
     public static function print_log($logmessage) {
