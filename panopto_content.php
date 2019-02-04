@@ -33,6 +33,9 @@ require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 try {
     require_login();
     require_sesskey();
+    // Close the session so that the users other tabs in the same session are not blocked.
+    \core\session\manager::write_close();
+
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
 
