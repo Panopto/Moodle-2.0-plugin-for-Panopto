@@ -46,7 +46,7 @@ $observers = array(
     // User unenroled event.
     array(
         'eventname' => '\core\event\user_enrolment_updated',
-        'callback' => 'block_panopto_rollingsync::userenrolmentupdated ',
+        'callback' => 'block_panopto_rollingsync::userenrolmentupdated',
     ),
     // User enroled event.
     array(
