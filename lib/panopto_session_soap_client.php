@@ -287,12 +287,10 @@ class panopto_session_soap_client extends SoapClient {
             $retobj = $this->sessionmanagementserviceget->getResult();
             return $retobj->GetFoldersByExternalIdResult->Folder[0];
         } else {
-            $this->handle_error(
+            return $this->handle_error(
                 $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersByExternalId']
             );
         }
-
-        return $ret;
     }
 
     /** 
@@ -587,8 +585,6 @@ class panopto_session_soap_client extends SoapClient {
                 $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetRecorderDownloadUrls']
             );
         }
-
-        return $ret;
     }
 
     private function handle_error($lasterror) {
