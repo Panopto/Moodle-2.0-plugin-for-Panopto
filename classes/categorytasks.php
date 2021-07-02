@@ -44,7 +44,7 @@ class block_panopto_categorytasks {
      * @param \core\event\course_category_updated $event
      */
     public static function coursecategorycreated(\core\event\course_category_created $event) {
-        
+
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;

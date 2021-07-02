@@ -26,62 +26,51 @@
 
 class PanoptoTimeoutSoapClient extends SoapClient
 {
-    private $socket_timeout;
-    private $connect_timeout;
+    private $sockettimeout;
+    private $connecttimeout;
 
-    public function __setConnectionTimeout($connect_timeout)
-    {
-        $connect_timeout = intval($connect_timeout);
+    public function set_connection_timeout($connecttimeout) {
+        $connecttimeout = intval($connecttimeout);
 
-        if (!is_null($connect_timeout) && !is_int($connect_timeout))
-        {
+        if (!is_null($connecttimeout) && !is_int($connecttimeout)) {
             throw new Exception("Invalid connection timeout value");
         }
 
-        $this->connect_timeout = $connect_timeout;
+        $this->connecttimeout = $connecttimeout;
     }
 
-    public function __setSocketTimeout($socket_timeout)
-    {
-        $socket_timeout = intval($socket_timeout);
+    public function set_socket_timeout($sockettimeout) {
+        $sockettimeout = intval($sockettimeout);
 
-        if (!is_null($socket_timeout) && !is_int($socket_timeout))
-        {
+        if (!is_null($sockettimeout) && !is_int($sockettimeout)) {
             throw new Exception("Invalid socket timeout value");
         }
 
-        $this->socket_timeout = $socket_timeout;
+        $this->sockettimeout = $sockettimeout;
     }
 
-    public function __doRequest($request, $location, $action, $version, $one_way = FALSE)
-    {
-
-        if (!$this->socket_timeout && !$this->connect_timeout)
-        {
+    public function do_request($request, $location, $action, $version, $oneway = false) {
+        if (!$this->sockettimeout && !$this->connecttimeout) {
             // Call via parent because we require no timeout
-            $response = parent::__doRequest($request, $location, $action, $version, $one_way);
-        }
-        else
-        {
-
+            $response = parent::__doRequest($request, $location, $action, $version, $oneway);
+        } else {
             $curl = new \curl();
             $options = [
-                'CURLOPT_VERBOSE' => FALSE,
-                'CURLOPT_RETURNTRANSFER' => TRUE,
-                'CURLOPT_HEADER' => FALSE,
+                'CURLOPT_VERBOSE' => false,
+                'CURLOPT_RETURNTRANSFER' => true,
+                'CURLOPT_HEADER' => false,
                 'CURLOPT_HTTPHEADER' => array('Content-Type: text/xml',
                                               'SoapAction: ' . $action)
             ];
 
-            if (!is_null($this->socket_timeout)) {
-                $options['CURLOPT_TIMEOUT'] = $this->socket_timeout;
+            if (!is_null($this->sockettimeout)) {
+                $options['CURLOPT_TIMEOUT'] = $this->sockettimeout;
             }
 
-            if(!is_null($this->connect_timeout)) {
-                $options['CURLOPT_CONNECTTIMEOUT'] = $this->connect_timeout;
+            if (!is_null($this->connecttimeout)) {
+                $options['CURLOPT_CONNECTTIMEOUT'] = $this->connecttimeout;
             }
-            
-            
+
             $response = $curl->post($location, $request, $options);
 
             if ($curl->get_errno()) {
@@ -90,8 +79,7 @@ class PanoptoTimeoutSoapClient extends SoapClient
         }
 
         // Return?
-        if (!$one_way)
-        {
+        if (!$oneway) {
             return ($response);
         }
     }

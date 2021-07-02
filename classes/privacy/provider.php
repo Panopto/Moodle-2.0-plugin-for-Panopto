@@ -1,30 +1,60 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Privacy provider for block_panopto
+ *
+ * @package block_panopto
+ * @copyright Panopto 2009 - 2018
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace block_panopto\privacy;
+
+defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
 
 use \core_privacy\local\metadata\collection;
- 
+
 if (interface_exists('\core_privacy\local\request\userlist')) {
-    interface my_userlist extends \core_privacy\local\request\userlist{}
+    interface my_userlist extends \core_privacy\local\request\userlist{
+    }
 } else {
-    interface my_userlist {};
-} 
+    interface my_userlist {
+    };
+}
 
 if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
-    interface my_userlist_provider extends \core_privacy\local\request\core_userlist_provider{}
+    interface my_userlist_provider extends \core_privacy\local\request\core_userlist_provider{
+    }
 } else {
-    interface my_userlist_provider {};
+    interface my_userlist_provider {
+    };
 }
 
 if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
-    interface my_userdataprovider extends \core_privacy\local\request\core_user_data_provider{}
+    interface my_userdataprovider extends \core_privacy\local\request\core_user_data_provider{
+    }
 } else {
-    interface my_userdataprovider {};
+    interface my_userdataprovider {
+    };
 }
 
-class provider implements 
+class provider implements
         // This plugin does store personal user data.
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\data_provider,
@@ -32,7 +62,7 @@ class provider implements
         my_userdataprovider,
         my_userlist_provider,
         my_userlist {
-    
+
     public static function get_metadata(collection $collection) : collection {
         $collection->add_external_location_link('block_panopto', [
             'firstname' => 'privacy:metadata:block_panopto:firstname',
@@ -51,10 +81,10 @@ class provider implements
      */
     public static function get_contexts_for_userid(int $userid) : \core_privacy\local\request\contextlist {
         $contextlist = new \core_privacy\local\request\contextlist();
- 
+
         $currentcourses = \enrol_get_users_courses($userid, true);
 
-        foreach($currentcourses as $currentcourse) {
+        foreach ($currentcourses as $currentcourse) {
             $currentpanopto = new \panopto_data($currentcourse->id);
             if ($currentpanopto->has_valid_panopto()) {
                 $contextlist->add_from_sql(
@@ -65,7 +95,7 @@ class provider implements
 
         return $contextlist;
     }
- 
+
     /**
      * Get the list of users who have data within a context.
      *
@@ -76,7 +106,7 @@ class provider implements
 
         if ($context->contextlevel != CONTEXT_COURSE) {
             return;
-        } 
+        }
 
         $enrolledusers = \get_enrolled_users($context);
         $enrolleduserids = array();
@@ -98,7 +128,6 @@ class provider implements
         $allpanoptos = \panopto_get_valid_panopto_servers();
         $panoptouser = null;
 
-
         foreach ($allpanoptos as $currentpanoptoinfo) {
             $currentpanopto = new \panopto_data(null);
             $currentpanopto->servername = $currentpanoptoinfo->name;
@@ -107,7 +136,7 @@ class provider implements
             // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
             $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $userinfo->username);
 
-            if ($panoptouser != null && 
+            if ($panoptouser != null &&
                 !\panopto_is_guid_empty($panoptouser->UserId) &&
                 \panopto_user_info_valid($panoptouser->FirstName) &&
                 \panopto_user_info_valid($panoptouser->LastName) &&
@@ -120,11 +149,11 @@ class provider implements
                     'firstname' => $panoptouser->FirstName,
                     'lastname' => $panoptouser->LastName,
                     'email' => $panoptouser->Email
-                ]); 
+                ]);
             }
         }
     }
- 
+
     /**
      * Delete multiple users within a single context.
      *
@@ -136,20 +165,20 @@ class provider implements
         $instancename = \get_config('block_panopto', 'instance_name');
 
         // Iterate through each Panopto server and delete the users from each one.
-        foreach($panoptoservers as $panoptoserver) {
+        foreach ($panoptoservers as $panoptoserver) {
             $currentpanopto = new \panopto_data(null);
             $currentpanopto->servername = $panoptoserver->name;
             $currentpanopto->applicationkey = $panoptoserver->appkey;
 
             $userids = array();
-            foreach($targetusers as $targetuser) {
+            foreach ($targetusers as $targetuser) {
                 // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
                 $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $targetuser->username);
 
                 if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                     // Overwrite all of the existing user's current info with '--Deleted--'
                     $currentpanopto->update_contact_info(
-                        $panoptouser->UserId, 
+                        $panoptouser->UserId,
                         "--Deleted--",
                         "--Deleted--",
                         "--Deleted--",
@@ -160,7 +189,7 @@ class provider implements
         }
     }
 
- 
+
     /**
      * Delete a single user in approved contexts
      *
@@ -176,7 +205,7 @@ class provider implements
         $instancename = \get_config('block_panopto', 'instance_name');
 
         // Iterate through each Panopto server and delete the users from each one.
-        foreach($panoptoservers as $panoptoserver) {
+        foreach ($panoptoservers as $panoptoserver) {
             $currentpanopto = new \panopto_data(null);
             $currentpanopto->servername = $panoptoserver->name;
             $currentpanopto->applicationkey = $panoptoserver->appkey;
@@ -187,7 +216,7 @@ class provider implements
             if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                 // Overwrite all of the existing user's current info with '--Deleted--'
                 $currentpanopto->update_contact_info(
-                    $panoptouser->UserId, 
+                    $panoptouser->UserId,
                     "--Deleted--",
                     "--Deleted--",
                     "--Deleted--",
@@ -197,7 +226,7 @@ class provider implements
         }
     }
 
- 
+
     /**
      * Delete multiple users within a single context.
      *
@@ -214,14 +243,14 @@ class provider implements
             $enrolledusers = \get_enrolled_users($context);
             $instancename = \get_config('block_panopto', 'instance_name');
 
-            foreach($enrolledusers as $enrolleduser) {
+            foreach ($enrolledusers as $enrolleduser) {
                 // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
                 $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $enrolleduser->username);
 
                 if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                     // Overwrite all of the existing user's current info with '--Deleted--'
                     $currentpanopto->update_contact_info(
-                        $panoptouser->UserId, 
+                        $panoptouser->UserId,
                         "--Deleted--",
                         "--Deleted--",
                         "--Deleted--",

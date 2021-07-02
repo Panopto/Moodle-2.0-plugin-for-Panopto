@@ -40,7 +40,7 @@ class ensure_category extends \core\task\adhoc_task {
     public function get_component() {
         return 'block_panopto';
     }
-    
+
     /**
      * the main execution function of the class
      */
@@ -50,7 +50,7 @@ class ensure_category extends \core\task\adhoc_task {
         try {
             $eventdata = (array) $this->get_custom_data();
             $categoryid = $eventdata['categoryid'];
-            
+
             $targetservers = panopto_get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
                 $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
@@ -59,7 +59,7 @@ class ensure_category extends \core\task\adhoc_task {
                 $serverpanopto->ensure_category_branch(false, null);
             }
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }

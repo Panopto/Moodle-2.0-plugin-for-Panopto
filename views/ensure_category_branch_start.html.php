@@ -15,12 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the template used to display when we begin processing 
+ * the template used to display when we begin processing
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 ?>
 
 <div class='block_panopto'>
@@ -33,10 +34,9 @@
                 <div class='value'><?php echo $branchinfo['targetserver'] ?></div>
                 <div class='attribute'><?php echo get_string('attribute_target_branch_leaf', 'block_panopto') ?></div>
                 <div class='value'><?php echo $branchinfo['categoryname'] ?></div>
-            <?php
+                <?php
             } else {
             ?>
                 <div class='errorMessage'><?php echo get_string('error_invalid_category_information', 'block_panopto') ?></div>
-            <?php
+                <?php
             }
-            ?>

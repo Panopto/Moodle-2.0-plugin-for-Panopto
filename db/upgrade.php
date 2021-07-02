@@ -294,7 +294,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $categorymaptable->addKey($mappingkey);
             $dbman->create_table($categorymaptable);
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2019070100, 'panopto');
     }
@@ -311,7 +311,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         if (get_config('block_panopto', 'prefix_new_folder_names')) {
             unset_config('prefix_new_folder_names', 'block_panopto');
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2020072736, 'panopto');
     }
@@ -372,7 +372,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         } else {
             return false;
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2021050404, 'panopto');
     }

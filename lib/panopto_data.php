@@ -92,7 +92,7 @@ class panopto_data {
     public $uname;
 
     /**
-     * @var string $currentcoursename The name of the current course in Panopto folder name format 
+     * @var string $currentcoursename The name of the current course in Panopto folder name format
      */
     public $currentcoursename;
 
@@ -112,7 +112,7 @@ class panopto_data {
     public static $requiredpanoptoversion = '5.4.0';
 
     /**
-     * @var string $unprovisionrequiredpanoptoversion The UnprovisionExternalCourse endpoint was only added in 7.0.0 so 
+     * @var string $unprovisionrequiredpanoptoversion The UnprovisionExternalCourse endpoint was only added in 7.0.0 so
      * anyone using an older Panopto server should not be able to attempt to use this endpoint.
      */
     public static $unprovisionrequiredpanoptoversion = '7.0.0';
@@ -129,7 +129,7 @@ class panopto_data {
     }
     /**
      * @return returns an array of possible values for the Panopt folder name style
-     */                    
+     */
     public static function getpossibleprovisiontypes() {
         return array(
             'off' => get_string('autoprovision_off', 'block_panopto'),
@@ -183,7 +183,7 @@ class panopto_data {
         } else {
             $username = 'guest';
         }
-        
+
         $this->uname = $username;
     }
 
@@ -364,18 +364,18 @@ class panopto_data {
                 $courseinfo->viewers = array();
                 $courseinfo->creators = array();
                 $courseinfo->publishers = array();
-                
+
                 // sync every user enrolled in the course
                 foreach ($enrolledusers as $enrolleduser) {
                     $userrole = self::get_role_from_context($coursecontext, $enrolleduser->id);
-                    $panoptousername =  $this->instancename . '\\' . $enrolleduser->username;
+                    $panoptousername = $this->instancename . '\\' . $enrolleduser->username;
 
-                    if(strpos($userrole, 'Publisher') !== FALSE) {
+                    if (strpos($userrole, 'Publisher') !== false) {
                         $courseinfo->publishers[] = $panoptousername;
-                        if(strpos($userrole, 'Creator') !== FALSE) {
+                        if (strpos($userrole, 'Creator') !== false) {
                             $courseinfo->creators[] = $panoptousername;
                         }
-                    } else if(strpos($userrole, 'Creator') !== FALSE) {
+                    } else if (strpos($userrole, 'Creator') !== false) {
                         $courseinfo->creators[] = $panoptousername;
                     } else {
                         $courseinfo->viewers[] = $panoptousername;
@@ -442,11 +442,11 @@ class panopto_data {
         global $CFG, $USER, $DB;
 
         $this->ensure_auth_manager();
-        
+
         $activepanoptoserverversion = $this->authmanager->get_server_version();
         $hasvalidpanoptoversion = version_compare(
-            $activepanoptoserverversion, 
-            self::$unprovisionrequiredpanoptoversion, 
+            $activepanoptoserverversion,
+            self::$unprovisionrequiredpanoptoversion,
             '>='
         );
 
@@ -464,7 +464,7 @@ class panopto_data {
                     );
                 }
             } catch (Exception $e) {
-                self::print_log(print_r($e->getMessage(), true));
+                self::print_log($e->getMessage());
                 return false;
             }
 
@@ -472,7 +472,7 @@ class panopto_data {
             self::delete_panopto_relation($this->moodlecourseid, true);
             return true;
         }
-     }
+    }
 
     /**
      *  Fetch course name and membership info from DB in preparation for provisioning operation.
@@ -499,16 +499,15 @@ class panopto_data {
             $provisioninginfo->sessiongroupid = $this->sessiongroupid;
             $provisioninginfo->fullname = $mappedpanoptocourse->Name;
 
-        } 
-        else if (isset($mappedpanoptocourse) && 
-                 isset($mappedpanoptocourse->noaccess) && 
+        } else if (isset($mappedpanoptocourse) &&
+                 isset($mappedpanoptocourse->noaccess) &&
                  $mappedpanoptocourse->noaccess == true) {
 
             $provisioninginfo->accesserror = true;
             return $provisioninginfo;
         } else {
-            if (isset($mappedpanoptocourse) && 
-                isset($mappedpanoptocourse->notfound) && 
+            if (isset($mappedpanoptocourse) &&
+                isset($mappedpanoptocourse->notfound) &&
                 $mappedpanoptocourse->notfound == true) {
 
                 // If we had a sessiongroupid set from a previous folder, but that folder was not found on Panopto.
@@ -530,7 +529,7 @@ class panopto_data {
                 $provisioninginfo->longname = $coursenameinfo->fullname;
 
                 $provisioninginfo->fullname = $this->get_new_folder_name(
-                    $provisioninginfo->shortname, 
+                    $provisioninginfo->shortname,
                     $provisioninginfo->longname
                 );
             }
@@ -551,23 +550,23 @@ class panopto_data {
         return $this->sessionmanager->update_folder_name($this->sessiongroupid, $this->currentcoursename);
     }
 
-    /** 
+    /**
      * Attempts to map the externalId(moodle course Id) to the currently assigned Panopto folder.
      * A properly mapped externalId is necessary for most non-plugin LTI based workflows so we need to make sure
      *   this is kept up-to-date when a user custom maps a new folder to the course.
-     */ 
+     */
     public function update_folder_external_id_with_provider() {
         $this->ensure_session_manager();
         return $this->sessionmanager->update_folder_external_id_with_provider(
-            $this->sessiongroupid, 
-            $this->moodlecourseid, 
+            $this->sessiongroupid,
+            $this->moodlecourseid,
             $this->instancename
         );
     }
 
-    /** 
-     * Generates the name for a Panopto folder depending on the course name and chosen folder name style 
-     */ 
+    /**
+     * Generates the name for a Panopto folder depending on the course name and chosen folder name style
+     */
     public function get_new_folder_name($shortname, $longname) {
         global $DB;
 
@@ -618,7 +617,7 @@ class panopto_data {
      */
     public function init_and_sync_import($newimportid, $importresults = array(), $handledimports = array()) {
 
-        // If we are importing a nested child make sure we have not already imported 
+        // If we are importing a nested child make sure we have not already imported
         if (in_array($newimportid, $handledimports)) {
             return $importresults;
         } else {
@@ -650,9 +649,9 @@ class panopto_data {
                 $importpanopto->sessiongroupid
             );
             $importresult->importedcourseid = $newimportid;
-            $importresults[] = $importresult; 
+            $importresults[] = $importresult;
 
-            // We need to make sure this course gets access to anything the course it imported had access to. 
+            // We need to make sure this course gets access to anything the course it imported had access to.
             $nestedimports = self::get_import_list($newimportid);
             foreach ($nestedimports as $nestedimportid) {
                 $importresults = $this->init_and_sync_import($nestedimportid, $importresults, $handledimports);
@@ -680,7 +679,7 @@ class panopto_data {
             $provisioninginfo = $this->get_provisioning_info();
             $ret = $this->sessionmanager->get_folders_by_external_id($provisioninginfo->externalcourseid);
         }
-        
+
         if (!$ret || empty($ret) || isset($ret->noaccess) || !empty($ret->errormessage)) {
             // Update permissions so user can see everything they should.
             $this->sync_external_user($USER->id);
@@ -719,7 +718,7 @@ class panopto_data {
      *
      */
     public function get_folders_by_id_no_sync() {
-        
+
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
 
@@ -741,7 +740,6 @@ class panopto_data {
         global $USER;
         $ret = false;
 
-
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);
 
@@ -759,7 +757,6 @@ class panopto_data {
     public function get_creator_folders_list() {
         global $USER;
         $ret = false;
-
 
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);
@@ -947,7 +944,7 @@ class panopto_data {
      */
     public function delete_users_from_panopto($userids) {
         global $USER;
-        
+
         if (!empty($this->servername) && !empty($this->applicationkey)) {
             $this->ensure_user_manager($USER->username);
         }
@@ -967,7 +964,7 @@ class panopto_data {
      */
     public function update_contact_info($userid, $firstname, $lastname, $email, $sendemailnotifications) {
         global $USER;
-        
+
         if (!empty($this->servername) && !empty($this->applicationkey)) {
             $this->ensure_user_manager($USER->username);
         }
@@ -975,7 +972,7 @@ class panopto_data {
         $result = $this->usermanager->update_contact_info(
             $userid,
             $firstname,
-            $lastname, 
+            $lastname,
             $email,
             $sendemailnotifications
         );
@@ -1324,8 +1321,8 @@ class panopto_data {
     }
 
     public function has_valid_panopto() {
-        return isset($this->sessiongroupid) && !empty($this->sessiongroupid) && 
-               isset($this->servername) && !empty($this->servername) && 
+        return isset($this->sessiongroupid) && !empty($this->sessiongroupid) &&
+               isset($this->servername) && !empty($this->servername) &&
                isset($this->applicationkey) && !empty($this->applicationkey);
     }
 
@@ -1387,7 +1384,7 @@ class panopto_data {
         // Extract the existing capabilities that have been assigned for context, role and capability.
         foreach ($roles as $key => $roleid) {
             // Only query the DB if $roleid is not null
-            if ($roleid && $DB->record_exists('role_capabilities', array('contextid'=>$context->id, 'roleid'=>$roleid, 'capability'=>$capability))) {
+            if ($roleid && $DB->record_exists('role_capabilities', array('contextid' => $context->id, 'roleid' => $roleid, 'capability' => $capability))) {
                 $existing[$roleid] = $capability;
             }
         }
@@ -1513,15 +1510,17 @@ class panopto_data {
             if (get_config('block_panopto', 'print_log_to_file')) {
                 $currenttime = time();
                 file_put_contents(
-                    $CFG->dirroot . '/PanoptoLogs.txt', date("Y-m-d-h:i:sA", $currenttime) . ": " . $logmessage . "\n", 
+                    $CFG->dirroot . '/PanoptoLogs.txt', date("Y-m-d-h:i:sA", $currenttime) . ": " . $logmessage . "\n",
                     FILE_APPEND
                 );
             } else {
-                error_log($logmessage);
+                debugging($logmessage);
 
                 // These flush's are needed for longer processes like the Moodle upgrade process and import process.
 
-                // If the oblength are false then there is no active outbut buffer, if we call ob_flush without an output buffer (e.g. from the cli) it will spit out an error. This doesn't break the execution of the script, but it's ugly and a lot of bloat.
+                // If the oblength are false then there is no active outbut buffer, if we call ob_flush without an output buffer
+                // (e.g. from the cli) it will spit out an error. This doesn't break the execution of the script,
+                // but it's ugly and a lot of bloat.
                 $obstatus = ob_get_status();
                 if (isset($obstatus) && !empty($obstatus)) {
                     ob_flush();

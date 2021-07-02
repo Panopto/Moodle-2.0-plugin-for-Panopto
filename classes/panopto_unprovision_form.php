@@ -39,7 +39,7 @@ class panopto_unprovision_form extends moodleform {
         global $DB;
 
         $mform = & $this->_form;
-        
+
         // Get all categories with no children (all leaf nodes)
         $coursesraw = $DB->get_records_sql(
             'SELECT id, shortname, fullname FROM {course} WHERE id IN (SELECT moodleid FROM {block_panopto_foldermap})'

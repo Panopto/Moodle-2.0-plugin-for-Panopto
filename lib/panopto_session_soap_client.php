@@ -93,7 +93,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
 
     // Possibly unneeded since Moodle won't support multiple folders without behavior change.
     public function add_folder($foldername, $parentguids = null, $ispublic = false) {
-        
+
         if (!isset($this->sessionmanagementserviceadd)) {
             $this->sessionmanagementserviceadd = new SessionManagementServiceAdd($this->serviceparams);
         }
@@ -114,13 +114,13 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
     }
 
-    /* 
-     * This function wraps the API call to unprovision a course from Panopto 
+    /*
+     * This function wraps the API call to unprovision a course from Panopto
      *
      * @param int $externalid string the externalId we are finding in Panopto to unmap
-     */ 
+     */
     public function unprovision_external_course($externalid) {
-        
+
         if (!isset($this->sessionmanagementserviceunprovision)) {
             $this->sessionmanagementserviceunprovision = new SessionManagementServiceUnprovision($this->serviceparams);
         }
@@ -129,7 +129,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $this->authparam,
             $externalid
         );
-        
+
         if ($this->sessionmanagementserviceunprovision->UnprovisionExternalCourse($unprovisionexternalcourseparams)) {
             return  $this->sessionmanagementserviceunprovision->getResult()->UnprovisionExternalCourseResult;
         } else {
@@ -140,7 +140,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function provision_external_course_with_roles($fullname, $externalcourseid) {
-        
+
         if (!isset($this->sessionmanagementserviceprovision)) {
             $this->sessionmanagementserviceprovision = new SessionManagementServiceProvision($this->serviceparams);
         }
@@ -170,7 +170,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function set_external_course_access_for_roles($fullname, $externalcourseid, $folderids) {
-        
+
         if (!isset($this->sessionmanagementserviceset)) {
             $this->sessionmanagementserviceset = new SessionManagementServiceSet($this->serviceparams);
         }
@@ -208,7 +208,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function set_copied_external_course_access_for_roles($fullname, $externalcourseid, $folderids) {
-        
+
         if (!isset($this->sessionmanagementserviceset)) {
             $this->sessionmanagementserviceset = new SessionManagementServiceSet($this->serviceparams);
         }
@@ -245,7 +245,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function get_folders_by_id($folderids) {
-        
+
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -268,7 +268,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function get_folders_by_external_id($folderids) {
-        
+
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -294,11 +294,11 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
     }
 
-    /** 
+    /**
      * Attempts to get all folders the user has creator access to.
-     */ 
+     */
     public function get_creator_folders_list() {
-        
+
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -378,11 +378,11 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
     }
 
-    /** 
+    /**
      * Attempts to get all folders the user has access to.
-     */ 
+     */
     public function get_folders_list() {
-        
+
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -463,7 +463,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function get_session_list($folderid, $sessionshavespecificorder) {
-        
+
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -511,14 +511,14 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function ensure_category_branch($categorybranchinfo) {
-        
+
         if (!isset($this->sessionmanagementserviceensure)) {
             $this->sessionmanagementserviceensure = new SessionManagementServiceEnsure($this->serviceparams);
         }
 
         $brancharrayofcategoryinfos = new SessionManagementStructArrayOfExternalHierarchyInfo($categorybranchinfo);
         $ensurecategorybranchparams = new SessionManagementStructEnsureExternalHierarchyBranch(
-            $this->authparam, 
+            $this->authparam,
             $brancharrayofcategoryinfos
         );
 
@@ -532,14 +532,14 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function update_folder_parent($folderid, $newparentid) {
-        
+
         if (!isset($this->sessionmanagementserviceupdate)) {
             $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
         }
 
         $updatefolderparentparams = new SessionManagementStructUpdateFolderParent(
-            $this->authparam, 
-            $folderid, 
+            $this->authparam,
+            $folderid,
             $newparentid
         );
 
@@ -553,14 +553,14 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function update_folder_external_id_with_provider($folderid, $externalid, $providername) {
-        
+
         if (!isset($this->sessionmanagementserviceupdate)) {
             $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
         }
 
         $updatefolderparams = new SessionManagementStructUpdateFolderExternalIdWithProvider(
-            $this->authparam, 
-            $folderid, 
+            $this->authparam,
+            $folderid,
             $externalid,
             $providername
         );
@@ -575,14 +575,14 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     }
 
     public function update_folder_name($folderid, $newname) {
-        
+
         if (!isset($this->sessionmanagementserviceupdate)) {
             $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
         }
 
         $updatefoldernameparams = new SessionManagementStructUpdateFolderName(
-            $this->authparam, 
-            $folderid, 
+            $this->authparam,
+            $folderid,
             $newname
         );
 
@@ -613,8 +613,6 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     private function handle_error($lasterror) {
         $ret = new stdClass;
         $ret->errormessage = $lasterror->getMessage();
-        
-        
 
         if (!empty($ret->errormessage)) {
             if (strpos($ret->errormessage, 'not found') !== false) {
@@ -624,10 +622,10 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             if (strpos($ret->errormessage, 'not have access') !== false) {
                 $ret->noaccess = true;
             }
-            
+
             \panopto_data::print_log($ret->errormessage);
         } else {
-            \panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(var_export($lasterror, true));
         }
 
         return $ret;

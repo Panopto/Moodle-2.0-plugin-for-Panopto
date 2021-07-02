@@ -23,10 +23,7 @@
  */
 
 define('AJAX_SCRIPT', true);
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
@@ -37,9 +34,9 @@ try {
     require_sesskey();
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
-    
+
     $content = new stdClass;
-    
+
     // Close the session so that the users other tabs in the same session are not blocked.
     \core\session\manager::write_close();
     $content->text = '';
@@ -50,13 +47,13 @@ try {
 
     $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
     $usercanprovision = $panoptodata->can_user_provision($courseid);
-    
-    if ((empty($panoptodata->servername) || 
-        empty($panoptodata->instancename) || 
+
+    if ((empty($panoptodata->servername) ||
+        empty($panoptodata->instancename) ||
         empty($panoptodata->applicationkey)) &&
         $usercanprovision &&
         ($allowautoprovision == 'onblockview')) {
-        
+
         $task = new \block_panopto\task\provision_course();
         $task->set_custom_data(array(
             'courseid' => $courseid
@@ -108,12 +105,10 @@ try {
                 if (isset($courseinfo->noaccess) && $courseinfo->noaccess == true) {
                     // The user did not have access to the Panopto content.
                     $content->text .= "<span class='error'>" . get_string('no_access', 'block_panopto') . '</span>';
-                } 
-                else if (!empty($courseinfo->errormessage)) { 
-                    // We failed for some other reason, display the error. 
+                } else if (!empty($courseinfo->errormessage)) {
+                    // We failed for some other reason, display the error.
                     $content->text .= "<span class='error'>" . $courseinfo->errormessage . '</span>';
-                } 
-                else {
+                } else {
                     // SSO form passes instance name in POST to keep URLs portable.
                     $content->text .= "<form name='SSO' method='post'>" .
                         "<input type='hidden' name='instance' value='$panoptodata->instancename' /></form>";

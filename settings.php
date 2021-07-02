@@ -321,7 +321,7 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $categorystructurelink = '<a id="panopto_build_category_structure_btn" href="' . $CFG->wwwroot . 
+    $categorystructurelink = '<a id="panopto_build_category_structure_btn" href="' . $CFG->wwwroot .
         '/blocks/panopto/build_category_structure.php">' .
         get_string('block_global_build_category_structure', 'block_panopto') . '</a>';
 

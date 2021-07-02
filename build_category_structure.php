@@ -21,10 +21,7 @@
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/classes/panopto_build_category_structure_form.php');
@@ -124,7 +121,7 @@ if ($mform->is_cancelled()) {
 
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
     } else {
-       $mform->display(); 
+        $mform->display();
     }
 
     echo $OUTPUT->footer();
