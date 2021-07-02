@@ -39,8 +39,6 @@ class sync_user_login extends \core\task\adhoc_task {
      * the main execution function of the class
      */
     public function execute() {
-        global $DB;
-
         try {
             $eventdata = (array) $this->get_custom_data();
 

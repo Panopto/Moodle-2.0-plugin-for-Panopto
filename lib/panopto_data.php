@@ -405,12 +405,10 @@ class panopto_data {
                     if (isset($targetcategory) && !empty($targetcategory)) {
                         $categorydata = new \panopto_category_data($targetcategory, $this->servername, $this->applicationkey);
 
-                        $newcategories = $categorydata->ensure_category_branch(false, $this);
+                        $categorydata->ensure_category_branch(false, $this);
                     }
                 }
             } else {
-
-                $provisionresponse = $courseinfo;
                 // Give the user some basic info they can use to debug or send to AE.
                 $courseinfo->moodlecourseid = $this->moodlecourseid;
                 $courseinfo->servername = $this->servername;
@@ -439,8 +437,6 @@ class panopto_data {
      *
      */
     public function unprovision_course() {
-        global $CFG, $USER, $DB;
-
         $this->ensure_auth_manager();
 
         $activepanoptoserverversion = $this->authmanager->get_server_version();
@@ -773,7 +769,7 @@ class panopto_data {
      *
      */
     public function sync_external_user($userid) {
-        global $DB, $CFG;
+        global $DB;
 
         self::print_log_verbose(get_string('attempt_sync_user', 'block_panopto', $userid));
         self::print_log_verbose(get_string('attempt_sync_user_server', 'block_panopto', $this->servername));
@@ -782,8 +778,6 @@ class panopto_data {
 
         // Only sync if we find an existing user with the given id.
         if (isset($userinfo) && ($userinfo !== false)) {
-            $instancename = get_config('block_panopto', 'instance_name');
-
             $currentcourses = enrol_get_users_courses($userid, true);
 
             // Go through each course.
@@ -1382,7 +1376,7 @@ class panopto_data {
         $existing = array();
 
         // Extract the existing capabilities that have been assigned for context, role and capability.
-        foreach ($roles as $key => $roleid) {
+        foreach ($roles as $roleid) {
             // Only query the DB if $roleid is not null
             if ($roleid && $DB->record_exists('role_capabilities', array('contextid' => $context->id, 'roleid' => $roleid, 'capability' => $capability))) {
                 $existing[$roleid] = $capability;

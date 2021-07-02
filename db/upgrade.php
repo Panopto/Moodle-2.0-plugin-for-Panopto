@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion the previous version Panopto is being upgraded from
  */
 function xmldb_block_panopto_upgrade($oldversion = 0) {
-    global $CFG, $DB, $USER;
+    global $CFG, $DB;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014121502) {

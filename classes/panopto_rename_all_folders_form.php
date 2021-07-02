@@ -41,10 +41,6 @@ class panopto_rename_all_folders_form extends moodleform {
      * Defines a Panopto bulk rename folders form
      */
     public function definition() {
-        global $DB;
-
-        $mform = & $this->_form;
-
         $this->add_action_buttons(true, get_string('bulk_rename_start_button', 'block_panopto'));
     }
 }

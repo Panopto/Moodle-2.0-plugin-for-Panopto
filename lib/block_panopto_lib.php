@@ -232,7 +232,6 @@ function panopto_get_app_key($panoptoservername) {
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
-        $hasservername = isset($thisservername) && !empty($thisservername);
         if ($thisservername === $panoptoservername) {
             return $thisappkey;
         }
@@ -347,7 +346,6 @@ function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
  *  and maps all roles that are currently set as publishers to have the proper capability
  */
 function panopto_update_system_publishers() {
-    global $DB;
     $capability = 'block/panopto:provision_aspublisher';
     $systemcontext = context_system::instance();
     $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);

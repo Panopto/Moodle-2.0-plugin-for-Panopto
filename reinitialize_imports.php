@@ -42,10 +42,6 @@ class panopto_reinitialize_imports_form extends moodleform {
      * Defines a Panopto reinitialize import form
      */
     public function definition() {
-        global $DB;
-
-        $mform = & $this->_form;
-
         $this->add_action_buttons(true, get_string('begin_reinitializing_imports', 'block_panopto'));
     }
 
@@ -90,7 +86,7 @@ function reinitialize_all_imports() {
 
         $targetpanopto = $coursepanoptoarray[$courseimport->target_moodle_id];
         $targetpanoptodata = null;
-        $importresult = null;
+        $importresults = array();
 
         if ($targetpanopto !== panopto_reinitialize::NO_COURSE_EXISTS &&
             $targetpanopto !== panopto_reinitialize::INVALID_PANOPTO_DATA) {

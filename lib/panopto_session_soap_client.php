@@ -284,7 +284,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $folderidlist
         );
 
-        if ($this->sessionmanagementserviceget->GetFoldersByExternalId()) {
+        if ($this->sessionmanagementserviceget->GetFoldersByExternalId($getfolderparams)) {
             $retobj = $this->sessionmanagementserviceget->getResult();
             return $retobj->GetFoldersByExternalIdResult->Folder[0];
         } else {

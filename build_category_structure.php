@@ -67,8 +67,6 @@ require_login();
  * The category structure process workhorse funciton
  */
 function build_category_structure($selectedserver, $selectedkey) {
-    global $DB;
-
     $defaultmaxtime = ini_get('max_execution_time');
 
     $twohoursinseconds = 7200;
