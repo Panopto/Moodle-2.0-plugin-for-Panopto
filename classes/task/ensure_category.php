@@ -50,8 +50,6 @@ class ensure_category extends \core\task\adhoc_task {
      * The main execution function of the class
      */
     public function execute() {
-        global $DB;
-
         try {
             $eventdata = (array) $this->get_custom_data();
             $categoryid = $eventdata['categoryid'];

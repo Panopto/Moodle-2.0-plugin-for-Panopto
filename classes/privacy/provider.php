@@ -182,7 +182,6 @@ class provider implements
             $currentpanopto->servername = $panoptoserver->name;
             $currentpanopto->applicationkey = $panoptoserver->appkey;
 
-            $userids = array();
             foreach ($targetusers as $targetuser) {
                 // Search for user in panopto, if they exist then export the below data, if they do not exist then skip.
                 $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $targetuser->username);

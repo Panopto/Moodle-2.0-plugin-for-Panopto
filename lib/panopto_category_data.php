@@ -293,7 +293,6 @@ class panopto_category_data {
      * @param object $leafcoursedata course data
      */
     private function save_category_data_to_table($categorybranchdata, $usehtmloutput, $leafcoursedata) {
-        global $DB;
         $row = (object) array(
             'category_id' => null,
             'panopto_id' => null,

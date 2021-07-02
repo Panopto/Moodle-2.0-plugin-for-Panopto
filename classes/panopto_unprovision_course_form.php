@@ -27,11 +27,6 @@ class panopto_unprovision_course_form extends moodleform {
      * Defines a Panopto unprovision form
      */
     public function definition() {
-
-        global $DB, $aserverarray;
-
-        $mform = & $this->_form;
-
         $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
     }
 }

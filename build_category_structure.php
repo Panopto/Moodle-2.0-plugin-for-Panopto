@@ -70,8 +70,6 @@ require_login();
  * @param string $selectedkey selected key
  */
 function build_category_structure($selectedserver, $selectedkey) {
-    global $DB;
-
     $defaultmaxtime = ini_get('max_execution_time');
 
     $twohoursinseconds = 7200;

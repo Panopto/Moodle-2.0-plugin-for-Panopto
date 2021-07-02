@@ -48,7 +48,6 @@ class panoptoblock_lti_utility {
             $targetservername = get_config('block_panopto', 'automatic_operation_target_server');
         }
 
-        $tooltypes = [];
         foreach ($ltitooltypes as $type) {
             $type->config = lti_get_config(
                 (object)[

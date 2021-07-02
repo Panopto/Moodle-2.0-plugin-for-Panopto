@@ -84,10 +84,7 @@ class block_panopto_edit_form extends block_edit_form {
 
             $currentcourseroles = role_fix_names($currentcourseroles, $context, ROLENAME_ALIAS, true);
 
-            while ($role = current($currentcourseroles)) {
-                $rolearray[key($currentcourseroles)] = $currentcourseroles[key($currentcourseroles)];
-                next($currentcourseroles);
-            }
+            $rolearray = array_filter($currentcourseroles);
 
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
             $mform->addHelpButton('rolemapheader', 'role_map_header', 'block_panopto');
