@@ -20,6 +20,8 @@
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir . '/formslib.php');
 
 class panopto_build_category_structure_form extends moodleform {
@@ -39,12 +41,11 @@ class panopto_build_category_structure_form extends moodleform {
      */
     public function definition() {
 
-        global $DB;
         global $aserverarray;
 
         $mform = & $this->_form;
 
-        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
         $mform->addHelpButton('servers', 'select_server', 'block_panopto');
 
         $this->add_action_buttons(true, get_string('begin_building_category_structure', 'block_panopto'));

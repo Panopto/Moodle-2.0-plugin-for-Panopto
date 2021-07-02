@@ -20,6 +20,8 @@
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir . '/formslib.php');
 
 class panopto_provision_form extends moodleform {
@@ -53,7 +55,7 @@ class panopto_provision_form extends moodleform {
         }
         asort($courses);
 
-        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
         $mform->addHelpButton('servers', 'select_server', 'block_panopto');
 
         $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);

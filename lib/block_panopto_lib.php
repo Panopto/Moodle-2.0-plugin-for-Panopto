@@ -232,12 +232,11 @@ function panopto_get_app_key($panoptoservername) {
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
-        $hasservername = isset($thisservername) && !empty($thisservername);
         if ($thisservername === $panoptoservername) {
             return $thisappkey;
         }
     }
-    
+
     return null;
 }
 
@@ -303,15 +302,15 @@ function panopto_is_string_empty($name) {
  */
 function panopto_is_guid_empty($guidstring) {
     // Assuming the guid is valid
-    $retVal = false;
+    $retval = false;
     $val = array_sum(explode("-", $guidstring));
 
     if ($val == 0) {
         // Guid is empty
-        $retVal = true;
+        $retval = true;
     }
 
-    return $retVal;
+    return $retval;
 }
 
 /**
@@ -321,14 +320,14 @@ function panopto_is_guid_empty($guidstring) {
  */
 function panopto_user_info_valid($userinfostring) {
     // Assuming the guid is valid
-    $retVal = true;
+    $retval = true;
 
     if (strcmp($userinfostring, '--Deleted--') === 0) {
         // Guid is empty
-        $retVal = false;
+        $retval = false;
     }
 
-    return $retVal;
+    return $retval;
 }
 
 function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
@@ -339,15 +338,14 @@ function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
         INNER JOIN {role_context_levels} rcl ON (rcl.contextlevel = :targetcontextlevel AND rcl.roleid = r.id)
         LEFT JOIN {role_names} rn ON (rn.contextid = :targetcontext AND rn.roleid = r.id)
         ORDER BY r.sortorder ASC";
-    return $DB->get_records_sql($sql, array('targetcontext'=>$targetcontext->id, 'targetcontextlevel'=>$targetcontext->contextlevel));
+    return $DB->get_records_sql($sql, array('targetcontext' => $targetcontext->id, 'targetcontextlevel' => $targetcontext->contextlevel));
 }
 
 /**
- * Unsets all system publishers that are not currently mapped 
+ * Unsets all system publishers that are not currently mapped
  *  and maps all roles that are currently set as publishers to have the proper capability
  */
 function panopto_update_system_publishers() {
-    global $DB;
     $capability = 'block/panopto:provision_aspublisher';
     $systemcontext = context_system::instance();
     $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);
@@ -355,8 +353,8 @@ function panopto_update_system_publishers() {
     $publishersystemroles = explode(',', $publisherrolesstring);
     $publisherprocessed = false;
 
-    // Remove the system publisher capability from all old publishers. 
-    foreach($systemrolearray as $possiblesystempublisher) {
+    // Remove the system publisher capability from all old publishers.
+    foreach ($systemrolearray as $possiblesystempublisher) {
         $targetname = !empty($possiblesystempublisher->name) ? $possiblesystempublisher->name : $possiblesystempublisher->shortname;
         if (!in_array($targetname, $publishersystemroles)) {
             $publisherprocessed = true;
@@ -366,8 +364,8 @@ function panopto_update_system_publishers() {
 
     // Build and process new/old changes to capabilities to roles and capabilities.
     $publisherprocessed = \panopto_data::build_and_assign_context_capability_to_roles(
-        $systemcontext, 
-        $publishersystemroles, 
+        $systemcontext,
+        $publishersystemroles,
         $capability
     ) || $publisherprocessed;
 

@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion the previous version Panopto is being upgraded from
  */
 function xmldb_block_panopto_upgrade($oldversion = 0) {
-    global $CFG, $DB, $USER;
+    global $CFG, $DB;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014121502) {
@@ -95,7 +95,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2015012901, 'panopto');
     }
 
-    if ($oldversion <= 2016101227) {
+    if ($oldversion < 2016101227) {
         // Move block global settings to <prefix>_config_plugin table.
         // First, move each server configuration. We are not relying here on
         // block_panopto_server_number to determine number of servers, as there
@@ -294,7 +294,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $categorymaptable->addKey($mappingkey);
             $dbman->create_table($categorymaptable);
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2019070100, 'panopto');
     }
@@ -311,7 +311,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         if (get_config('block_panopto', 'prefix_new_folder_names')) {
             unset_config('prefix_new_folder_names', 'block_panopto');
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2020072736, 'panopto');
     }
@@ -372,7 +372,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         } else {
             return false;
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2021050404, 'panopto');
     }

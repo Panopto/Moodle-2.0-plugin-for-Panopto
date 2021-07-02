@@ -31,23 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_configtext_trimmed extends admin_setting_configtext {
-
-    /**
-     * Config text constructor
-     *
-     * @param string $name unique ascii name, either 'mysetting' for settings that in config,
-     *                     or 'myplugin/mysetting' for ones in config_plugins.
-     * @param string $visiblename localised
-     * @param string $description long localised info
-     * @param string $defaultsetting
-     * @param mixed $paramtype int means PARAM_XXX type, string is a allowed format in regex
-     * @param int $size default field size
-     */
-    public function __construct($name, $visiblename, $description, $defaultsetting, $paramtype=PARAM_RAW,
-                                $size=null) {
-        parent::__construct($name, $visiblename, $description, $defaultsetting, $paramtype, $size);
-    }
-
     /**
      * write data to storage
      *

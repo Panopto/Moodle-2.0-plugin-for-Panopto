@@ -108,9 +108,8 @@ class block_panopto extends block_base {
                 $panoptodata->unprovision_course();
             }
 
-
             // Manually overwrite the sessiongroupid on this Panopto_Data instance so we can test provision the attempted new mapping. If the provision fails do not allow it.
-            //  Provision could fail if the user attempts to provision a personal folder.
+            // Provision could fail if the user attempts to provision a personal folder.
             $panoptodata->sessiongroupid = $data->course;
 
             $provisioninginfo = $panoptodata->get_provisioning_info();
@@ -137,7 +136,7 @@ class block_panopto extends block_base {
      * Generate HTML for block contents.
      */
     public function get_content() {
-        global $COURSE, $PAGE;
+        global $COURSE;
 
         if ($this->content !== null) {
             return $this->content;
@@ -152,7 +151,7 @@ class block_panopto extends block_base {
 
         $params = array('id' => self::CONTENTID, 'courseid' => $COURSE->id);
 
-        $PAGE->requires->yui_module('moodle-block_panopto-asyncload',
+        $this->page->requires->yui_module('moodle-block_panopto-asyncload',
                                     'M.block_panopto.asyncload.init',
                                     array($params),
                                     null,
@@ -188,7 +187,7 @@ class block_panopto extends block_base {
                         'var showAllToggle = document.getElementById("showAllToggle");' .
                         'var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");' .
 
-                        'if(hiddenLecturesDiv.style.display == "block") {' .
+                        'if (hiddenLecturesDiv.style.display == "block") {' .
                             'hiddenLecturesDiv.style.display = "none";' .
                             'showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";' .
                         '} else {' .

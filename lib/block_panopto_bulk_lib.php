@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * main library functions for the panoptop block bulk operations. 
+ * main library functions for the panoptop block bulk operations.
  * Warning: These operations can work on many Panopto mappings for many Panopto servers at one time.
  *   Please make sure the user performing this work is an administrator on all Panopto servers to avoid
- *   an access headache.  
+ *   an access headache.
  *
  * @package block_panopto
  * @copyright  Panopto 2020
@@ -52,12 +52,12 @@ function panopto_update_task_progress($currentprogress, $totalitems, $progressst
 
 /**
  * Checks to see if we need to throttle the bulk operation and does so if needed
- * 
+ *
  * @var $numberprocessed the current number of folders processed.
  */
 function panopto_handle_bulk_throttle($numberprocessed) {
     if ($numberprocessed > 0 && $numberprocessed % 50 == 0) {
-        // Put in a minor break between batches to not make API calls too quickly. 
+        // Put in a minor break between batches to not make API calls too quickly.
         sleep(10);
     }
 
@@ -68,16 +68,16 @@ function panopto_handle_bulk_throttle($numberprocessed) {
  * Display the access error in the case the working user does not have the correct Panopto permissions
  *
  * @var $targetuser the Panopto username for the current user (so the customer knows who to make an Admin)
- */ 
+ */
 function panopto_bulk_display_access_error($targetuser) {
     if (!CLI_SCRIPT) {
         include('views/bulk_task_access_error.html.php');
     }
-    
+
     \panopto_data::print_log(
         get_string(
-            'bulk_task_access_error', 
-            'block_panopto', 
+            'bulk_task_access_error',
+            'block_panopto',
             $targetuser
         )
     );
@@ -86,16 +86,16 @@ function panopto_bulk_display_access_error($targetuser) {
 function panopto_bulk_update_progress_bar($percentdone, $steptype) {
 
     $periodstring = '';
-    while(strlen($periodstring) < $percentdone % 4) {
+    while (strlen($periodstring) < $percentdone % 4) {
         $periodstring .= '.';
     }
-    // Javascript for updating the progress bar and information
-    $updatescriptstring = '<script language="javascript">' . 
-        'document.getElementById("panopto-progress-bar-' . $steptype . '").innerHTML="' . 
-        '<div style=\'width:'.$percentdone.'%;background-color: #228B22;z-index:0;\'>&nbsp;</div>' . 
-        '<span style=\'z-index: 1;position: absolute;top: 0px;transform: translateX(-50%);\'>' . 
+    // Javascript for updating the progress bar and information.
+    $updatescriptstring = '<script language="javascript">' .
+        'document.getElementById("panopto-progress-bar-' . $steptype . '").innerHTML="' .
+        '<div style=\'width:'.$percentdone.'%;background-color: #228B22;z-index:0;\'>&nbsp;</div>' .
+        '<span style=\'z-index: 1;position: absolute;top: 0px;transform: translateX(-50%);\'>' .
             $percentdone . '% done ' . $steptype . $periodstring .
-        '</span>"' . 
+        '</span>"' .
     '</script>';
 
     echo $updatescriptstring;
@@ -103,7 +103,7 @@ function panopto_bulk_update_progress_bar($percentdone, $steptype) {
 
 /**
  * This script will process all passed in folders using the passed in callback
- * 
+ *
  * @var $panoptocourseobjects array - all valid mappings ready to process
  * @var $bulktaskname string - the name of the bulk task we are performing on the mappings
  * @var $workercallback string - the name of the callback function we use to process a folder
@@ -126,11 +126,11 @@ function panopto_bulk_process_folders($panoptocourseobjects, $bulktaskname, $wor
 
 /**
  * callback used to bulk reprovision all folders and imports
- * 
+ *
  * @var mappedfolder object the current folder we are provisioning
- */ 
+ */
 function panopto_bulk_reprovision_callback($mappablecourse) {
-    
+
     $provisioningdata = $mappablecourse->provisioninginfo;
     $provisioneddata = $mappablecourse->panopto->provision_course($provisioningdata, true);
 
@@ -146,25 +146,25 @@ function panopto_bulk_reprovision_callback($mappablecourse) {
 
 /**
  * callback used to bulk update all folder names to match course names
- * 
+ *
  * @var mappablecourse object the current folder we are provisioning
- */ 
+ */
 function panopto_bulk_rename_callback($mappablecourse) {
-    // display the name information for the user
-    // provisioninginfo should still contain the original name.
+    // Display the name information for the user.
+    // Note: provisioninginfo should still contain the original name.
     $currentfoldernamecontainer = new stdClass;
     $currentfoldernamecontainer->oldname = $mappablecourse->provisioninginfo->fullname;
     $currentfoldernamecontainer->moodleid = $mappablecourse->panopto->moodlecourseid;
     if ($currentfoldernamecontainer->oldname != $mappablecourse->panopto->get_new_folder_name(null, null)) {
         if ($mappablecourse->panopto->update_folder_name()) {
 
-            // currentcoursename should get updated during the update_folder_name call.
+            // The currentcoursename should get updated during the update_folder_name call.
             $currentfoldernamecontainer->newname = $mappablecourse->panopto->currentcoursename;
 
             \panopto_data::print_log(
                 get_string('bulk_rename_single_success', 'block_panopto', $currentfoldernamecontainer)
             );
-            
+
             if (!CLI_SCRIPT) {
                 include('views/bulk_rename_single_success.html.php');
             }
@@ -177,7 +177,7 @@ function panopto_bulk_rename_callback($mappablecourse) {
             }
         }
     } else {
-        // currentcoursename should get updated during the update_folder_name call.
+        // The currentcoursename should get updated during the update_folder_name call.
         $currentfoldernamecontainer->newname = $mappablecourse->panopto->currentcoursename;
 
         \panopto_data::print_log(
@@ -192,13 +192,13 @@ function panopto_bulk_rename_callback($mappablecourse) {
 
 /**
  * Grabs every mapping existing in the Panopto FolderMap table and checks that the mapping is
- *   still in a good state (e.g. Folder Deleted in Panopto, Course in Moodle doesn't exist 
+ *   still in a good state (e.g. Folder Deleted in Panopto, Course in Moodle doesn't exist
  *   anymore, or any necessary DB fields still exist). Returns an array of Panopto mapping data
- *   for the mappings that are still in a good state or can be recovered by fresh provisining. 
- * 
+ *   for the mappings that are still in a good state or can be recovered by fresh provisining.
+ *
  * @var $currentindex int the current folder row we are on
- * @var $skipimports bool whether or not to process imported folders. 
- */ 
+ * @var $skipimports bool whether or not to process imported folders.
+ */
 function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
     global $DB;
 
@@ -274,7 +274,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
 
                 panopto_bulk_display_access_error($getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
 
-                // If the user does not have access on even one of the folders return nothing. 
+                // If the user does not have access on even one of the folders return nothing.
                 return array();
             }
         } else {
@@ -291,8 +291,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
 
             panopto_bulk_display_access_error($getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
 
-
-            // If the user does not have access on even one of the folders return nothing. 
+            // If the user does not have access on even one of the folders return nothing.
             return array();
         } else {
             if (isset($oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder) &&
@@ -301,7 +300,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                 // The true parameter moves the row to the old_foldermap instead of deleting it.
                 \panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
 
-                //Recreate the default role mappings that were deleted by the above line.
+                // Recreate the default role mappings that were deleted by the above line.
                 $oldpanoptocourse->panopto->check_course_role_mappings();
 
                 // Imports SHOULD still work for this case, so continue to below code.
@@ -312,7 +311,6 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                 foreach ($courseimports as $courseimport) {
                     $importpanopto = new \panopto_data($courseimport);
 
-
                     $existingmoodlecourse = $DB->get_record('course', array('id' => $courseimport));
 
                     $moodlecourseexists = isset($existingmoodlecourse) && $existingmoodlecourse !== false;
@@ -320,7 +318,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                         isset($importpanopto->applicationkey) && !empty($importpanopto->applicationkey);
 
                     // Only perform the actions below if the import is in a valid state, otherwise remove it.
-                    if ($moodlecourseexists && $hasvalidpanoptodata) {  
+                    if ($moodlecourseexists && $hasvalidpanoptodata) {
                         $importpanoptofolder = $importpanopto->get_folders_by_id_no_sync();
 
                         if ($importpanoptofolder == null || (isset($importpanoptofolder->notfound) && $importpanoptofolder->notfound == true)) {
@@ -349,23 +347,23 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
 }
 
 /**
- * Gets all existing mapped panopto folders, verifies the folders existand then renames them 
+ * Gets all existing mapped panopto folders, verifies the folders existand then renames them
  *   to match their mapped course name
  *
  * @param string $params[1] - The index you would like to start with in the rename process.
  * @param string $params[2] - The number of folders you would like to work on this execution.
  */
 function panopto_rename_all_folders($params) {
-    // This can take a very long time if users have many folders
+    // This can take a very long time if users have many folders.
     core_php_time_limit::raise();
 
-    if(!CLI_SCRIPT) {
+    if (!CLI_SCRIPT) {
         include('views/bulk_task_progress_bar.html.php');
     }
 
     panopto_bulk_process_folders(
-        panopto_bulk_sanitize_and_get_mappings($params, true), 
-        get_string('bulk_rename_start_renaming', 'block_panopto'), 
+        panopto_bulk_sanitize_and_get_mappings($params, true),
+        get_string('bulk_rename_start_renaming', 'block_panopto'),
         'panopto_bulk_rename_callback'
     );
 }
@@ -373,21 +371,21 @@ function panopto_rename_all_folders($params) {
 /**
  * This script will reprovision all existing Panopto folders associated with this Moodle site.
  * For users experiencing issues with large amounts of courses the following two parameters can be added to the CLI to batching purposes.
- * 
- * e.g. upgrade_all_folders.php 550 500 
+ *
+ * e.g. upgrade_all_folders.php 550 500
  *   This line will start at folder 550 and will process/upgrade up to folder 1050
  * @param string $params[1] - The index you would like to start with in the upgrade process.
  * @param string $params[2] - The number of folders you would like to work on this execution.
  */
 function panopto_upgrade_all_folders($params) {
-    // This can take a very long time if users have many folders
+    // This can take a very long time if users have many folders.
     core_php_time_limit::raise();
 
     if (!CLI_SCRIPT) {
         include('views/bulk_task_progress_bar.html.php');
     }
 
-    // we do not want to skip imports when bulk reprovisioning all folders. 
+    // We do not want to skip imports when bulk reprovisioning all folders.
     panopto_bulk_process_folders(
         panopto_bulk_sanitize_and_get_mappings($params, false),
         get_string('bulk_reprovision_begin_reprovision', 'block_panopto'),

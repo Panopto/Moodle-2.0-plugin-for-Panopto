@@ -21,10 +21,7 @@
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
@@ -45,10 +42,6 @@ class panopto_reinitialize_imports_form extends moodleform {
      * Defines a Panopto reinitialize import form
      */
     public function definition() {
-        global $DB;
-
-        $mform = & $this->_form;
-
         $this->add_action_buttons(true, get_string('begin_reinitializing_imports', 'block_panopto'));
     }
 
@@ -56,11 +49,13 @@ class panopto_reinitialize_imports_form extends moodleform {
 
 require_login();
 
+abstract class panopto_reinitialize {
+    const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
+    const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
+}
+
 function reinitialize_all_imports() {
     global $DB;
-
-    $NO_COURSE_EXISTS = "NO_COURSE_EXISTS";
-    $INVALID_PANOPTO_DATA = "INVALID_PANOPTO_DATA";
 
     $courseimports = $DB->get_records('block_panopto_importmap');
 
@@ -84,17 +79,17 @@ function reinitialize_all_imports() {
             if ($targetcourseexists && $hasvalidpanoptodata) {
                 $coursepanoptoarray[$courseimport->target_moodle_id] = $targetpanopto;
             } else {
-                $coursepanoptoarray[$courseimport->target_moodle_id] = !$targetcourseexists ? $NO_COURSE_EXISTS : $INVALID_PANOPTO_DATA;
+                $coursepanoptoarray[$courseimport->target_moodle_id] = !$targetcourseexists ? panopto_reinitialize::NO_COURSE_EXISTS : panopto_reinitialize::INVALID_PANOPTO_DATA;
                 \panopto_data::delete_panopto_relation($courseimport->target_moodle_id, true);
             }
         }
 
         $targetpanopto = $coursepanoptoarray[$courseimport->target_moodle_id];
         $targetpanoptodata = null;
-        $importresult = null;
+        $importresults = array();
 
-        if ($targetpanopto !== $NO_COURSE_EXISTS &&
-            $targetpanopto !== $INVALID_PANOPTO_DATA) {
+        if ($targetpanopto !== panopto_reinitialize::NO_COURSE_EXISTS &&
+            $targetpanopto !== panopto_reinitialize::INVALID_PANOPTO_DATA) {
 
             $targetpanoptodata = $targetpanopto->get_provisioning_info();
 

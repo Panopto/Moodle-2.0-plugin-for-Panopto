@@ -39,17 +39,15 @@ class sync_user_login extends \core\task\adhoc_task {
      * the main execution function of the class
      */
     public function execute() {
-        global $DB;
-
         try {
             $eventdata = (array) $this->get_custom_data();
-            
+
             if (empty($eventdata['targetservers'])) {
                 $targetservers = panopto_get_target_panopto_servers();
             } else {
                 $targetservers = $eventdata['targetservers'];
             }
-                        
+
             foreach ($targetservers as $targetserver) {
                 $serverpanopto = new \panopto_data(null);
                 $serverpanopto->applicationkey = $targetserver->appkey;
@@ -59,7 +57,7 @@ class sync_user_login extends \core\task\adhoc_task {
                 $serverpanopto->sync_external_user($eventdata['userid']);
             }
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }

@@ -23,15 +23,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined Moodle internal because it is called from Panopto to authorize login.
+defined('MOODLE_INTERNAL') || die();
 
-/**
- * The auth soap client for Panopto
- *
- * @copyright Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu),
- * Skylar Kelty <S.Kelty@kent.ac.uk>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
@@ -93,7 +86,7 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
         if ($this->authmanagementserviceget->GetServerVersion()) {
             $returnvalue = $this->authmanagementserviceget->getResult()->GetServerVersionResult;
         } else {
-            \panopto_data::print_log(print_r($this->authmanagementserviceget->getLastError(), true));
+            \panopto_data::print_log(var_export($this->authmanagementserviceget->getLastError(), true));
         }
         return $returnvalue;
     }
@@ -122,7 +115,7 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
             $returnvalue = true;
         } else {
             $lasterror = $this->authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
-            \panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(var_export($lasterror, true));
         }
 
         return $returnvalue;

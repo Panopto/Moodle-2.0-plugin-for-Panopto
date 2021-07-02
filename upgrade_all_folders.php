@@ -21,10 +21,7 @@
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/classes/panopto_upgrade_all_folders_form.php');
@@ -66,7 +63,7 @@ echo $OUTPUT->header();
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
 } else if ($mform->get_data()) {
-    // calling this with null parameter should upgrade everything. 
+    // calling this with null parameter should upgrade everything.
     panopto_upgrade_all_folders(null);
 
     echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';

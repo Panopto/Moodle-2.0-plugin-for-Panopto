@@ -24,11 +24,7 @@
 
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
-global $CFG, $USER;
-
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
@@ -37,7 +33,7 @@ $callbackurl = required_param('callbackURL', PARAM_URL);
 $configuredserverarray = panopto_get_configured_panopto_servers();
 
 $callbackverified = false;
-foreach($configuredserverarray as  $possibleserver) {
+foreach ($configuredserverarray as $possibleserver) {
     if (strcasecmp($possibleserver, $servername) == 0) {
         $callbackhost = parse_url($callbackurl, PHP_URL_HOST);
 
@@ -49,7 +45,7 @@ foreach($configuredserverarray as  $possibleserver) {
 }
 
 if ($callbackverified) {
-    if (strpos($callbackurl, 'http%') !== false 
+    if (strpos($callbackurl, 'http%') !== false
      || strpos($callbackurl, 'https%') !== false) {
         $callbackurl = urldecode($callbackurl);
     }

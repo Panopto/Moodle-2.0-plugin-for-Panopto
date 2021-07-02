@@ -27,11 +27,11 @@ class panopto_provision_course_form extends moodleform {
      */
     public function definition() {
 
-        global $DB, $aserverarray;
+        global $aserverarray;
 
         $mform = & $this->_form;
 
-        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
 
         $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
     }

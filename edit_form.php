@@ -61,7 +61,11 @@ class block_panopto_edit_form extends block_edit_form {
             $unprovisionurl = "$CFG->wwwroot/blocks/panopto/unprovision_course_internal.php?id=" . $COURSE->id;
             $unprovisionfrommoodle = get_string('unprovision_from_moodle', 'block_panopto');
             $or = get_string('or', 'block_panopto');
-            $mform->addElement('html', "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>-- $or --<br><br><a href='$provisionurl'>$addtopanopto</a><br><br>-- $or --<br><br>");
+            $html = "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>";
+            $html .= "-- $or --<br><br>";
+            $html .= "<a href='$provisionurl'>$addtopanopto</a><br><br>";
+            $html .= "-- $or --<br><br>";
+            $mform->addElement('html', $html);
 
             $courselist = $panoptodata->get_course_options();
 
@@ -80,10 +84,7 @@ class block_panopto_edit_form extends block_edit_form {
 
             $currentcourseroles = role_fix_names($currentcourseroles, $context, ROLENAME_ALIAS, true);
 
-            while ($role = current($currentcourseroles)) {
-                $rolearray[key($currentcourseroles)] = $currentcourseroles[key($currentcourseroles)];
-                next($currentcourseroles);
-            }
+            $rolearray = array_filter($currentcourseroles);
 
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
             $mform->addHelpButton('rolemapheader', 'role_map_header', 'block_panopto');

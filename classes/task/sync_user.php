@@ -39,8 +39,6 @@ class sync_user extends \core\task\adhoc_task {
      * the main execution function of the class
      */
     public function execute() {
-        global $DB;
-
         try {
             $eventdata = (array) $this->get_custom_data();
             $coursepanopto = new \panopto_data($eventdata['courseid']);
@@ -50,7 +48,7 @@ class sync_user extends \core\task\adhoc_task {
                 $coursepanopto->sync_external_user($eventdata['userid']);
             }
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }
