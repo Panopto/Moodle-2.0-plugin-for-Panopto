@@ -22,10 +22,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die;
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
 
 require_once(dirname(__FILE__) . '/classes/admin/trim_configtext.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');

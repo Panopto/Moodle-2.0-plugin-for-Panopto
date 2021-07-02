@@ -14,11 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
-
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 

@@ -33,24 +33,24 @@
  */
 class PanoptoTimeoutSoapClient extends SoapClient {
     /**
-     * @var int $socket_timeout socket timeout
+     * @var int $sockettimeout socket timeout
      */
-    private $socket_timeout;
+    private $sockettimeout;
 
     /**
-     * @var int $connect_timeout connection timeout
+     * @var int $connecttimeout connection timeout
      */
-    private $connect_timeout;
+    private $connecttimeout;
 
     /**
-     * @var string $proxy_host proxy host
+     * @var string $proxyhost proxy host
      */
-    private $proxy_host;
+    private $proxyhost;
 
     /**
-     * @var int $proxy_port proxy port
+     * @var int $proxyport proxy port
      */
-    private $proxy_port;
+    private $proxyport;
 
     /**
      * @var array $panoptocookies Panopto cookies
@@ -60,49 +60,49 @@ class PanoptoTimeoutSoapClient extends SoapClient {
     /**
      * Set connection timeout
      *
-     * @param int $connect_timeout
+     * @param int $connecttimeout
      */
-    public function __setConnectionTimeout($connect_timeout) {
-        $connect_timeout = intval($connect_timeout);
+    public function set_connection_timeout($connecttimeout) {
+        $connecttimeout = intval($connecttimeout);
 
-        if (!is_null($connect_timeout) && !is_int($connect_timeout)) {
+        if (!is_null($connecttimeout) && !is_int($connecttimeout)) {
             throw new Exception("Invalid connection timeout value");
         }
 
-        $this->connect_timeout = $connect_timeout;
+        $this->connecttimeout = $connecttimeout;
     }
 
     /**
      * Set socket timeout
      *
-     * @param int $socket_timeout
+     * @param int $sockettimeout
      */
-    public function __setSocketTimeout($socket_timeout) {
-        $socket_timeout = intval($socket_timeout);
+    public function set_socket_timeout($sockettimeout) {
+        $sockettimeout = intval($sockettimeout);
 
-        if (!is_null($socket_timeout) && !is_int($socket_timeout)) {
+        if (!is_null($sockettimeout) && !is_int($sockettimeout)) {
             throw new Exception("Invalid socket timeout value");
         }
 
-        $this->socket_timeout = $socket_timeout;
+        $this->sockettimeout = $sockettimeout;
     }
 
     /**
      * Set proxy host
      *
-     * @param string $proxy_host
+     * @param string $proxyhost
      */
-    public function __setProxyHost($proxy_host) {
-        $this->proxy_host = $proxy_host;
+    public function set_proxy_host($proxyhost) {
+        $this->proxyhost = $proxyhost;
     }
 
     /**
      * Set proxy port
      *
-     * @param int $proxy_port
+     * @param int $proxyport
      */
-    public function __setProxyPort($proxy_port) {
-        $this->proxy_port = $proxy_port;
+    public function set_proxy_port($proxyport) {
+        $this->proxyport = $proxyport;
     }
 
     /**
@@ -116,15 +116,15 @@ class PanoptoTimeoutSoapClient extends SoapClient {
      * Create a SOAP request
      *
      * @param string $request XML SOAP request
-     * @param string $location the URL to request
-     * @param string $action the SOAP action
-     * @param int $version the SOAP version
-     * @param bool $one_way determine if response is expected or not
+     * @param string $location The URL to request
+     * @param string $action The SOAP action
+     * @param int $version The SOAP version
+     * @param bool $oneway determine if response is expected or not
      */
-    public function __doRequest($request, $location, $action, $version, $one_way = false) {
-        if (empty($this->socket_timeout) && empty($this->connect_timeout)) {
+    public function do_request($request, $location, $action, $version, $oneway = false) {
+        if (empty($this->sockettimeout) && empty($this->connecttimeout)) {
             // Call via parent because we require no timeout.
-            $response = parent::__doRequest($request, $location, $action, $version, $one_way);
+            $response = parent::__doRequest($request, $location, $action, $version, $oneway);
 
             $lastresponseheaders = $this->__getLastResponseHeaders();
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $lastresponseheaders, $matches);
@@ -144,20 +144,20 @@ class PanoptoTimeoutSoapClient extends SoapClient {
                                               'SoapAction: ' . $action)
             ];
 
-            if (!is_null($this->socket_timeout)) {
-                $options['CURLOPT_TIMEOUT'] = $this->socket_timeout;
+            if (!is_null($this->sockettimeout)) {
+                $options['CURLOPT_TIMEOUT'] = $this->sockettimeout;
             }
 
-            if (!is_null($this->connect_timeout)) {
-                $options['CURLOPT_CONNECTTIMEOUT'] = $this->connect_timeout;
+            if (!is_null($this->connecttimeout)) {
+                $options['CURLOPT_CONNECTTIMEOUT'] = $this->connecttimeout;
             }
 
-            if (!empty($this->proxy_host)) {
-                $options['CURLOPT_PROXY'] = $this->proxy_host;
+            if (!empty($this->proxyhost)) {
+                $options['CURLOPT_PROXY'] = $this->proxyhost;
             }
 
-            if (!empty($this->proxy_port)) {
-                $options['CURLOPT_PROXYPORT'] = $this->proxy_port;
+            if (!empty($this->proxyport)) {
+                $options['CURLOPT_PROXYPORT'] = $this->proxyport;
             }
 
             $response = $curl->post($location, $request, $options);
@@ -181,7 +181,7 @@ class PanoptoTimeoutSoapClient extends SoapClient {
         }
 
         // Return?
-        if (!$one_way) {
+        if (!$oneway) {
             return $response;
         }
     }

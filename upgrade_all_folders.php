@@ -21,10 +21,7 @@
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/classes/panopto_upgrade_all_folders_form.php');

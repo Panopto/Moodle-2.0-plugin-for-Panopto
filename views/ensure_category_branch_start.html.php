@@ -40,4 +40,3 @@ defined('MOODLE_INTERNAL') || die();
                 <div class='errorMessage'><?php echo get_string('error_invalid_category_information', 'block_panopto') ?></div>
                 <?php
             }
-            ?>

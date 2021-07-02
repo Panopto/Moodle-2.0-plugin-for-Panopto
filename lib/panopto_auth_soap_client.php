@@ -23,15 +23,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined Moodle internal because it is called from Panopto to authorize login.
+defined('MOODLE_INTERNAL') || die();
 
-/**
- * The auth soap client for Panopto
- *
- * @copyright Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu),
- * Skylar Kelty <S.Kelty@kent.ac.uk>
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');

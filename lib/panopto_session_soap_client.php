@@ -96,8 +96,9 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $apiuseruserkey
         );
 
-        $this->serviceparams =
-            panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl');
+        $this->serviceparams = panopto_generate_wsdl_service_params(
+            'https://'. $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl'
+        );
     }
 
     /**

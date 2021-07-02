@@ -26,11 +26,7 @@
 
 define('CLI_SCRIPT', true);
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../../../config.php');
-}
-
+require_once(dirname(__FILE__) . '/../../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/../panopto_data.php');

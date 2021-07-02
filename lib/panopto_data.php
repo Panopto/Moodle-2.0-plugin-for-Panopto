@@ -23,11 +23,6 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-if (empty($CFG)) {
-    require_once('../../config.php');
-}
-
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/dmllib.php');
 require_once($CFG->libdir .'/filelib.php');
@@ -1503,7 +1498,7 @@ class panopto_data {
 
                 // Only add a folder to the course options if it is not already mapped to a course on moodle.
                 // Unless its the current course.
-                if (!$DB->get_records('block_panopto_foldermap', array('panopto_id' => $folderinfo->Id)) 
+                if (!$DB->get_records('block_panopto_foldermap', array('panopto_id' => $folderinfo->Id))
                     || ($this->sessiongroupid === $folderinfo->Id)) {
 
                     if ($this->sessiongroupid === $folderinfo->Id) {
@@ -1715,7 +1710,7 @@ class panopto_data {
                     FILE_APPEND
                 );
             } else {
-                error_log($logmessage);
+                debugging($logmessage);
 
                 // These flush's are needed for longer processes like the Moodle upgrade process and import process.
 

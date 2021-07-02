@@ -23,11 +23,6 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
-
 require_once($CFG->libdir . '/dmllib.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/panopto_session_soap_client.php');

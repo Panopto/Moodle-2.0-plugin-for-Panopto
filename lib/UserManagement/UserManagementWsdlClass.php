@@ -226,19 +226,19 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
         }
         
         if(array_key_exists('panopto_socket_timeout', $_arrayOfValues)) {
-            self::$soapClient->__setSocketTimeout($_arrayOfValues['panopto_socket_timeout']);
+            self::$soapClient->set_socket_timeout($_arrayOfValues['panopto_socket_timeout']);
         }
 
         if(array_key_exists('panopto_connection_timeout', $_arrayOfValues)) {
-            self::$soapClient->__setConnectionTimeout($_arrayOfValues['panopto_connection_timeout']);
+            self::$soapClient->set_connection_timeout($_arrayOfValues['panopto_connection_timeout']);
         }
 
         if(array_key_exists('wsdl_proxy_host', $_arrayOfValues)) {
-            self::$soapClient->__setProxyHost($_arrayOfValues['wsdl_proxy_host']);
+            self::$soapClient->set_proxy_host($_arrayOfValues['wsdl_proxy_host']);
         }
 
         if(array_key_exists('wsdl_proxy_port', $_arrayOfValues)) {
-            self::$soapClient->__setProxyPort($_arrayOfValues['wsdl_proxy_port']);
+            self::$soapClient->set_proxy_port($_arrayOfValues['wsdl_proxy_port']);
         }
     }
     /**
@@ -1002,11 +1002,11 @@ class UserManagementSoapClient extends PanoptoTimeoutSoapClient {
      * @param string $version
      * @param int $one_way
      */
-    public function __doRequest ($request, $location, $action, $version, $one_way = 0) {
+    public function do_request($request, $location, $action, $version, $one_way = 0) {
         if (get_config('block_panopto', 'enforce_https_on_wsdl')) {
             $location = str_replace('http://', 'https://', $location);
         }
 
-        return parent::__doRequest($request, $location, $action, $version, $one_way);
+        return parent::do_request($request, $location, $action, $version, $one_way);
     }
 }

@@ -23,10 +23,7 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../../config.php');
-}
+
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 
 /**
