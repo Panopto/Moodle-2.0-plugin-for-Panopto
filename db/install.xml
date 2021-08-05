@@ -33,7 +33,7 @@
         </KEYS>
         <INDEXES>
             <INDEX NAME="mdl_blocpanoimpo_tar_ix" UNIQUE="false" FIELDS="target_moodle_id" COMMENT="index on the import target course id"/>
-            <INDEX NAME="mdl_blocpanoimpo_tar_ix" UNIQUE="false" FIELDS="import_moodle_id" COMMENT="index on the imported course id"/>
+            <INDEX NAME="mdl_blocpanoimpo_imp_ix" UNIQUE="false" FIELDS="import_moodle_id" COMMENT="index on the imported course id"/>
         </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_creatormap" COMMENT="a table that maps Moodle roles to the creator capability when provisioning to Panopto">

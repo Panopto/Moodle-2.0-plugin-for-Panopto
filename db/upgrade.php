@@ -336,7 +336,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         if ($dbman->table_exists($importmaptable)) {
             $targetidindex = new xmldb_index('mdl_blocpanoimpo_tar_ix', XMLDB_INDEX_NOTUNIQUE, array('target_moodle_id'), array());
-            $importidindex = new xmldb_index('mdl_blocpanoimpo_tar_ix', XMLDB_INDEX_NOTUNIQUE, array('import_moodle_id'), array());
+            $importidindex = new xmldb_index('mdl_blocpanoimpo_imp_ix', XMLDB_INDEX_NOTUNIQUE, array('import_moodle_id'), array());
             $dbman->add_index($importmaptable, $targetidindex);
             $dbman->add_index($importmaptable, $importidindex);
         } else {
