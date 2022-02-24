@@ -86,6 +86,13 @@ class SessionManagementStructListFoldersRequest extends SessionManagementWsdlCla
      */
     public $WildcardSearchNameOnly;
     /**
+     * The UnmappedOnly
+     * Meta informations extracted from the WSDL
+     * - minOccurs : 0
+     * @var boolean
+     */
+    public $UnmappedOnly;
+    /**
      * Constructor method for ListFoldersRequest
      * @see parent::__construct()
      * @param SessionManagementStructPagination $_pagination
@@ -94,11 +101,12 @@ class SessionManagementStructListFoldersRequest extends SessionManagementWsdlCla
      * @param SessionManagementEnumFolderSortField $_sortBy
      * @param boolean $_sortIncreasing
      * @param boolean $_wildcardSearchNameOnly
+     * @param boolean $_unmappedOnly
      * @return SessionManagementStructListFoldersRequest
      */
-    public function __construct($_pagination = NULL,$_parentFolderId = NULL,$_publicOnly = NULL,$_sortBy = NULL,$_sortIncreasing = NULL,$_wildcardSearchNameOnly = NULL)
+    public function __construct($_pagination = NULL,$_parentFolderId = NULL,$_publicOnly = NULL,$_sortBy = NULL,$_sortIncreasing = NULL,$_wildcardSearchNameOnly = NULL, $__unmappedOnly = NULL)
     {
-        parent::__construct(array('Pagination'=>$_pagination,'ParentFolderId'=>$_parentFolderId,'PublicOnly'=>$_publicOnly,'SortBy'=>$_sortBy,'SortIncreasing'=>$_sortIncreasing,'WildcardSearchNameOnly'=>$_wildcardSearchNameOnly),false);
+        parent::__construct(array('Pagination'=>$_pagination,'ParentFolderId'=>$_parentFolderId,'PublicOnly'=>$_publicOnly,'SortBy'=>$_sortBy,'SortIncreasing'=>$_sortIncreasing,'WildcardSearchNameOnly'=>$_wildcardSearchNameOnly,'UnmappedOnly'=>$__unmappedOnly),false);
     }
     /**
      * Get Pagination value
@@ -206,6 +214,23 @@ class SessionManagementStructListFoldersRequest extends SessionManagementWsdlCla
     public function setWildcardSearchNameOnly($_wildcardSearchNameOnly)
     {
         return ($this->WildcardSearchNameOnly = $_wildcardSearchNameOnly);
+    }
+    /**
+     * Get UnmappedOnly value
+     * @return boolean|null
+     */
+    public function getUnmappedOnly()
+    {
+        return $this->UnmappedOnly;
+    }
+    /**
+     * Set UnmappedOnly value
+     * @param boolean $_unmappedOnly the UnmappedOnly
+     * @return boolean
+     */
+    public function setUnmappedOnly($_unmappedOnly)
+    {
+        return ($this->UnmappedOnly = $_unmappedOnly);
     }
     /**
      * Method called when an object has been exported with var_export() functions

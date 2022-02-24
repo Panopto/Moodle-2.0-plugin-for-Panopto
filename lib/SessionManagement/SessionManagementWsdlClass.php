@@ -228,13 +228,21 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
             foreach($_arrayOfValues as $name=>$value)
                 $this->_set($name,$value);
         }
-            
+        
         if(array_key_exists('panopto_socket_timeout', $_arrayOfValues)) {
             self::$soapClient->__setSocketTimeout($_arrayOfValues['panopto_socket_timeout']);
         }
 
         if(array_key_exists('panopto_connection_timeout', $_arrayOfValues)) {
             self::$soapClient->__setConnectionTimeout($_arrayOfValues['panopto_connection_timeout']);
+        }
+
+        if(array_key_exists('wsdl_proxy_host', $_arrayOfValues)) {
+            self::$soapClient->__setProxyHost($_arrayOfValues['wsdl_proxy_host']);
+        }
+
+        if(array_key_exists('wsdl_proxy_port', $_arrayOfValues)) {
+            self::$soapClient->__setProxyPort($_arrayOfValues['wsdl_proxy_port']);
         }
     }
     /**
@@ -306,14 +314,6 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
                 unset($wsdlOptions[str_replace('wsdl_','',self::WSDL_URL)]);
                 $soapClientClassName = self::getSoapClientClassName();
                 self::setSoapClient(new $soapClientClassName($wsdlUrl,$wsdlOptions));
-            }
-
-            if(array_key_exists('panopto_socket_timeout', $wsdlOptions)) {
-                self::$soapClient->__setSocketTimeout($wsdlOptions['panopto_socket_timeout']);
-            }
-
-            if(array_key_exists('panopto_connection_timeout', $wsdlOptions)) {
-                self::$soapClient->__setConnectionTimeout($wsdlOptions['panopto_connection_timeout']);
             }
         }
     }

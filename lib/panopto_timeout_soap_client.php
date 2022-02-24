@@ -28,6 +28,8 @@ class PanoptoTimeoutSoapClient extends SoapClient
 {
     private $socket_timeout;
     private $connect_timeout;
+    private $proxy_host;
+    private $proxy_port;
     private $panoptocookies;
 
     public function __setConnectionTimeout($connect_timeout)
@@ -52,6 +54,14 @@ class PanoptoTimeoutSoapClient extends SoapClient
         }
 
         $this->socket_timeout = $socket_timeout;
+    }
+
+    public function __setProxyHost($proxy_host) {
+        $this->proxy_host = $proxy_host;
+    }
+
+    public function __setProxyPort($proxy_port) {
+        $this->proxy_port = $proxy_port;
     }
 
     public function getpanoptocookies() 
@@ -92,6 +102,14 @@ class PanoptoTimeoutSoapClient extends SoapClient
 
             if(!is_null($this->connect_timeout)) {
                 $options['CURLOPT_CONNECTTIMEOUT'] = $this->connect_timeout;
+            }
+
+            if(!empty($this->proxy_host)) {
+                $options['CURLOPT_PROXY'] = $this->proxy_host;
+            }
+
+            if(!empty($this->proxy_port)) {
+                $options['CURLOPT_PROXYPORT'] = $this->proxy_port;
             }
             
             $response = $curl->post($location, $request, $options);

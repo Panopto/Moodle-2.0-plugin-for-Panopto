@@ -687,6 +687,17 @@ class panopto_data {
             if (!!$connection_timeout) {
                 $options['CURLOPT_CONNECTTIMEOUT'] = $connection_timeout;
             }
+
+            $proxyhost = get_config('block_panopto', 'wsdl_proxy_host');
+            $proxyport = get_config('block_panopto', 'wsdl_proxy_port');
+
+            if (!empty($proxyhost)) {
+                $options['CURLOPT_PROXY'] = $proxyhost;
+            }
+
+            if (!empty($proxyport)) {
+                $options['CURLOPT_PROXYPORT'] = $proxyport;
+            }
             
             $response = json_decode($curl->post($location, json_encode($coursecopytask), $options));
 
@@ -717,13 +728,9 @@ class panopto_data {
      * @param int $newimportid the id of the course being imported
      *
      */
-    public function init_and_sync_import_ccv1($newimportid, $importresults = array(), $handledimports = array()) {
-        // If we are importing a nested child make sure we have not already imported 
-        if (in_array($newimportid, $handledimports)) {
-            return $importresults;
-        } else {
-            $handledimports[] = $newimportid;
-        }
+    public function init_and_sync_import_ccv1($newimportid) {
+        $importresults = array(); 
+        $handledimports = array();
 
         self::print_log_verbose(get_string('init_import_target', 'block_panopto', $this->moodlecourseid));
         self::print_log_verbose(get_string('init_import_source', 'block_panopto', $newimportid));
@@ -743,20 +750,36 @@ class panopto_data {
         if (!isset($importpanopto->sessiongroupid)) {
             self::print_log(get_string('import_not_mapped', 'block_panopto'));
         } else if (!isset($provisioninginfo->accesserror)) {
-            // Only do this code if we have proper access to the target Panopto course folder.
-            $importresult = $this->sessionmanager->set_copied_external_course_access_for_roles(
-                $provisioninginfo->fullname,
-                $provisioninginfo->externalcourseid,
-                $importpanopto->sessiongroupid
-            );
-            $importresult->importedcourseid = $newimportid;
-            $importresults[] = $importresult; 
-
+            $sessiongroupids = array();
+            $sessiongroupids[] = $importpanopto->sessiongroupid;
             // We need to make sure this course gets access to anything the course it imported had access to. 
             $nestedimports = self::get_import_list($newimportid);
+            $nestedimportresults = array();
             foreach ($nestedimports as $nestedimportid) {
-                $importresults = $this->init_and_sync_import_ccv1($nestedimportid, $importresults, $handledimports);
+                $nestedimportpanopto = new \panopto_data($nestedimportid);
+                // If we are importing a nested child make sure we have not already imported 
+                if (isset($nestedimportpanopto->sessiongroupid) && !in_array($nestedimportid, $handledimports)) {
+                    $handledimports[] = $nestedimportid;
+                    $sessiongroupids[] = $nestedimportpanopto->sessiongroupid;
+
+                    $importresult = new stdClass;
+                    $importresult->importedcourseid = $nestedimportid;
+                    $nestedimportresults[] = $importresult;
+                }
             }
+
+            // Only do this code if we have proper access to the target Panopto course folder.
+            $this->sessionmanager->set_copied_external_course_access_for_roles(
+                $provisioninginfo->fullname,
+                $provisioninginfo->externalcourseid,
+                $sessiongroupids
+            );
+
+            $importresult = new stdClass;
+            $importresult->importedcourseid = $newimportid;
+            $importresults[] = $importresult;
+            $importresults = array_merge($importresults, $nestedimportresults);
+
         } else {
             $importresult = new stdClass;
             $importresult->importedcourseid = $newimportid;
@@ -1430,9 +1453,9 @@ class panopto_data {
                 }
             }
         } else if (isset($panoptofolders)) {
-            $options = array('Error' => array('-- No Courses Available --'));
+            $options = array('Error' => '-- No Courses Available --');
         } else {
-            $options = array('Error' => array('!! Unable to retrieve course list !!'));
+            $options = array('Error' => '!! Unable to retrieve course list !!');
         }
 
         return array('courses' => $options, 'selected' => $this->sessiongroupid);
