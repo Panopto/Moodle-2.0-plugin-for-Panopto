@@ -631,7 +631,12 @@ class panopto_data {
         $coursecopytask->SourceCourseContexts = array($originalcourseid);
         $coursecopytask->TargetCourseContext = $this->moodlecourseid;
 
-        self::print_log_verbose(get_string('copy_course_init', 'block_panopto', $coursecopytask));
+        // The api call takes an array but moodle logging can't handle this well so an extra variable is needed for logging
+        $coursecopylogdata = new stdClass;
+        $coursecopylogdata->SourceCourseContext = $originalcourseid;
+        $coursecopylogdata->TargetCourseContext = $this->moodlecourseid;
+
+        self::print_log_verbose(get_string('copy_course_init', 'block_panopto', $coursecopylogdata));
 
         $this->sync_external_user($USER->id);
 
