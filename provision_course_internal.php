@@ -51,14 +51,14 @@ for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker++) {
 
     $hasservername = !panopto_is_string_empty($thisservername);
     if ($hasservername && !panopto_is_string_empty($thisappkey)) {
-        // array reference so we should substract 1 to start at 0.
+        // Array reference so we should substract 1 to start at 0.
         $aserverarray[$serverwalker - 1] = $thisservername;
         $appkeyarray[$serverwalker - 1] = $thisappkey;
     }
 }
 
-// If only one server, simply provision with that server. Setting these values will circumvent loading the selection form
-// prior to provisioning.
+// If only one server, simply provision with that server.
+// Setting these values will circumvent loading the selection form prior to provisioning.
 if (count($aserverarray) == 1) {
     // Get first element from associative array. aServerArray and appKeyArray will have same key values.
     $key = array_keys($aserverarray);
@@ -69,7 +69,8 @@ if (count($aserverarray) == 1) {
 require_login();
 
 
-// This page requires a course ID to be passed in as a param. If accessed directly without clicking on a link for the course,
+// This page requires a course ID to be passed in as a param.
+// If accessed directly without clicking on a link for the course,
 // no id is passed and the script fails. Similarly if no ID is passed with via a link (should never happen) the script will fail.
 $courseid = required_param('id', PARAM_INT);
 
@@ -106,7 +107,6 @@ if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
 } else if ($data = $mform->get_data()) {
     // If data has been submitted use it then lose it for next time.
-
     $selectedserver = trim($aserverarray[$data->servers]);
     $selectedkey = trim($appkeyarray[$data->servers]);
 

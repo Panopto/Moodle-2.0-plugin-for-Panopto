@@ -17,7 +17,7 @@
 /**
  * Panopto lti helper object. Contains info required for Panopto LTI tools to be used in text editors
  *
- * @package mod_panoptocourseembed
+ * @package block_panopto
  * @copyright  Panopto 2021
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,22 +25,22 @@ class panoptoblock_lti_utility {
 
     /**
      * Get the id of the pre-configured LTI tool that matched the Panopto server a course is provisioned to.
-     *  If multiple LTI tools are configured to a single server this will get the first one. 
+     * If multiple LTI tools are configured to a single server this will get the first one.
      *
-     * @param int $courseid - the id of the course we are targetting in moodle.
-     * @return int the id of the first matching tool 
-     */ 
+     * @param int $courseid - the id of the course we are targeting in moodle.
+     * @return int the id of the first matching tool
+     */
     public static function get_course_tool($courseid) {
         global $DB;
         require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/mod/lti/locallib.php');
-        
+
         $ltitooltypes = $DB->get_records('lti_types', null, 'name');
-        
+
         $targetservername = null;
 
         $blockexists = $DB->get_record('block', array('name' => 'panopto'), 'name');
         if (!empty($blockexists)) {
-           $targetservername = $DB->get_field('block_panopto_foldermap', 'panopto_server', array('moodleid' => $courseid));
+            $targetservername = $DB->get_field('block_panopto_foldermap', 'panopto_server', array('moodleid' => $courseid));
         }
 
         // If the course if not provisioned with the Panopto block then get the default panopto server fqdn.
@@ -56,11 +56,11 @@ class panoptoblock_lti_utility {
                 ]
             );
 
-            if (!empty($targetservername) && strpos($type->config['toolurl'], $targetservername) !== false && 
+            if (!empty($targetservername) && strpos($type->config['toolurl'], $targetservername) !== false &&
                 $type->state == LTI_TOOL_STATE_CONFIGURED) {
                 $currentconfig = lti_get_type_config($type->id);
 
-                if(!empty($currentconfig['customparameters']) && 
+                if (!empty($currentconfig['customparameters']) &&
                     strpos($currentconfig['customparameters'], 'panopto_course_embed_tool') !== false) {
                     return $type;
                 }

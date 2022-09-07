@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * the ensure category class for Panopto, this will build a set of folders in panopto matching the given category and it's parent categories.
+ * The ensure category class for Panopto.
+ *
+ * This will build a set of folders in Panopto matching the given category and it's parent categories.
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016
@@ -26,8 +28,11 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../../lib/panopto_category_data.php');
+
 /**
- * Panopto "ensure category" task. This task will build a set of folders in panopto matching the given category and it's parent categories.
+ * Panopto "ensure category" task.
+ *
+ * This task will build a set of folders in Panopto matching the given category and it's parent categories.
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016 /With contributions
@@ -35,14 +40,14 @@ require_once(dirname(__FILE__) . '/../../lib/panopto_category_data.php');
  */
 class ensure_category extends \core\task\adhoc_task {
     /**
-     * the the parent component for this class
+     * The the parent component for this class
      */
     public function get_component() {
         return 'block_panopto';
     }
-    
+
     /**
-     * the main execution function of the class
+     * The main execution function of the class
      */
     public function execute() {
         global $DB;
@@ -50,14 +55,14 @@ class ensure_category extends \core\task\adhoc_task {
         try {
             $eventdata = (array) $this->get_custom_data();
             $categoryid = $eventdata['categoryid'];
-            
+
             $targetserver = panopto_get_target_panopto_server();
             $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
 
             // Sync the user to all courses mapped to the server.
             $serverpanopto->ensure_category_branch(false, null);
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }

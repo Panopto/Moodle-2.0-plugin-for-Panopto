@@ -24,11 +24,7 @@
 
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
-global $CFG, $USER;
-
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
@@ -37,7 +33,7 @@ $callbackurl = required_param('callbackURL', PARAM_URL);
 $configuredserverarray = panopto_get_configured_panopto_servers();
 
 $callbackverified = false;
-foreach($configuredserverarray as  $possibleserver) {
+foreach ($configuredserverarray as $possibleserver) {
     if (strcasecmp($possibleserver, $servername) == 0) {
         $callbackhost = parse_url($callbackurl, PHP_URL_HOST);
 
@@ -49,7 +45,7 @@ foreach($configuredserverarray as  $possibleserver) {
 }
 
 if ($callbackverified) {
-    if (strpos($callbackurl, 'http%') !== false 
+    if (strpos($callbackurl, 'http%') !== false
      || strpos($callbackurl, 'https%') !== false) {
         $callbackurl = urldecode($callbackurl);
     }
@@ -74,7 +70,7 @@ if ($callbackverified) {
         return;
     }
 
-    // No course ID (0).  Don't autologin guests (false).
+    // No course ID (0). Don't autologin guests (false).
     require_login(0, false);
 
     // Reproduce canonically-ordered incoming auth payload.
@@ -105,18 +101,39 @@ if ($callbackverified) {
                 \core\task\manager::queue_adhoc_task($ssosynctask);
             break;
         }
+
+        // Strip ReturnUrl so we can append it on the end
+        parse_str(parse_url($callbackurl, PHP_URL_QUERY), $params);
+        $returnurl = isset($params['ReturnUrl']) ? $params['ReturnUrl'] : "";
+
+        // Handle fragment with hash.
+        $fragment = "#";
+        if (strpos($callbackurl, "#") !== false) {
+            $fragment .= strtok(explode("#", $callbackurl)[1], '&');
+        } else {
+            $fragment = "";
+        }
+
+        // Strip ReturnUrl from original URL and clean if necessary.
+        // This is constant LoginPageRedirectParamKey = "ReturnUrl" so it should always arrive in this format.
+        $url = preg_replace('/&?ReturnUrl=[^&]*/', '', $callbackurl);
+        $url = str_replace('?&', '?', $url);
+        $url = rtrim($url, '?');
+
         // Generate canonically-ordered auth payload string.
         $responseparams = 'serverName=' . $servername . '&externalUserKey=' . $userkey . '&expiration=' . $expiration;
         // Sign payload with shared key and hash.
         $responseauthcode = panopto_generate_auth_code($responseparams);
 
-        // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence
+        // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence.
         // (e.g. in the case of usernames that begin with digits).
         // Maintain the original canonical string to avoid signature mismatch.
-        $responseparamsencoded = 'serverName=' . $servername . '&externalUserKey=' . urlencode($userkey) . '&expiration=' . $expiration;
+        $responseparamsencoded =
+            'serverName=' . $servername . '&externalUserKey=' . urlencode($userkey) . '&expiration=' . $expiration;
 
-        $separator = (strpos($callbackurl, '?') ? '&' : '?');
-        $redirecturl = $callbackurl . $separator . $responseparamsencoded . '&authCode=' . $responseauthcode;
+        $fullreturnurl = !empty($returnurl) ? '&ReturnUrl=' . $returnurl . $fragment : "";
+        $separator = (strpos($url, '?') ? '&' : '?');
+        $redirecturl = $url . $separator . $responseparamsencoded . '&authCode=' . $responseauthcode . $fullreturnurl;
 
         // Redirect to Panopto Focus login page.
         redirect($redirecturl);

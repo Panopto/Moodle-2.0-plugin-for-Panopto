@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/formslib.php');
+
 /**
  * Form to update all currently mapped Panopto folder names to match their mapped course name
  *
@@ -21,8 +25,6 @@
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once($CFG->libdir . '/formslib.php');
-
 class panopto_rename_all_folders_form extends moodleform {
 
     /**

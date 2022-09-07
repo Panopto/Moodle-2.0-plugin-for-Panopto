@@ -36,6 +36,13 @@ require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/panopto_timeout_soap_client.php');
 
+/**
+ * Panopto user SOAP client
+ *
+ * @package block_panopto
+ * @copyright  Panopto 2009 - 2015
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
     /**
      * @var array $authparam
@@ -63,7 +70,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
     private $usermanagementservicecreate;
 
     /**
-     * main constructor
+     * Main constructor
      *
      * @param string $servername
      * @param string $apiuseruserkey
@@ -77,7 +84,8 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
             null,
             $apiuseruserkey);
 
-        $this->serviceparams = panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl');
+        $this->serviceparams =
+            panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl');
 
         // We need to make sure the UpdateContactInfo call succeeded so we need to ensure SOAP_WAIT_ONE_WAY_CALLS is set.
         $this->serviceparams['wsdl_features'] = SOAP_WAIT_ONE_WAY_CALLS | SOAP_SINGLE_ELEMENT_ARRAYS | SOAP_USE_XSI_ARRAY_TYPE;
@@ -110,7 +118,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
 
         // Returns false if the call failed.
         if (!$this->usermanagementservicesync->SyncExternalUser($syncparamsobject)) {
-            \panopto_data::print_log(print_r($this->usermanagementservicesync->getLastError(), true));
+            \panopto_data::print_log(var_export($this->usermanagementservicesync->getLastError(), true));
         }
     }
 
@@ -136,7 +144,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
             $result = $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
         } else {
             $lasterror = $this->usermanagementserviceget->getLastError()['UserManagementServiceGet::GetUserByKey'];
-            \panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(var_export($lasterror, true));
             throw $lasterror;
         }
         return $result;
@@ -154,7 +162,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
      * @param string $userbio a new user information
      * @param string $userid the target id of the new user
      * @param string $userkey the target username/key of the new user
-     * @param string $usersettingsurl 
+     * @param string $usersettingsurl
      * @param string $password the password for the new user
      */
     public function create_user($email, $emailsessionnotifications, $firstname, $groupmemberships,
@@ -189,7 +197,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
         if ($this->usermanagementservicecreate->CreateUser($createuserparams)) {
             $result = $this->usermanagementservicecreate->getResult();
         } else {
-            \panopto_data::print_log(print_r($this->usermanagementservicecreate->getLastError(), true));
+            \panopto_data::print_log(var_export($this->usermanagementservicecreate->getLastError(), true));
         }
 
         return $result;
@@ -225,7 +233,7 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
             $result = $this->usermanagementserviceupdate->getResult();
         } else {
             $lasterror = $this->usermanagementserviceupdate->getLastError()['UserManagementServiceUpdate::UpdateContactInfo'];
-            \panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(var_export($lasterror, true));
             throw $lasterror;
         }
 
@@ -246,14 +254,14 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
 
         $arrayofuserids = new UserManagementStructArrayOfguid($userids);
         $deleteusersparams = new UserManagementStructDeleteUsers(
-            $this->authparam, 
+            $this->authparam,
             $arrayofuserids
         );
 
         if ($this->usermanagementservicedelete->DeleteUsers($deleteusersparams)) {
             $result = $this->usermanagementservicedelete->getResult();
         } else {
-            \panopto_data::print_log(print_r($this->usermanagementservicedelete->getLastError(), true));
+            \panopto_data::print_log(var_export($this->usermanagementservicedelete->getLastError(), true));
         }
 
         return $result;

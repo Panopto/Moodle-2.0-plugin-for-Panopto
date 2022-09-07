@@ -15,19 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the provisioned course template
+ * The provisioned course template
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2015
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 ?>
 
 <div class='block_panopto'>
     <div class='panoptoProcessInformation'>
         <div class='value'>
             <?php
-            if ($unprovisionwassuccess && !empty($panoptodata) && !empty($unprovisioninginfo)) { 
+            if ($unprovisionwassuccess && !empty($panoptodata) && !empty($unprovisioninginfo)) {
             ?>
                 <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
                 <div class='value'><?php echo $unprovisioninginfo->fullname ?></div>
@@ -37,11 +38,11 @@
                         <?php echo get_string('unprovision_successful', 'block_panopto', $panoptodata->moodlecourseid) ?>
                     </div>
                 </div>
-            <?php 
+                <?php
             } else {
             ?>
                 <div class='errorMessage'><?php echo get_string('unprovision_error', 'block_panopto') ?></div>
-            <?php
+                <?php
             }
             ?>
         </div>

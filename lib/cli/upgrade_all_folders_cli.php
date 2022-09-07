@@ -15,16 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * This is needed for the Panopto Generation 1 to Generation 2 migration.
+ *
  * This logic will get a list of all current Panopto folders on a Moodle server then it will go through each folder
  * and reprovision them and reinitialize the imports to that folders if the user has access to the folder.
- * This is needed for the Panopto Generation 1 to Generation 2 migration.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017 with contributions from Hittesh Ahuja
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Do not require MOODLE_INTERNAL definition since this is a CLI file. 
+// Do not require MOODLE_INTERNAL definition since this is a CLI file.
 
 define('CLI_SCRIPT', true);
 

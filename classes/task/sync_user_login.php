@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
- * the sync user class for Panopto, syncs user permissions with Panopto server, called on unenrollment event
+ * The sync user class for Panopto, syncs user permissions with Panopto server, called on unenrollment event.
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016
@@ -23,27 +23,30 @@
 namespace block_panopto\task;
 defined('MOODLE_INTERNAL') || die();
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
+
 /**
  * Panopto "sync user login" task. This task syncs a user with all targeted Panopto servers.
+ *
  * @copyright Panopto 2009 - 2016 /With contributions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class sync_user_login extends \core\task\adhoc_task {
     /**
-     * the the parent component for this class
+     * The the parent component for this class
      */
     public function get_component() {
         return 'block_panopto';
     }
+
     /**
-     * the main execution function of the class
+     * The main execution function of the class
      */
     public function execute() {
         global $DB;
 
         try {
             $eventdata = (array) $this->get_custom_data();
-            
+
             if (empty($eventdata['targetserver'])) {
                 $targetserver = panopto_get_target_panopto_server();
             } else {
@@ -57,7 +60,7 @@ class sync_user_login extends \core\task\adhoc_task {
             // Sync the user to all courses mapped to the server.
             $serverpanopto->sync_external_user($eventdata['userid']);
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }

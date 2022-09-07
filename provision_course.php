@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the provision course logic for Panopto
+ * The provision course logic for Panopto
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -155,10 +155,12 @@ if ($mform->is_cancelled()) {
                 $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
                 include('views/provisioned_course.html.php');
             } else if ($coursecount == 1) {
-                // If there is only one course in the count and the server info is invalid redirect to the form for manual provisioning.
+                // If there is only one course in the count and the server info is invalid redirect
+                // to the form for manual provisioning.
                 $mform->display();
             } else {
-                // For some reason the server name or application key are invalid and we can't redirect to the form since there are multiple courses, let the user know.
+                // For some reason the server name or application key are invalid and we can't redirect
+                // to the form since there are multiple courses, let the user know.
                 echo "<div class='block_panopto'>" .
                         "<div class='panoptoProcessInformation'>" .
                             "<div class='errorMessage'>" . get_string('server_info_not_valid', 'block_panopto') . "</div>" .

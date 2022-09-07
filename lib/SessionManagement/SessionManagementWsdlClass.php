@@ -253,8 +253,9 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
      * @param string $_className optional (used by inherited classes in order to always call this method)
      * @return SessionManagementWsdlClass|null
      */
-    public static function __set_state(array $_array,$_className = __CLASS__)
+    public static function __set_state(array $_array)
     {
+        $_className = __CLASS__;
         if(class_exists($_className))
         {
             $object = @new $_className();

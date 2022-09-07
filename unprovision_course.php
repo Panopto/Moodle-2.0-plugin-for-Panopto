@@ -101,7 +101,7 @@ if ($mform->is_cancelled()) {
             $panoptodata = new \panopto_data($courseid);
             $unprovisioninginfo = $panoptodata->get_provisioning_info();
             $unprovisionwassuccess = $panoptodata->unprovision_course();
-            
+
             include('views/unprovisioned_course.html.php');
         }
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
@@ -111,5 +111,4 @@ if ($mform->is_cancelled()) {
 
     echo $OUTPUT->footer();
 }
-
 /* End of file unprovision_course.php */

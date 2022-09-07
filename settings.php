@@ -150,7 +150,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/sso_sync_type',
             get_string('block_panopto_sso_sync_type', 'block_panopto'),
             get_string('block_panopto_sso_sync_type_desc', 'block_panopto'),
-            'nosync', // Default to authentication without sync
+            'nosync', // Default to authentication without sync.
             $possiblessosynctypes
         )
     );
@@ -174,7 +174,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/folder_name_style',
             get_string('block_panopto_folder_name_style', 'block_panopto'),
             get_string('block_panopto_folder_name_style_desc', 'block_panopto'),
-            'fullname', // Default to longname only
+            'fullname', // Default to longname only.
             $possiblefoldernamestyles
         )
     );
@@ -207,7 +207,7 @@ if ($ADMIN->fulltree) {
             0
         )
     );
-    
+
     $settings->add(
         new admin_setting_configcheckbox(
             'block_panopto/auto_sync_imports',
@@ -297,7 +297,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('block_panopto/panopto_http_and_debug_settings',
             get_string('block_global_panopto_http_and_debug_settings', 'block_panopto'),
             ''));
-    
+
     $settings->add(
         new admin_setting_configcheckbox(
             'block_panopto/print_log_to_file',
@@ -368,7 +368,7 @@ if ($ADMIN->fulltree) {
             get_string('block_global_panopto_bulk_and_batch_tools', 'block_panopto'),
             ''));
 
-    $categorystructurelink = '<a id="panopto_build_category_structure_btn" href="' . $CFG->wwwroot . 
+    $categorystructurelink = '<a id="panopto_build_category_structure_btn" href="' . $CFG->wwwroot .
         '/blocks/panopto/build_category_structure.php">' .
         get_string('block_global_build_category_structure', 'block_panopto') . '</a>';
 
@@ -379,8 +379,8 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
 
-    $unprovisionlink = '<a id="panopto_unprovision_course_btn" href="' . $CFG->wwwroot . '/blocks/panopto/unprovision_course.php">' .
-        get_string('block_global_unprovision_courses', 'block_panopto') . '</a>';
+    $unprovisionlink = '<a id="panopto_unprovision_course_btn" href="' . $CFG->wwwroot .
+        '/blocks/panopto/unprovision_course.php">' . get_string('block_global_unprovision_courses', 'block_panopto') . '</a>';
     $settings->add(new admin_setting_heading('block_panopto_unprovision_courses', '', $unprovisionlink));
 
     $importlink = '<a id="panopto_reinitialize_imports_btn" href="' . $CFG->wwwroot . '/blocks/panopto/reinitialize_imports.php">' .

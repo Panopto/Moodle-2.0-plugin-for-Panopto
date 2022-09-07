@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * the reinitialize imports logic for Panopto
- *
- * @package block_panopto
- * @copyright  Panopto 2009 - 2017
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 global $CFG;
 if (empty($CFG)) {
     require_once(dirname(__FILE__) . '/../../config.php');
@@ -29,6 +22,13 @@ if (empty($CFG)) {
 require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
+/**
+ * The reinitialize imports logic for Panopto
+ *
+ * @package block_panopto
+ * @copyright  Panopto 2020
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class panopto_reinitialize_imports_form extends moodleform {
 
     /**
@@ -56,12 +56,24 @@ class panopto_reinitialize_imports_form extends moodleform {
 
 require_login();
 
+/**
+ * Panopto reinitialize.
+ *
+ */
+abstract class panopto_reinitialize {
+    const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
+    const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
+}
+
+/**
+ * Reinitialize all imports.
+ *
+ * @package block_panopto
+ * @copyright  Panopto 2020
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 function reinitialize_all_imports() {
     global $DB;
-
-    $NO_COURSE_EXISTS = "NO_COURSE_EXISTS";
-    $INVALID_PANOPTO_DATA = "INVALID_PANOPTO_DATA";
-
 
     $courseimports = $DB->get_records('block_panopto_importmap');
 
@@ -85,7 +97,9 @@ function reinitialize_all_imports() {
             if ($targetcourseexists && $hasvalidpanoptodata) {
                 $coursepanoptoarray[$courseimport->target_moodle_id] = $targetpanopto;
             } else {
-                $coursepanoptoarray[$courseimport->target_moodle_id] = !$targetcourseexists ? $NO_COURSE_EXISTS : $INVALID_PANOPTO_DATA;
+                $coursepanoptoarray[$courseimport->target_moodle_id] = !$targetcourseexists
+                    ? panopto_reinitialize::NO_COURSE_EXISTS
+                    : panopto_reinitialize::INVALID_PANOPTO_DATA;
                 \panopto_data::delete_panopto_relation($courseimport->target_moodle_id, true);
             }
         }
@@ -94,17 +108,17 @@ function reinitialize_all_imports() {
         $targetpanoptodata = null;
         $importresult = null;
 
-        if ($targetpanopto !== $NO_COURSE_EXISTS &&
-            $targetpanopto !== $INVALID_PANOPTO_DATA) {
+        if ($targetpanopto !== panopto_reinitialize::NO_COURSE_EXISTS &&
+            $targetpanopto !== panopto_reinitialize::INVALID_PANOPTO_DATA) {
 
             $targetpanopto->ensure_auth_manager();
             $activepanoptoserverversion = $targetpanopto->authmanager->get_server_version();
             $useccv2 = version_compare(
-                $activepanoptoserverversion, 
-                \panopto_data::$ccv2requiredpanoptoversion, 
+                $activepanoptoserverversion,
+                \panopto_data::$ccv2requiredpanoptoversion,
                 '>='
             );
-            
+
             $targetpanoptodata = $targetpanopto->get_provisioning_info();
 
             $importresults = null;

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * contains the different events Panopto can expect to handle
+ * Contains the different events Panopto can expect to handle.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu)

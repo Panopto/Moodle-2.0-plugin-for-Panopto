@@ -13,9 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Create form for course unprovision.
  *
+ * @package block_panopto
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -39,8 +41,8 @@ class panopto_unprovision_form extends moodleform {
         global $DB;
 
         $mform = & $this->_form;
-        
-        // Get all categories with no children (all leaf nodes)
+
+        // Get all categories with no children (all leaf nodes).
         $coursesraw = $DB->get_records_sql(
             'SELECT id, shortname, fullname FROM {course} WHERE id IN (SELECT moodleid FROM {block_panopto_foldermap})'
         );

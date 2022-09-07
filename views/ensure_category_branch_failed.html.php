@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the template used to display when we begin processing 
+ * The template used to display when we begin processing
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 ?>
             <?php if (isset($panoptoversioninfo) && !empty($panoptoversioninfo)) { ?>
-            <div class='errorMessage'><?php echo get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo) ?></div>
+            <div class='errorMessage'>
+                <?php echo get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo) ?>
+            </div>
             <?php } else { ?>
-            <div class='attribute'><?php echo get_string('attribute_ensure_branch_failed', 'block_panopto') ?></div>
-            <div class='value'><?php echo get_string('ensure_category_branch_failed', 'block_panopto') ?></div>
+            <div class='attribute'>
+                <?php echo get_string('attribute_ensure_branch_failed', 'block_panopto') ?>
+            </div>
+            <div class='value'>
+                <?php echo get_string('ensure_category_branch_failed', 'block_panopto') ?>
+            </div>
             <?php } ?>
         </div>
     </div>

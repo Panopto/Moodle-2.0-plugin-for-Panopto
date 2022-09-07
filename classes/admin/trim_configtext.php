@@ -15,15 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * a new admin setting that trims any input.
+ * A new admin setting that trims any input.
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
  * Skylar Kelty <S.Kelty@kent.ac.uk>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Text input that trims any extra whitespace.
@@ -49,7 +47,7 @@ class admin_setting_configtext_trimmed extends admin_setting_configtext {
     }
 
     /**
-     * write data to storage
+     * Write data to storage
      *
      * @param string $data the data being written.
      */
@@ -59,7 +57,7 @@ class admin_setting_configtext_trimmed extends admin_setting_configtext {
             $data = 0;
         }
 
-        // ...$data is a string.
+        // The ...$data is a string.
         $trimmeddata = trim($data);
         $validated = $this->validate($trimmeddata);
         if ($validated !== true) {

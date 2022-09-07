@@ -63,7 +63,7 @@ class SessionManagementStructExternalHierarchyInfo extends SessionManagementWsdl
      * @param string $_externalId
      * @param boolean $_isCourse
      */
-    public function __construct($_name = NULL,$_externalId = NULL,$_isCourse)
+    public function __construct($_isCourse,$_name = NULL,$_externalId = NULL)
     {
         parent::__construct(array('Name'=>$_name,'ExternalId'=>$_externalId,'IsCourse'=>$_isCourse),false);
     }
@@ -126,9 +126,9 @@ class SessionManagementStructExternalHierarchyInfo extends SessionManagementWsdl
      * @param array $_array the exported values
      * @return SessionManagementStructExternalHierarchyInfo
      */
-    public static function __set_state(array $_array,$_className = __CLASS__)
+    public static function __set_state(array $_array)
     {
-        return parent::__set_state($_array,$_className);
+        return parent::__set_state($_array);
     }
     /**
      * Method returning the class name

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the provision course class for Panopto
+ * The provision course class for Panopto.
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
@@ -31,20 +31,21 @@ require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
 
 /**
  * Panopto "provision course" task.
+ *
  * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
  * Skylar Kelty <S.Kelty@kent.ac.uk>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provision_course extends \core\task\adhoc_task {
     /**
-     * the the parent component for this class
+     * The the parent component for this class
      */
     public function get_component() {
         return 'block_panopto';
     }
 
     /**
-     * the main execution function of the class
+     * The main execution function of the class
      */
     public function execute() {
         try {
@@ -58,7 +59,7 @@ class provision_course extends \core\task\adhoc_task {
             $provisioninginfo = $panopto->get_provisioning_info();
             $provisioneddata = $panopto->provision_course($provisioninginfo, false);
         } catch (Exception $e) {
-            \panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log($e->getMessage());
         }
     }
 }

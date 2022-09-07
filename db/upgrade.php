@@ -15,17 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Scripts used for upgrading database when upgrading block from an older version
+ * Scripts used for upgrading database when upgrading block from an older version.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Upgrades Panopto for xmldb
+ * Upgrades Panopto for xmldb.
  *
  * @param int $oldversion the previous version Panopto is being upgraded from
  */
@@ -244,13 +242,20 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         $oldfoldermaptable = new xmldb_table('block_panopto_old_foldermap');
         if (!$dbman->table_exists($oldfoldermaptable)) {
             $mappingfields = array();
-            $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
-            $mappingfields[] = new xmldb_field('moodleid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
-            $mappingfields[] = new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'moodleid');
-            $mappingfields[] = new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
-            $mappingfields[] = new xmldb_field('panopto_app_key', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_server');
-            $mappingfields[] = new xmldb_field('publisher_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '1', 'panopto_app_key');
-            $mappingfields[] = new xmldb_field('creator_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '3,4', 'publisher_mapping');
+            $mappingfields[] =
+                new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $mappingfields[] =
+                new xmldb_field('moodleid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+            $mappingfields[] =
+                new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'moodleid');
+            $mappingfields[] =
+                new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
+            $mappingfields[] =
+                new xmldb_field('panopto_app_key', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_server');
+            $mappingfields[] =
+                new xmldb_field('publisher_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '1', 'panopto_app_key');
+            $mappingfields[] =
+                new xmldb_field('creator_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '3,4', 'publisher_mapping');
             $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
             foreach ($mappingfields as $mappingfield) {
                 $oldfoldermaptable->addField($mappingfield);
@@ -268,7 +273,8 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
     if ($oldversion < 2018030200) {
 
-        // Since this toggle got changed/removed for a select, get the old value and if it's set then set the new feature as appropriate.
+        // Since this toggle got changed/removed for a select,
+        // get the old value and if it's set then set the new feature as appropriate.
         if (get_config('block_panopto', 'prefix_new_folder_names')) {
             set_config('folder_name_style', 'combination', 'block_panopto');
         }
@@ -279,14 +285,18 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
     if ($oldversion < 2019070100) {
 
-        // Define table table where we will place all of our category mappings. So we can know which categories are linked to Panopto folders.
+        // Define table table where we will place all of our category mappings.
+        // So we can know which categories are linked to Panopto folders.
         $categorymaptable = new xmldb_table('block_panopto_categorymap');
         if (!$dbman->table_exists($categorymaptable)) {
             $mappingfields = array();
             $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
-            $mappingfields[] = new xmldb_field('category_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
-            $mappingfields[] = new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'category_id');
-            $mappingfields[] = new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
+            $mappingfields[] =
+                new xmldb_field('category_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+            $mappingfields[] =
+                new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'category_id');
+            $mappingfields[] =
+                new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
             $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
             foreach ($mappingfields as $mappingfield) {
                 $categorymaptable->addField($mappingfield);
@@ -294,7 +304,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $categorymaptable->addKey($mappingkey);
             $dbman->create_table($categorymaptable);
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2019070100, 'panopto');
     }
@@ -311,7 +321,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         if (get_config('block_panopto', 'prefix_new_folder_names')) {
             unset_config('prefix_new_folder_names', 'block_panopto');
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2020072736, 'panopto');
     }
@@ -344,11 +354,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $targetidindex = new xmldb_index('mdl_blocpanoimpo_tar_ix', XMLDB_INDEX_NOTUNIQUE, array('target_moodle_id'), array());
             $importidindex = new xmldb_index('mdl_blocpanoimpo_imp_ix', XMLDB_INDEX_NOTUNIQUE, array('import_moodle_id'), array());
 
-
             if (!$dbman->index_exists($importmaptable, $targetidindex)) {
                 $dbman->add_index($importmaptable, $targetidindex);
             }
-
 
             if (!$dbman->index_exists($importmaptable, $importidindex)) {
                 $dbman->add_index($importmaptable, $importidindex);
@@ -360,7 +368,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         if ($dbman->table_exists($creatormaptable)) {
             $moodleidindex = new xmldb_index('mdl_blocpanocrea_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodle_id'), array());
 
-
             if (!$dbman->index_exists($creatormaptable, $moodleidindex)) {
                 $dbman->add_index($creatormaptable, $moodleidindex);
             }
@@ -370,7 +377,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         if ($dbman->table_exists($publishermaptable)) {
             $moodleidindex = new xmldb_index('mdl_blocpanopubl_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodle_id'), array());
-
 
             if (!$dbman->index_exists($publishermaptable, $moodleidindex)) {
                 $dbman->add_index($publishermaptable, $moodleidindex);
@@ -383,11 +389,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $moodleidindex = new xmldb_index('mdl_blocpanooldfold_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodleid'), array());
             $serverindex = new xmldb_index('mdl_blocpanooldfold_pan_ix', XMLDB_INDEX_NOTUNIQUE, array('panopto_server'), array());
 
-
             if (!$dbman->index_exists($oldfoldermaptable, $moodleidindex)) {
                 $dbman->add_index($oldfoldermaptable, $moodleidindex);
             }
-
 
             if (!$dbman->index_exists($oldfoldermaptable, $serverindex)) {
                 $dbman->add_index($oldfoldermaptable, $serverindex);
@@ -399,14 +403,13 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         if ($dbman->table_exists($categorymaptable)) {
             $serverindex = new xmldb_index('mdl_blocpanocate_cat_ix', XMLDB_INDEX_NOTUNIQUE, array('category_id'), array());
 
-
             if (!$dbman->index_exists($categorymaptable, $serverindex)) {
                 $dbman->add_index($categorymaptable, $serverindex);
             }
         } else {
             return false;
         }
-        
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2021063000, 'panopto');
     }

@@ -15,12 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the imported course result template
+ * The imported course result template
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 ?>
 
 <div class='block_panopto'>
@@ -37,23 +38,23 @@
                 <div class='value'><?php echo $targetpanopto->servername ?></div>
                 <div class='attribute'><?php echo get_string('import_status', 'block_panopto') ?></div>
                 <?php
-                foreach($importresults as $importresult) {
-                    if(isset($importresult->errormessage)) {
+                foreach ($importresults as $importresult) {
+                    if (isset($importresult->errormessage)) {
                     ?>
                         <div class='value'>
                             <?php echo get_string('import_error', 'block_panopto', $importresult) ?>
                         </div>
-                    <?php
+                        <?php
                     } else {
                     ?>
                         <div class='value'>
                             <?php echo get_string('import_success', 'block_panopto', $importresult) ?>
                         </div>
-                    <?php
+                        <?php
                     }
                 }
             } else {
-                if ($targetpanopto === $NO_COURSE_EXISTS) {
+                if ($targetpanopto === panopto_reinitialize::NO_COURSE_EXISTS) {
                     ?>
                         <div class='errorMessage'><?php echo get_string('target_moodle_course_deleted', 'block_panopto') ?></div>
                     <?php

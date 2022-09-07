@@ -24,74 +24,122 @@
 
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
-class PanoptoTimeoutSoapClient extends SoapClient
-{
+/**
+ * Panopto timeout soap client class.
+ *
+ * @package block_panopto
+ * @copyright  Panopto 2009 - 2016
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class PanoptoTimeoutSoapClient extends SoapClient {
+    /**
+     * @var int $socket_timeout socket timeout
+     */
     private $socket_timeout;
+
+    /**
+     * @var int $connect_timeout connection timeout
+     */
     private $connect_timeout;
+
+    /**
+     * @var string $proxy_host proxy host
+     */
     private $proxy_host;
+
+    /**
+     * @var int $proxy_port proxy port
+     */
     private $proxy_port;
+
+    /**
+     * @var array $panoptocookies Panopto cookies
+     */
     private $panoptocookies;
 
-    public function __setConnectionTimeout($connect_timeout)
-    {
+    /**
+     * Set connection timeout
+     *
+     * @param int $connect_timeout
+     */
+    public function __setConnectionTimeout($connect_timeout) {
         $connect_timeout = intval($connect_timeout);
 
-        if (!is_null($connect_timeout) && !is_int($connect_timeout))
-        {
+        if (!is_null($connect_timeout) && !is_int($connect_timeout)) {
             throw new Exception("Invalid connection timeout value");
         }
 
         $this->connect_timeout = $connect_timeout;
     }
 
-    public function __setSocketTimeout($socket_timeout)
-    {
+    /**
+     * Set socket timeout
+     *
+     * @param int $socket_timeout
+     */
+    public function __setSocketTimeout($socket_timeout) {
         $socket_timeout = intval($socket_timeout);
 
-        if (!is_null($socket_timeout) && !is_int($socket_timeout))
-        {
+        if (!is_null($socket_timeout) && !is_int($socket_timeout)) {
             throw new Exception("Invalid socket timeout value");
         }
 
         $this->socket_timeout = $socket_timeout;
     }
 
+    /**
+     * Set proxy host
+     *
+     * @param string $proxy_host
+     */
     public function __setProxyHost($proxy_host) {
         $this->proxy_host = $proxy_host;
     }
 
+    /**
+     * Set proxy port
+     *
+     * @param int $proxy_port
+     */
     public function __setProxyPort($proxy_port) {
         $this->proxy_port = $proxy_port;
     }
 
-    public function getpanoptocookies() 
-    {
+    /**
+     * Set Panopto cookies
+     */
+    public function getpanoptocookies() {
         return $this->panoptocookies;
     }
 
-    public function __doRequest($request, $location, $action, $version, $one_way = FALSE)
-    {
-        if (empty($this->socket_timeout) && empty($this->connect_timeout))
-        {
-            // Call via parent because we require no timeout
+    /**
+     * Create a SOAP request
+     *
+     * @param string $request XML SOAP request
+     * @param string $location the URL to request
+     * @param string $action the SOAP action
+     * @param int $version the SOAP version
+     * @param bool $one_way determine if response is expected or not
+     */
+    public function __doRequest($request, $location, $action, $version, $one_way = false) {
+        if (empty($this->socket_timeout) && empty($this->connect_timeout)) {
+            // Call via parent because we require no timeout.
             $response = parent::__doRequest($request, $location, $action, $version, $one_way);
 
             $lastresponseheaders = $this->__getLastResponseHeaders();
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $lastresponseheaders, $matches);
             $this->panoptocookies = array();
-            foreach($matches[1] as $item) {
+            foreach ($matches[1] as $item) {
                 parse_str($item, $cookie);
                 $this->panoptocookies = array_merge($this->panoptocookies, $cookie);
             }
-        }
-        else
-        {
+        } else {
 
             $curl = new \curl();
             $options = [
-                'CURLOPT_VERBOSE' => FALSE,
-                'CURLOPT_RETURNTRANSFER' => TRUE,
-                'CURLOPT_HEADER' => TRUE,
+                'CURLOPT_VERBOSE' => false,
+                'CURLOPT_RETURNTRANSFER' => true,
+                'CURLOPT_HEADER' => true,
                 'CURLOPT_HTTPHEADER' => array('Content-Type: text/xml',
                                               'SoapAction: ' . $action)
             ];
@@ -100,46 +148,43 @@ class PanoptoTimeoutSoapClient extends SoapClient
                 $options['CURLOPT_TIMEOUT'] = $this->socket_timeout;
             }
 
-            if(!is_null($this->connect_timeout)) {
+            if (!is_null($this->connect_timeout)) {
                 $options['CURLOPT_CONNECTTIMEOUT'] = $this->connect_timeout;
             }
 
-            if(!empty($this->proxy_host)) {
+            if (!empty($this->proxy_host)) {
                 $options['CURLOPT_PROXY'] = $this->proxy_host;
             }
 
-            if(!empty($this->proxy_port)) {
+            if (!empty($this->proxy_port)) {
                 $options['CURLOPT_PROXYPORT'] = $this->proxy_port;
             }
-            
+
             $response = $curl->post($location, $request, $options);
 
-            // get cookies
-            $actualresponseheaders = (isset($curl->info["header_size"]))?substr($response,0,$curl->info["header_size"]):"";
+            // Get cookies.
+            $actualresponseheaders = (isset($curl->info["header_size"])) ? substr($response, 0, $curl->info["header_size"]) : "";
             preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $actualresponseheaders, $matches);
             $this->panoptocookies = array();
-            foreach($matches[1] as $item) {
+            foreach ($matches[1] as $item) {
                 parse_str($item, $cookie);
                 $this->panoptocookies = array_merge($this->panoptocookies, $cookie);
             }
 
-            $actualResponse = (isset($curl->info["header_size"]))?substr($response,$curl->info["header_size"]):"";
+            $actualresponse = (isset($curl->info["header_size"])) ? substr($response, $curl->info["header_size"]) : "";
 
             if ($curl->get_errno()) {
                 throw new Exception($response);
             }
 
-            $response = $actualResponse;
+            $response = $actualresponse;
         }
 
         // Return?
-        if (!$one_way)
-        {
+        if (!$one_way) {
             return $response;
         }
     }
 }
-
-
 
 /* End of file panopto_timeout_soap_client.php */

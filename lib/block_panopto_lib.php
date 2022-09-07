@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * main library functions for the panoptop block
+ * Main library functions for the Panopto block
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -29,7 +29,6 @@
  *
  * @param string $alertmessage - the message the user is supposed to see.
  */
-
 function panopto_alert_user($alertmessage) {
     echo '<script language="javascript">';
     echo 'alert("' . $alertmessage . '")';
@@ -98,14 +97,14 @@ function panopto_validate_auth_code($payload, $authcode) {
 }
 
 /**
- * takes an api url, then checks the Panopto config for proxy settings, and returns the relevant serviceparams object.
+ * Takes an api url, then checks the Panopto config for proxy settings, and returns the relevant serviceparams object.
  *
- * @param string apiurl
+ * @param string $apiurl
  */
 function panopto_generate_wsdl_service_params($apiurl) {
     $serviceparams = array('wsdl_url' => $apiurl);
 
-    // Check to see if the user set any proxy options
+    // Check to see if the user set any proxy options.
     $proxyhost = get_config('block_panopto', 'wsdl_proxy_host');
     $proxyport = get_config('block_panopto', 'wsdl_proxy_port');
 
@@ -123,6 +122,10 @@ function panopto_generate_wsdl_service_params($apiurl) {
     return $serviceparams;
 }
 
+/**
+ * Get configured Panopto servers.
+ *
+ */
 function panopto_get_configured_panopto_servers() {
 
     $numservers = get_config('block_panopto', 'server_number');
@@ -168,7 +171,7 @@ function panopto_get_target_panopto_server() {
             $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
             $hasvaliddata = isset($thisappkey) && !empty($thisappkey);
 
-            // If we have valid data for the server then try to ensure the category branch
+            // If we have valid data for the server then try to ensure the category branch.
             if ($hasvaliddata) {
                 $ret = new stdClass();
                 $ret->name = $thisservername;
@@ -200,7 +203,7 @@ function panopto_get_valid_panopto_servers() {
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
         $hasvaliddata = isset($thisappkey) && !empty($thisappkey);
 
-        // If we have valid data for the server then try to ensure the category branch
+        // If we have valid data for the server then try to ensure the category branch.
         if ($hasvaliddata) {
 
             $targetserver = new stdClass();
@@ -213,7 +216,7 @@ function panopto_get_valid_panopto_servers() {
 }
 
 /**
- *  Retrieve the app key for the target panopto server
+ * Retrieve the app key for the target panopto server.
  *
  * @param string $panoptoservername the server we are trying to get the application key for
  */
@@ -235,7 +238,7 @@ function panopto_get_app_key($panoptoservername) {
             return $thisappkey;
         }
     }
-    
+
     return null;
 }
 
@@ -275,6 +278,10 @@ function panopto_instantiate_session_soap_client($username, $servername, $applic
 /**
  * Used to instantiate a soap client for calling Panopto's iAuth service.
  * Should be called only the first time an  auth soap client is needed for an instance.
+ *
+ * @param string $username the name of the current user
+ * @param string $servername the name of the active server
+ * @param string $applicationkey the key need for the user to be authenticated
  */
 function panopto_instantiate_auth_soap_client($username, $servername, $applicationkey) {
     // Compute web service credentials for given user.
@@ -300,16 +307,16 @@ function panopto_is_string_empty($name) {
  * @param string $guidstring the uid being tested in string format.
  */
 function panopto_is_guid_empty($guidstring) {
-    // Assuming the guid is valid
-    $retVal = false;
+    // Assuming the guid is valid.
+    $retval = false;
     $val = array_sum(explode("-", $guidstring));
 
     if ($val == 0) {
-        // Guid is empty
-        $retVal = true;
+        // Guid is empty.
+        $retval = true;
     }
 
-    return $retVal;
+    return $retval;
 }
 
 /**
@@ -318,31 +325,37 @@ function panopto_is_guid_empty($guidstring) {
  * @param string $userinfostring information to check
  */
 function panopto_user_info_valid($userinfostring) {
-    // Assuming the guid is valid
-    $retVal = true;
+    // Assuming the guid is valid.
+    $retval = true;
 
     if (strcmp($userinfostring, '--Deleted--') === 0) {
-        // Guid is empty
-        $retVal = false;
+        // Guid is empty.
+        $retval = false;
     }
 
-    return $retVal;
-}
-
-function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
-    global $DB;
-
-    $sql = "SELECT r.*, rn.name AS contextalias
-        FROM {role} r
-        INNER JOIN {role_context_levels} rcl ON (rcl.contextlevel = :targetcontextlevel AND rcl.roleid = r.id)
-        LEFT JOIN {role_names} rn ON (rn.contextid = :targetcontext AND rn.roleid = r.id)
-        ORDER BY r.sortorder ASC";
-    return $DB->get_records_sql($sql, array('targetcontext'=>$targetcontext->id, 'targetcontextlevel'=>$targetcontext->contextlevel));
+    return $retval;
 }
 
 /**
- * Unsets all system publishers that are not currently mapped 
- *  and maps all roles that are currently set as publishers to have the proper capability
+ * Get all roles for context and context level
+ *
+ * @param string $targetcontext target context
+ */
+function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
+    global $DB;
+
+    $sql = "SELECT r.*, rn.name AS contextalias " .
+        "FROM {role} r " .
+        "INNER JOIN {role_context_levels} rcl ON (rcl.contextlevel = :targetcontextlevel AND rcl.roleid = r.id) " .
+        "LEFT JOIN {role_names} rn ON (rn.contextid = :targetcontext AND rn.roleid = r.id) " .
+        "ORDER BY r.sortorder ASC";
+    return $DB->get_records_sql($sql,
+        array('targetcontext' => $targetcontext->id, 'targetcontextlevel' => $targetcontext->contextlevel));
+}
+
+/**
+ * Unsets all system publishers that are not currently mapped
+ *  and maps all roles that are currently set as publishers to have the proper capability.
  */
 function panopto_update_system_publishers() {
     global $DB;
@@ -353,8 +366,8 @@ function panopto_update_system_publishers() {
     $publishersystemroles = explode(',', $publisherrolesstring);
     $publisherprocessed = false;
 
-    // Remove the system publisher capability from all old publishers. 
-    foreach($systemrolearray as $possiblesystempublisher) {
+    // Remove the system publisher capability from all old publishers.
+    foreach ($systemrolearray as $possiblesystempublisher) {
         $targetname = !empty($possiblesystempublisher->name) ? $possiblesystempublisher->name : $possiblesystempublisher->shortname;
         if (!in_array($targetname, $publishersystemroles)) {
             $publisherprocessed = true;
@@ -364,8 +377,8 @@ function panopto_update_system_publishers() {
 
     // Build and process new/old changes to capabilities to roles and capabilities.
     $publisherprocessed = \panopto_data::build_and_assign_context_capability_to_roles(
-        $systemcontext, 
-        $publishersystemroles, 
+        $systemcontext,
+        $publishersystemroles,
         $capability
     ) || $publisherprocessed;
 

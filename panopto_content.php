@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * manages the content on the Panopto block
+ * Manages the content on the Panopto block
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -23,11 +23,8 @@
  */
 
 define('AJAX_SCRIPT', true);
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
 
+require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 try {
@@ -37,9 +34,9 @@ try {
     require_sesskey();
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
-    
+
     $content = new stdClass;
-    
+
     // Close the session so that the users other tabs in the same session are not blocked.
     \core\session\manager::write_close();
     $content->text = '';
@@ -50,13 +47,13 @@ try {
 
     $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
     $usercanprovision = $panoptodata->can_user_provision($courseid);
-    
-    if ((empty($panoptodata->servername) || 
-        empty($panoptodata->instancename) || 
+
+    if ((empty($panoptodata->servername) ||
+        empty($panoptodata->instancename) ||
         empty($panoptodata->applicationkey)) &&
         $usercanprovision &&
         ($allowautoprovision == 'onblockview')) {
-        
+
         $task = new \block_panopto\task\provision_course();
         $task->set_custom_data(array(
             'courseid' => $courseid
@@ -80,7 +77,8 @@ try {
     }
 
 
-    if (!$failedautoprovisioning && (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey))) {
+    if (!$failedautoprovisioning && (empty($panoptodata->servername) ||
+        empty($panoptodata->instancename) || empty($panoptodata->applicationkey))) {
         $content->text = get_string('unprovisioned', 'block_panopto');
 
         if ($usercanprovision) {
@@ -108,16 +106,13 @@ try {
                 if (isset($courseinfo->noaccess) && $courseinfo->noaccess == true) {
                     // The user did not have access to the Panopto content.
                     $content->text .= "<span class='error'>" . get_string('no_access', 'block_panopto') . '</span>';
-                } 
-                else if (!empty($courseinfo->errormessage)) { 
-                    // We failed for some other reason, display the error. 
+                } else if (!empty($courseinfo->errormessage)) {
+                    // We failed for some other reason, display the error.
                     $content->text .= "<span class='error'>" . $courseinfo->errormessage . '</span>';
-                } 
-                else {
+                } else {
                     // SSO form passes instance name in POST to keep URLs portable.
                     $content->text .= "<form name='SSO' method='post'>" .
                         "<input type='hidden' name='instance' value='$panoptodata->instancename' /></form>";
-
 
                     // Get all Completed.
                     $sessionlist = $panoptodata->get_session_list($courseinfo->DeliveriesHaveSpecifiedOrder);
@@ -126,7 +121,8 @@ try {
                     if (is_array($sessionlist) && !empty($sessionlist)) {
                         foreach ($sessionlist as $sessionobj) {
 
-                            // If the session is a live broadcast from the Windows/Mac Recorder or Remote Recorder check if its live
+                            // If the session is a live broadcast from the Windows/Mac Recorder
+                            // or Remote Recorder check if its live.
                             $islivesession = $sessionobj->State === 'Broadcasting';
 
                             if ($islivesession) {
@@ -172,25 +168,30 @@ try {
                         $i = 0;
 
                         if (!function_exists('str_contains')) {
-                            function str_contains(string $haystack, string $needle): bool
-                            {
+                            /**
+                             * Check if string contains
+                             *
+                             * @param string $haystack
+                             * @param string $needle
+                             * @return bool
+                             */
+                            function str_contains(string $haystack, string $needle): bool {
                                 return '' === $needle || false !== strpos($haystack, $needle);
                             }
                         }
-                        
+
                         foreach ($completeddeliveries as $completeddelivery) {
                             // Collapse to 3 lectures by default.
                             if ($i == 3) {
                                 $content->text .= "<div id='hiddenLecturesDiv'>";
                             }
 
-                            if (!str_contains($completeddelivery->ViewerUrl, '?instance') && 
+                            if (!str_contains($completeddelivery->ViewerUrl, '?instance') &&
                                 !str_contains($completeddelivery->ViewerUrl, '&instance')) {
                                 if (str_contains($completeddelivery->ViewerUrl, '?')) {
-                                    $completeddelivery->ViewerUrl .= '&instance=' . $panoptodata->instancename; 
-                                } 
-                                else {
-                                    $completeddelivery->ViewerUrl .= '?instance=' . $panoptodata->instancename; 
+                                    $completeddelivery->ViewerUrl .= '&instance=' . $panoptodata->instancename;
+                                } else {
+                                    $completeddelivery->ViewerUrl .= '?instance=' . $panoptodata->instancename;
                                 }
                             }
 
@@ -248,8 +249,10 @@ try {
 
                     $hascreatoraccess = has_capability('block/panopto:provision_asteacher', $context, $USER->id);
 
-                    // Settings link can only be viewed by Teachers, Admins. If the proper setting is enabled, any creators can also view the link.
-                    if ($hascreatoraccess && ($isteacheroradmin || get_config('block_panopto', 'any_creator_can_view_folder_settings'))) {
+                    // Settings link can only be viewed by Teachers, Admins. If the proper setting is enabled,
+                    // any creators can also view the link.
+                    if ($hascreatoraccess && ($isteacheroradmin ||
+                        get_config('block_panopto', 'any_creator_can_view_folder_settings'))) {
                         $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') .
                             '</b></div>' .
                             "<div class='listItem'>" .

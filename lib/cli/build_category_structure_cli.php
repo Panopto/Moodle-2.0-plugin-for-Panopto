@@ -15,15 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This logic will iterate through all leaf categories in Moodle and build a matching folder branch on Panopto. 
- *  After all branches are ensured then Panopto should have a folder structure that matches the Moodle category structure.
+ * This logic will iterate through all leaf categories in Moodle and build a matching folder branch on Panopto.
+ *
+ * After all branches are ensured then Panopto should have a folder structure that matches the Moodle category structure.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017 with contributions from Hittesh Ahuja
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Do not require MOODLE_INTERNAL definition since this is a CLI file. 
+// Do not require MOODLE_INTERNAL definition since this is a CLI file.
 
 define('CLI_SCRIPT', true);
 
@@ -45,14 +46,13 @@ if (!$admin) {
 \core\session\manager::set_user(get_admin());
 cli_heading(get_string('cli_heading_build_category_structure', 'block_panopto'));
 
-
-
 /**
- * This CLI script will build the Moodle category structure on the target Panopto site. 
- * This will not sync existing folders to that new category structure. 
+ * This CLI script will build the Moodle category structure on the target Panopto site.
+ * This will not sync existing folders to that new category structure.
  *
- * @param string $params[1] - the panopto server the user is trying to use this script with. e.g. "example.hosted.panopto.com"
- * @param string $params[2] - the application key associated with the Moodle IDP on th target panopto server.
+ * @param array $params
+ * $params[1] - the panopto server the user is trying to use this script with. e.g. "example.hosted.panopto.com"
+ * $params[2] - the application key associated with the Moodle IDP on th target panopto server.
  */
 function build_panopto_category_structure($params) {
     if (!isset($params[1]) || !isset($params[2])) {

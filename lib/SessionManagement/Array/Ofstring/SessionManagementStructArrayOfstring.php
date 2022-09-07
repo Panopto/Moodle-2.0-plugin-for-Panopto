@@ -140,9 +140,9 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
      * @param array $_array the exported values
      * @return SessionManagementStructArrayOfstring
      */
-    public static function __set_state(array $_array,$_className = __CLASS__)
+    public static function __set_state(array $_array)
     {
-        return parent::__set_state($_array,$_className);
+        return parent::__set_state($_array);
     }
     /**
      * Method returning the class name

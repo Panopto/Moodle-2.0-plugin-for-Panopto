@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the edit form for the Panopto block
+ * The edit form for the Panopto block.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -61,7 +61,11 @@ class block_panopto_edit_form extends block_edit_form {
             $unprovisionurl = "$CFG->wwwroot/blocks/panopto/unprovision_course_internal.php?id=" . $COURSE->id;
             $unprovisionfrommoodle = get_string('unprovision_from_moodle', 'block_panopto');
             $or = get_string('or', 'block_panopto');
-            $mform->addElement('html', "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>-- $or --<br><br><a href='$provisionurl'>$addtopanopto</a><br><br>-- $or --<br><br>");
+            $html = "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>";
+            $html .= "-- $or --<br><br>";
+            $html .= "<a href='$provisionurl'>$addtopanopto</a><br><br>";
+            $html .= "-- $or --<br><br>";
+            $mform->addElement('html', $html);
 
             $courselist = $panoptodata->get_course_options();
 
@@ -111,7 +115,6 @@ class block_panopto_edit_form extends block_edit_form {
             $mform->addElement('static', 'error', '', get_string('block_edit_error', 'block_panopto'));
         }
     }
-
 }
 
 /* End of file edit_form.php */
