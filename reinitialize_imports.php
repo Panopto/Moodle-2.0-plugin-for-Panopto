@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->libdir . '/formslib.php');
-require_once(dirname(__FILE__) . '/lib/panopto_data.php');
-
 /**
  * The reinitialize imports logic for Panopto
  *
  * @package block_panopto
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+require_once(dirname(__FILE__) . '/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
+
+/**
+ * Panopto reinitialize form.
  */
 class panopto_reinitialize_imports_form extends moodleform {
 
@@ -50,10 +53,16 @@ require_login();
 
 /**
  * Panopto reinitialize.
- *
  */
 abstract class panopto_reinitialize {
+    /**
+     * @var string No course exists.
+     */
     const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
+
+    /**
+     * @var string Invalid data.
+     */
     const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
 }
 
