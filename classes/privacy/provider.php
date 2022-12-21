@@ -30,12 +30,13 @@ require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
 
 use \core_privacy\local\metadata\collection;
 
+// @codingStandardsIgnoreStart
 if (interface_exists('\core_privacy\local\request\userlist')) {
     interface my_userlist extends \core_privacy\local\request\userlist {
     }
 } else {
     interface my_userlist {
-    };
+    }
 }
 
 if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
@@ -43,7 +44,7 @@ if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
     }
 } else {
     interface my_userlist_provider {
-    };
+    }
 }
 
 if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
@@ -51,8 +52,9 @@ if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
     }
 } else {
     interface my_userdataprovider {
-    };
+    }
 }
+// @codingStandardsIgnoreEnd
 
 /**
  * Provider that stores user data.

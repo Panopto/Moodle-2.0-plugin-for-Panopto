@@ -228,7 +228,7 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
             foreach($_arrayOfValues as $name=>$value)
                 $this->_set($name,$value);
         }
-        
+
         if(array_key_exists('panopto_socket_timeout', $_arrayOfValues)) {
             self::$soapClient->__setSocketTimeout($_arrayOfValues['panopto_socket_timeout']);
         }
@@ -1000,7 +1000,7 @@ class AuthManagementSoapClient extends PanoptoTimeoutSoapClient {
     }
 
     /**
-     * wrapper around dorequest so we can enforce https on all calls
+     * Wrapper around dorequest so we can enforce https on all calls
      *
      * @param object $request - the request being made
      * @param string $location - the location the request will be made to
@@ -1008,7 +1008,7 @@ class AuthManagementSoapClient extends PanoptoTimeoutSoapClient {
      * @param string $version
      * @param int $one_way
      */
-    public function __doRequest ($request, $location, $action, $version, $one_way = 0) {
+    public function __doRequest($request, $location, $action, $version, $one_way = 0) {
         if (get_config('block_panopto', 'enforce_https_on_wsdl')) {
             $location = str_replace('http://', 'https://', $location);
         }

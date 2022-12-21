@@ -23,11 +23,6 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
-
 require_once($CFG->libdir . '/dmllib.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/panopto_session_soap_client.php');
@@ -200,6 +195,7 @@ class panopto_category_data {
      * @param object $leafcoursedata course data
      */
     public function ensure_category_branch($usehtmloutput, $leafcoursedata) {
+        require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/filter/multilang/filter.php');
         global $DB;
 
         if (!$this->hasvalidpanoptoversion) {
@@ -219,8 +215,13 @@ class panopto_category_data {
 
                 $targetcategory = $DB->get_record('course_categories', array('id' => $this->moodlecategoryid));
 
+                // Check if multilanguage categories are being used.
+                // If they are being used strip html from category name, and take first. If not just return category/folder name.
+                $multilanguagefilter = new filter_multilang('', array());
+                $cleancategoryname = $multilanguagefilter->filter($targetcategory->name);
+
                 // Some users have categories with no name, so default it to id.
-                $targetcategoryname = !empty(trim($targetcategory->name)) ? $targetcategory->name : $targetcategory->id;
+                $targetcategoryname = !empty(trim($cleancategoryname)) ? $cleancategoryname : $targetcategory->id;
 
                 $branchinfo = [
                     'targetserver' => $this->servername,

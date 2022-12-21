@@ -25,13 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../../config.php');
-}
-
+// No login check is expected since we can run this from console.
+// @codingStandardsIgnoreLine
+require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
-require_once(dirname(__FILE__) . '/../lib/panoptoblock_lti_utility.php');
+require_once(dirname(__FILE__) . '/../lib/lti/panoptoblock_lti_utility.php');
 require_once($CFG->libdir . '/pagelib.php');
 require_once($CFG->libdir . '/blocklib.php');
 
@@ -150,16 +148,81 @@ class block_panopto_rollingsync {
             $newcourseid = intval($event->courseid);
             $originalcourseid = intval($event->other['originalcourseid']);
 
+            // Make sure we cannot copy/import course into itself.
+            if ($originalcourseid == $newcourseid) {
+                return;
+            }
+
             $panoptodata = new \panopto_data($newcourseid);
             $originalpanoptodata = new \panopto_data($originalcourseid);
 
-            // We should only perform the import if both the target and the source course are provisioned in panopto.
-            if (isset($panoptodata->servername) && !empty($panoptodata->servername) &&
+            $istargetcourseprovisioned =
+                isset($panoptodata->servername) && !empty($panoptodata->servername) &&
                 isset($panoptodata->applicationkey) && !empty($panoptodata->applicationkey) &&
-                isset($panoptodata->sessiongroupid) && !empty($panoptodata->sessiongroupid) &&
+                isset($panoptodata->sessiongroupid) && !empty($panoptodata->sessiongroupid);
+
+            $isoriginalcourseprovisioned =
                 isset($originalpanoptodata->servername) && !empty($originalpanoptodata->servername) &&
                 isset($originalpanoptodata->applicationkey) && !empty($originalpanoptodata->applicationkey) &&
-                isset($originalpanoptodata->sessiongroupid) && !empty($originalpanoptodata->sessiongroupid)) {
+                isset($originalpanoptodata->sessiongroupid) && !empty($originalpanoptodata->sessiongroupid);
+
+            // If any is provisioned, check if we need to provision the other course.
+            if ($istargetcourseprovisioned || $isoriginalcourseprovisioned) {
+                // Source course not provisioned, lets provision with target servername and applicationkey.
+                if (!$isoriginalcourseprovisioned) {
+                    $panoptodata = new \panopto_data($newcourseid);
+                    $originalpanoptodata->servername = $panoptodata->servername;
+                    $originalpanoptodata->applicationkey = $panoptodata->applicationkey;
+                    $originalprovisioninginfo = $originalpanoptodata->get_provisioning_info();
+                    $originalprovisioneddata = $originalpanoptodata->provision_course($originalprovisioninginfo, false);
+                    if (isset($originalprovisioneddata->Id) && !empty($originalprovisioneddata->Id)) {
+                        $isoriginalcourseprovisioned = true;
+                    }
+                }
+
+                // Target course not provisioned, lets provision with original servername and applicationkey.
+                if (!$istargetcourseprovisioned) {
+                    $originalpanoptodata = new \panopto_data($originalcourseid);
+                    $panoptodata->servername = $originalpanoptodata->servername;
+                    $panoptodata->applicationkey = $originalpanoptodata->applicationkey;
+                    $provisioninginfo = $panoptodata->get_provisioning_info();
+                    $targetprovisioneddata = $panoptodata->provision_course($provisioninginfo, false);
+                    if (isset($targetprovisioneddata->Id) && !empty($targetprovisioneddata->Id)) {
+                        $istargetcourseprovisioned = true;
+                    }
+                }
+            } else {
+                // Neither course is provisioned.
+
+                // Provision target course using automatic operation server.
+                $targetserver = panopto_get_target_panopto_server();
+                $panoptodata->servername = $targetserver->name;
+                $panoptodata->applicationkey = $targetserver->appkey;
+                $provisioninginfo = $panoptodata->get_provisioning_info();
+                $targetprovisioneddata = $panoptodata->provision_course($provisioninginfo, false);
+                if (isset($targetprovisioneddata->Id) && !empty($targetprovisioneddata->Id)) {
+                    $istargetcourseprovisioned = true;
+                }
+
+                // Provision original course using target course servername and applicationkey.
+                $panoptodata = new \panopto_data($newcourseid);
+                $originalpanoptodata->servername = $panoptodata->servername;
+                $originalpanoptodata->applicationkey = $panoptodata->applicationkey;
+                $originalprovisioninginfo = $originalpanoptodata->get_provisioning_info();
+                $originalprovisioneddata = $originalpanoptodata->provision_course($originalprovisioninginfo, false);
+                if (isset($originalprovisioneddata->Id) && !empty($originalprovisioneddata->Id)) {
+                    $isoriginalcourseprovisioned = true;
+                }
+            }
+
+            // We should only perform the import if both the target and the source courses are provisioned in panopto.
+            if ($istargetcourseprovisioned && $isoriginalcourseprovisioned) {
+
+                // If courses are provisioned to different servers, log an error and return.
+                if (strcmp($panoptodata->servername, $originalpanoptodata->servername) !== 0) {
+                    \panopto_data::print_log('ERROR: Mismatch in server name inside "courserestored" during course import/copy.');
+                    return;
+                }
 
                 $panoptodata->ensure_auth_manager();
                 $activepanoptoserverversion = $panoptodata->authmanager->get_server_version();

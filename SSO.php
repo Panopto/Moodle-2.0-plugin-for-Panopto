@@ -102,7 +102,7 @@ if ($callbackverified) {
             break;
         }
 
-        // Strip ReturnUrl so we can append it on the end
+        // Strip ReturnUrl so we can append it on the end.
         parse_str(parse_url($callbackurl, PHP_URL_QUERY), $params);
         $returnurl = isset($params['ReturnUrl']) ? $params['ReturnUrl'] : "";
 

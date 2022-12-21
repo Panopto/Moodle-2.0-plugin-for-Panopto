@@ -84,8 +84,9 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
             null,
             $apiuseruserkey);
 
-        $this->serviceparams =
-            panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl');
+        $this->serviceparams = panopto_generate_wsdl_service_params(
+            'https://'. $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl'
+        );
 
         // We need to make sure the UpdateContactInfo call succeeded so we need to ensure SOAP_WAIT_ONE_WAY_CALLS is set.
         $this->serviceparams['wsdl_features'] = SOAP_WAIT_ONE_WAY_CALLS | SOAP_SINGLE_ELEMENT_ARRAYS | SOAP_USE_XSI_ARRAY_TYPE;

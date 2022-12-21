@@ -23,11 +23,6 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-if (empty($CFG)) {
-    require_once('../../config.php');
-}
-
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/dmllib.php');
 require_once($CFG->libdir .'/filelib.php');
@@ -230,9 +225,10 @@ class panopto_data {
         // Get the context of the course so we can get capabilities.
         $context = context_course::instance($courseid, MUST_EXIST);
 
-        return has_capability('block/panopto:provision_aspublisher', $context, $USER->id) ||
+        return (has_capability('block/panopto:provision_aspublisher', $context, $USER->id) ||
             has_capability('block/panopto:provision_asteacher', $context, $USER->id) ||
-            has_capability('moodle/course:update', $context, $USER->id);
+            has_capability('moodle/course:update', $context, $USER->id)) &&
+            has_capability('block/panopto:provision_course', $context, $USER->id);
     }
 
     /**
@@ -415,7 +411,6 @@ class panopto_data {
                 }
 
                 if (!$skipusersync && $this->uname !== 'guest') {
-                    // Uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
                     // This is intended to make sure provisioning teachers get access without relogging,
                     // so we only need to perform this if we aren't syncing all enrolled users.
 
@@ -694,9 +689,9 @@ class panopto_data {
             if (empty($aspxauthcookie)) {
                 $importresult = new stdClass;
                 $importresult->importedcourseid = $originalcourseid;
-                $importresult->errormessage = get_string('copy_api_auth_error', 'block_panopto', $this->servername);
+                $importresult->errormessage = get_string('copy_api_error_auth', 'block_panopto', $this->servername);
                 $importresults[] = $importresult;
-                self::print_log(get_string('copy_api_auth_error', 'block_panopto', $importresult));
+                self::print_log(get_string('copy_api_error_auth', 'block_panopto', $importresult));
                 return $importresults;
             }
 
@@ -1503,7 +1498,7 @@ class panopto_data {
 
                 // Only add a folder to the course options if it is not already mapped to a course on moodle.
                 // Unless its the current course.
-                if (!$DB->get_records('block_panopto_foldermap', array('panopto_id' => $folderinfo->Id)) 
+                if (!$DB->get_records('block_panopto_foldermap', array('panopto_id' => $folderinfo->Id))
                     || ($this->sessiongroupid === $folderinfo->Id)) {
 
                     if ($this->sessiongroupid === $folderinfo->Id) {
@@ -1715,7 +1710,7 @@ class panopto_data {
                     FILE_APPEND
                 );
             } else {
-                error_log($logmessage);
+                debugging($logmessage);
 
                 // These flush's are needed for longer processes like the Moodle upgrade process and import process.
 

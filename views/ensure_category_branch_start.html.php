@@ -41,3 +41,4 @@ defined('MOODLE_INTERNAL') || die();
                 <?php
             }
             ?>
+            <br />

@@ -23,6 +23,7 @@
  */
 
 define('AJAX_SCRIPT', true);
+define('READ_ONLY_SESSION', true);
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
@@ -35,10 +36,8 @@ try {
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
 
+    $CFG->enable_read_only_sessions = true;
     $content = new stdClass;
-
-    // Close the session so that the users other tabs in the same session are not blocked.
-    \core\session\manager::write_close();
     $content->text = '';
 
     // Construct the Panopto data proxy object.

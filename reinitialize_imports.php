@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../config.php');
-}
-
-require_once($CFG->libdir . '/formslib.php');
-require_once(dirname(__FILE__) . '/lib/panopto_data.php');
-
 /**
  * The reinitialize imports logic for Panopto
  *
- * @package block_panopto
+ * @package    block_panopto
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+require_once(dirname(__FILE__) . '/../../config.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
+require_once($CFG->libdir . '/formslib.php');
+
+/**
+ * The reinitialize imports form.
+ *
+ * @package    block_panopto
+ * @copyright  Panopto 2020
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panopto_reinitialize_imports_form extends moodleform {
 
@@ -51,7 +54,6 @@ class panopto_reinitialize_imports_form extends moodleform {
 
         $this->add_action_buttons(true, get_string('begin_reinitializing_imports', 'block_panopto'));
     }
-
 }
 
 require_login();
@@ -59,18 +61,24 @@ require_login();
 /**
  * Panopto reinitialize.
  *
+ * @package    block_panopto
+ * @copyright  Panopto 2020
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class panopto_reinitialize {
+    /**
+     * @var string No course exists.
+     */
     const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
+    /**
+     * @var string Invalid data.
+     */
     const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
 }
 
 /**
  * Reinitialize all imports.
  *
- * @package block_panopto
- * @copyright  Panopto 2020
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 function reinitialize_all_imports() {
     global $DB;

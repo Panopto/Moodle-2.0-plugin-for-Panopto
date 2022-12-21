@@ -23,7 +23,7 @@
  */
 
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
-
+// @codingStandardsIgnoreStart
 /**
  * Panopto timeout soap client class.
  *
@@ -186,5 +186,5 @@ class PanoptoTimeoutSoapClient extends SoapClient {
         }
     }
 }
-
+// @codingStandardsIgnoreEnd
 /* End of file panopto_timeout_soap_client.php */

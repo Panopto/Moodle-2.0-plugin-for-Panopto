@@ -23,10 +23,10 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-global $CFG;
-if (empty($CFG)) {
-    require_once(dirname(__FILE__) . '/../../../config.php');
-}
+
+// No login check is expected since we can run this from console.
+// @codingStandardsIgnoreLine
+require_once(dirname(__FILE__) . '/../../../config.php');
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 
 /**
