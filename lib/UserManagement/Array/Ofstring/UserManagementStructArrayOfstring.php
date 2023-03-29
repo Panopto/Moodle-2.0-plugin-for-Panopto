@@ -81,7 +81,7 @@ class UserManagementStructArrayOfstring extends UserManagementWsdlClass
      * @see UserManagementWsdlClass::current()
      * @return string
      */
-    public function current()
+    public function current(): mixed
     {
         return parent::current();
     }
@@ -119,7 +119,7 @@ class UserManagementStructArrayOfstring extends UserManagementWsdlClass
      * @param int $_offset
      * @return string
      */
-    public function offsetGet($_offset)
+    public function offsetGet($_offset): mixed
     {
         return parent::offsetGet($_offset);
     }

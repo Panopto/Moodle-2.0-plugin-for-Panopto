@@ -81,7 +81,7 @@ class UserManagementStructArrayOfGroup extends UserManagementWsdlClass
      * @see UserManagementWsdlClass::current()
      * @return UserManagementStructGroup
      */
-    public function current()
+    public function current(): mixed
     {
         return parent::current();
     }
@@ -119,7 +119,7 @@ class UserManagementStructArrayOfGroup extends UserManagementWsdlClass
      * @param int $_offset
      * @return UserManagementStructGroup
      */
-    public function offsetGet($_offset)
+    public function offsetGet($_offset): mixed
     {
         return parent::offsetGet($_offset);
     }

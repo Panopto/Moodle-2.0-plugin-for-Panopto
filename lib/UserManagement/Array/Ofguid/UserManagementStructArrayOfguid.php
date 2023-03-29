@@ -81,7 +81,7 @@ class UserManagementStructArrayOfguid extends UserManagementWsdlClass
      * @see UserManagementWsdlClass::current()
      * @return guid
      */
-    public function current()
+    public function current(): mixed
     {
         return parent::current();
     }
@@ -119,7 +119,7 @@ class UserManagementStructArrayOfguid extends UserManagementWsdlClass
      * @param int $_offset
      * @return guid
      */
-    public function offsetGet($_offset)
+    public function offsetGet($_offset): mixed
     {
         return parent::offsetGet($_offset);
     }

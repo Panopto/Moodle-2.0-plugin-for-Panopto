@@ -79,7 +79,7 @@ class SessionManagementStructArrayOfExternalHierarchyInfo extends SessionManagem
      * @see SessionManagementWsdlClass::current()
      * @return SessionManagementStructExternalHierarchyInfo
      */
-    public function current()
+    public function current(): mixed
     {
         return parent::current();
     }
@@ -115,9 +115,9 @@ class SessionManagementStructArrayOfExternalHierarchyInfo extends SessionManagem
      * Returns the element at the offset
      * @see SessionManagementWsdlClass::last()
      * @param int $_offset
-     * @return SessionManagementStructExternalHierarchyInfo
+     * @return mixed
      */
-    public function offsetGet($_offset)
+    public function offsetGet($_offset): mixed
     {
         return parent::offsetGet($_offset);
     }

@@ -78,9 +78,9 @@ class SessionManagementStructArrayOfAccessRole extends SessionManagementWsdlClas
     /**
      * Returns the current element
      * @see SessionManagementWsdlClass::current()
-     * @return SessionManagementEnumAccessRole
+     * @return mixed
      */
-    public function current()
+    public function current(): mixed
     {
         return parent::current();
     }
@@ -116,9 +116,9 @@ class SessionManagementStructArrayOfAccessRole extends SessionManagementWsdlClas
      * Returns the element at the offset
      * @see SessionManagementWsdlClass::last()
      * @param int $_offset
-     * @return SessionManagementEnumAccessRole
+     * @return mixed
      */
-    public function offsetGet($_offset)
+    public function offsetGet($_offset): mixed
     {
         return parent::offsetGet($_offset);
     }
