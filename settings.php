@@ -364,6 +364,15 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/panopto_admin_only_videolist',
+            get_string('block_panopto_admin_only_videolist', 'block_panopto'),
+            get_string('block_panopto_admin_only_videolist_desc', 'block_panopto'),
+            0
+        )
+    );
+
     $settings->add(new admin_setting_heading('block_panopto/panopto_bulk_and_batch_tools',
             get_string('block_global_panopto_bulk_and_batch_tools', 'block_panopto'),
             ''));
