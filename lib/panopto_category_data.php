@@ -100,7 +100,7 @@ class panopto_category_data {
         $this->instancename = get_config('block_panopto', 'instance_name');
 
         if (isset($USER->username)) {
-            $username = $USER->username;
+            $username = panopto_convert_user_to_send($USER);
         } else {
             $username = 'guest';
         }

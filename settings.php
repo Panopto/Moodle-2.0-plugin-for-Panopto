@@ -164,6 +164,21 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    $userfields = ['' => get_string('username')];
+    $userprofilefields = $DB->get_records('user_info_field', ['datatype' => 'text'], 'sortorder');
+    foreach ($userprofilefields as $userprofilefield) {
+        $userfields[$userprofilefield->shortname] = $userprofilefield->name;
+    }
+    $settings->add(
+        new admin_setting_configselect(
+            'block_panopto/userfield_to_send',
+            get_string('username_field_to_send', 'block_panopto'),
+            get_string('username_field_to_send_desc', 'block_panopto'),
+            '',
+            $userfields
+        )
+    );
+
     $settings->add(new admin_setting_heading('block_panopto/panopto_folder_and_category_options',
             get_string('block_global_panopto_folder_and_category_options', 'block_panopto'),
             ''));

@@ -83,7 +83,7 @@ if ($callbackverified) {
 
     // Verify passed in parameters are properly signed.
     if (panopto_validate_auth_code($requestauthpayload, $requestauthcode)) {
-        $userkey = panopto_decorate_username($USER->username);
+        $userkey = panopto_decorate_username(panopto_convert_user_to_send($USER));
 
 
         $selectedssotype = get_config('block_panopto', 'sso_sync_type');

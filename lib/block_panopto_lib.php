@@ -387,4 +387,26 @@ function panopto_update_system_publishers() {
         $systemcontext->mark_dirty();
     }
 }
+
+/**
+ * Convert the username to be sent to panopto.
+ *
+ * @param object $user the moodle username for the account which is sent to panopto.
+ * @return string
+ */
+function panopto_convert_user_to_send($user): string {
+    global $CFG, $DB;
+    $userfieldtosend = get_config('block_panopto', 'userfield_to_send');
+    if (!empty($userfieldtosend)) {
+        $fieldname = 'profile_field_' . $userfieldtosend;
+        if (!isset($user->$fieldname)) {
+            require_once($CFG->dirroot . '/user/profile/lib.php');
+            profile_load_data($user);
+        }
+        if (!empty($user->$fieldname)) {
+            return $user->$fieldname;
+        }
+    }
+    return $user->username;
+}
 /* End of file block_panopto_lib.php */
