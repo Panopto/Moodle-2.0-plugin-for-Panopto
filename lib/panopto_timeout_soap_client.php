@@ -141,7 +141,7 @@ class PanoptoTimeoutSoapClient extends SoapClient {
                 'CURLOPT_RETURNTRANSFER' => true,
                 'CURLOPT_HEADER' => true,
                 'CURLOPT_HTTPHEADER' => ['Content-Type: text/xml',
-                                              'SoapAction: ' . $action]
+                                              'SoapAction: ' . $action],
             ];
 
             if (!is_null($this->socket_timeout)) {

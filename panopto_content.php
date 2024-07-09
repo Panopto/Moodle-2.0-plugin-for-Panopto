@@ -38,6 +38,8 @@ try {
     $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
     require_login($course);
     require_sesskey();
+    // Close the session so that the users other tabs in the same session are not blocked.
+    \core\session\manager::write_close();
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
 

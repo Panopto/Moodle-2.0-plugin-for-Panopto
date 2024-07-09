@@ -68,6 +68,24 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     private $sessionmanagementserviceget;
 
     /**
+     * @var SessionManagementServiceEnsure $sessionmanagementserviceensure soap service for ensure calls
+     */
+    private $sessionmanagementserviceensure;
+
+    /**
+     * @var SessionManagementServiceUnprovision $sessionmanagementserviceunprovision soap service for unprovision calls.
+     */
+    private $sessionmanagementserviceunprovision;
+
+    /**
+     * @var SessionManagementServiceUpdate $sessionmanagementserviceupdate soap service for update calls.
+     */
+    private $sessionmanagementserviceupdate;
+
+
+
+
+    /**
      * @var string PERSONAL_FOLDER_ERROR const string to return when user attempted to provision/sync a personal folder.
      * This action is not supported.
      */
@@ -625,7 +643,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             [
                 SessionManagementEnumSessionState::VALUE_BROADCASTING,
                 SessionManagementEnumSessionState::VALUE_COMPLETE,
-                SessionManagementEnumSessionState::VALUE_RECORDING
+                SessionManagementEnumSessionState::VALUE_RECORDING,
             ]
         );
 
@@ -790,7 +808,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     /**
      * Handle error
      *
-     * @param string $lasterror last error message
+     * @param object $lasterror last error message
      */
     private function handle_error($lasterror) {
         $ret = new stdClass;

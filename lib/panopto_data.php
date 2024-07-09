@@ -1201,6 +1201,22 @@ class panopto_data {
     }
 
     /**
+     * Lets us know if we have a value inside the config for a Panopto block,
+     * we don't want any of our events to fire on a disabled block.
+     *
+     */
+    public static function is_block_disabled() {
+        global $DB;
+
+        $sql = "SELECT * " .
+                "FROM {block} b " .
+                "WHERE b.name = :name AND b.visible = 0";
+        $isblockdisabled = $DB->get_record_sql($sql, ['name' => 'panopto']);
+
+        return $isblockdisabled ? true : false;
+    }
+
+    /**
      * Lets us know is we are using at least the minumum required version for the Panopto block
      *
      */
@@ -1777,7 +1793,7 @@ class panopto_data {
             'CURLOPT_RETURNTRANSFER' => true,
             'CURLOPT_HEADER' => false,
             'CURLOPT_HTTPHEADER' => ['Content-Type: application/json',
-                                          'Cookie: .ASPXAUTH='.$aspxauthcookie]
+                                          'Cookie: .ASPXAUTH='.$aspxauthcookie],
         ];
 
         $sockettimeout = get_config('block_panopto', 'panopto_socket_timeout');

@@ -70,6 +70,16 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
     private $usermanagementservicecreate;
 
     /**
+     * @var UserManagementServiceUpdate object used to call the user update service
+     */
+    private $usermanagementserviceupdate;
+
+    /**
+     * @var UserManagementServiceDelete object used to call the user delete service
+     */
+    private $usermanagementservicedelete;
+
+    /**
      * Main constructor
      *
      * @param string $servername

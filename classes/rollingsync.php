@@ -140,8 +140,9 @@ class block_panopto_rollingsync {
      * @param \core\event\course_restored $event
      */
     public static function courserestored(\core\event\course_restored $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (   !\panopto_data::is_main_block_configured()
+            || !\panopto_data::has_minimum_version()
+            || \panopto_data::is_block_disabled()) {
             return;
         }
 
