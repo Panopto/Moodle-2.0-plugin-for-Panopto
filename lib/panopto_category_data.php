@@ -52,12 +52,22 @@ class panopto_category_data {
     private $moodlecategoryid;
 
     /**
-     * @var string $servername
+     * @var int $sessiongroupid The id of the session group.
+     */
+    private $sessiongroupid;
+
+    /**
+     * @var string $uname The username of the current user.
+     */
+    private $uname;
+
+    /**
+     * @var string $servername  The server name.
      */
     private $servername;
 
     /**
-     * @var int $applicationkey
+     * @var int $applicationkey The application key.
      */
     private $applicationkey;
 
@@ -259,7 +269,9 @@ class panopto_category_data {
                 $currentcategory = $DB->get_record('course_categories', ['id' => $targetcategory->parent]);
 
                 while (isset($currentcategory) && !empty($currentcategory)) {
-                    $currentcategoryname = !empty(trim($currentcategory->name)) ? $currentcategory->name : $currentcategory->id;
+                    $currentcategoryname = !empty(trim($currentcategory->name))
+                        ? $multilanguagefilter->filter($currentcategory->name)
+                        : $currentcategory->id;
 
                     $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
                         false,
