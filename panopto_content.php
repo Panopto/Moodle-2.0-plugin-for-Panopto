@@ -167,60 +167,63 @@ try {
                             get_string('no_live_sessions', 'block_panopto') . '</div>';
                     }
 
-                    $content->text .= "<div class='sectionHeader'><b>" .
-                        get_string('completed_recordings', 'block_panopto') . '</b></div>';
+                    $admin_only_videolist = get_config('block_panopto', 'panopto_admin_only_videolist');
+                    if (!$admin_only_videolist || is_siteadmin()) {
+                        $content->text .= "<div class='sectionHeader'><b>" .
+                            get_string('completed_recordings', 'block_panopto') . '</b></div>';
 
-                    if (!empty($completeddeliveries)) {
-                        $i = 0;
+                        if (!empty($completeddeliveries)) {
+                            $i = 0;
 
-                        if (!function_exists('str_contains')) {
-                            /**
-                             * Check if string contains
-                             *
-                             * @param string $haystack
-                             * @param string $needle
-                             * @return bool
-                             */
-                            function str_contains(string $haystack, string $needle): bool {
-                                return '' === $needle || false !== strpos($haystack, $needle);
-                            }
-                        }
-
-                        foreach ($completeddeliveries as $completeddelivery) {
-                            // Collapse to 3 lectures by default.
-                            if ($i == 3) {
-                                $content->text .= "<div id='hiddenLecturesDiv'>";
-                            }
-
-                            if (!str_contains($completeddelivery->ViewerUrl, '?instance') &&
-                                !str_contains($completeddelivery->ViewerUrl, '&instance')) {
-                                if (str_contains($completeddelivery->ViewerUrl, '?')) {
-                                    $completeddelivery->ViewerUrl .= '&instance=' . $panoptodata->instancename;
-                                } else {
-                                    $completeddelivery->ViewerUrl .= '?instance=' . $panoptodata->instancename;
+                            if (!function_exists('str_contains')) {
+                                /**
+                                 * Check if string contains
+                                 *
+                                 * @param string $haystack
+                                 * @param string $needle
+                                 * @return bool
+                                 */
+                                function str_contains(string $haystack, string $needle): bool {
+                                    return '' === $needle || false !== strpos($haystack, $needle);
                                 }
                             }
 
-                            // Alternate gray background for readability.
-                            $altclass = ($i % 2) ? 'listItemAlt' : '';
+                            foreach ($completeddeliveries as $completeddelivery) {
+                                // Collapse to 3 lectures by default.
+                                if ($i == 3) {
+                                    $content->text .= "<div id='hiddenLecturesDiv'>";
+                                }
 
-                            $completeddeliverydisplayname = s($completeddelivery->Name);
-                            $content->text .= "<div class='listItem $altclass'>" .
-                                "<a href='$completeddelivery->ViewerUrl' onclick='return panopto_startSSO(this)'>" .
-                                $completeddeliverydisplayname .
-                                '</a></div>';
-                            $i++;
-                        }
+                                if (!str_contains($completeddelivery->ViewerUrl, '?instance') &&
+                                    !str_contains($completeddelivery->ViewerUrl, '&instance')) {
+                                    if (str_contains($completeddelivery->ViewerUrl, '?')) {
+                                        $completeddelivery->ViewerUrl .= '&instance=' . $panoptodata->instancename;
+                                    } else {
+                                        $completeddelivery->ViewerUrl .= '?instance=' . $panoptodata->instancename;
+                                    }
+                                }
 
-                        // If some lectures are hidden, display "Show all" link.
-                        if ($i > 3) {
-                            $content->text .= '</div>' . "<div id='showAllDiv'>" .
-                                "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>" .
-                                get_string('show_all', 'block_panopto') . '</a>]</div>';
+                                // Alternate gray background for readability.
+                                $altclass = ($i % 2) ? 'listItemAlt' : '';
+
+                                $completeddeliverydisplayname = s($completeddelivery->Name);
+                                $content->text .= "<div class='listItem $altclass'>" .
+                                    "<a href='$completeddelivery->ViewerUrl' onclick='return panopto_startSSO(this)'>" .
+                                    $completeddeliverydisplayname .
+                                    '</a></div>';
+                                $i++;
+                            }
+
+                            // If some lectures are hidden, display "Show all" link.
+                            if ($i > 3) {
+                                $content->text .= '</div>' . "<div id='showAllDiv'>" .
+                                    "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>" .
+                                    get_string('show_all', 'block_panopto') . '</a>]</div>';
+                            }
+                        } else {
+                            $content->text .= "<div class='listItem'>" .
+                                get_string('no_completed_recordings', 'block_panopto') . '</div>';
                         }
-                    } else {
-                        $content->text .= "<div class='listItem'>" .
-                            get_string('no_completed_recordings', 'block_panopto') . '</div>';
                     }
 
                     if ($courseinfo->AudioPodcastITunesUrl) {
