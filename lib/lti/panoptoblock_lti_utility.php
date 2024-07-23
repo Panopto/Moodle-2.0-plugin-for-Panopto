@@ -728,7 +728,7 @@ class panoptoblock_lti_utility {
     public static function is_active_user_enrolled($targetcontext) {
         global $USER;
 
-        return is_enrolled($targetcontext, $USER, 'mod/assignment:submit');
+        return is_enrolled($targetcontext, $USER, 'mod/assign:submit');
     }
 
     /**
