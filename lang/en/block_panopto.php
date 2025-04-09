@@ -242,6 +242,9 @@ $string['provision_both_on_copy'] = 'Provision both courses during copy or impor
 $string['provision_course_link_text'] = 'Provision course';
 $string['provision_courses'] = 'Provision courses';
 $string['provision_error'] = 'Error provisioning course, please check logs for more details.';
+$string['provisionerror'] = 'Error provisioning {$a} course(s), check logs for details.';
+$string['provisionsuccess'] = '{$a} course(s) successfully provisioned';
+$string['provisiontaskfail'] = 'Failed to provision {$a} courses';
 $string['provision_only_target_on_copy'] = 'Only provision the target course during a copy or import process, as long as the source course is already provisioned.';
 $string['provision_successful'] = 'Successfully provisioned course folder with Id: {$a}';
 $string['provisioncourseselect'] = 'Select courses to provision.';
@@ -288,4 +291,5 @@ $string['users_have_been_synced'] = 'The below users have been synced and should
 $string['users_will_be_synced_custom'] = 'Future users will automatically be synced according to your custom Panopto settings.';
 $string['verifying_permission'] = 'Verifying permission';
 $string['viewers'] = 'Viewers';
+$string['viewprovisiontasklog'] = 'Once the task has completed, <a href="{$a}">view the logs</a> to check the status.';
 $string['watch_live'] = 'Watch live';
