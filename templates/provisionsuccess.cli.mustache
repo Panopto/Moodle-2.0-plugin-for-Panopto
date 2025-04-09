@@ -1,0 +1,32 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_panopto/provisionsuccess.cli
+
+    Output when course successfully provisioned by adhoc task.
+}}
+{{#str}} course_name, block_panopto {{/str}}: {{fullname}}
+{{#str}} synced_user_info, block_panopto {{/str}}: {{#userswillbesyncedcustom}}{{.}}{{/userswillbesyncedcustom}}
+{{#asyncwaitwarning}}{{#str}} async_wait_warning, block_panopto {{/str}}{{/asyncwaitwarning}}
+{{#syncafterprovisioning}}{{#str}} users_have_been_synced, block_panopto {{/str}}
+{{#publishers}}{{#str}} publishers, block_panopto{{/str}} : {{.}}{{/publishers}}{{^publishers}}{{#str}} no_publishers, block_panopto{{/str}}{{/publishers}}
+{{#creators}}{{#str}} creators, block_panopto{{/str}} : {{.}}{{/creators}}{{^creators}}{{#str}} no_creators, block_panopto{{/str}}{{/creators}}
+{{#viewers}}{{#str}} viewers, block_panopto{{/str}} : {{.}}{{/viewers}}{{^viewers}}{{#str}} no_viewers, block_panopto{{/str}}{{/viewers}}
+{{/syncafterprovisioning}}
+{{^syncafterprovisioning}}{{#str}} no_users_synced_desc, block_panopto {{/str}}
+{{/syncafterprovisioning}}
+{{#str}} result, block_panopto {{/str}}: {{#str}} provision_successful, block_panopto, {{Id}} {{/str}}
