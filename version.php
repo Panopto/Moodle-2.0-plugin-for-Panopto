@@ -31,8 +31,8 @@ $plugin = (isset($plugin) ? $plugin : new stdClass());
 // If an admin wants to install with an older version number, however, set that here.
 $plugin->version = 2024120600;
 
-// Requires this Moodle version - 4.1.0.
-$plugin->requires = 2022112800;
+// Requires this Moodle version - 4.5.0.
+$plugin->requires = 2024100700;
 $plugin->cron = 0;
 $plugin->component = 'block_panopto';
 $plugin->maturity = MATURITY_STABLE;

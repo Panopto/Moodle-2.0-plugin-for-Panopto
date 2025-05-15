@@ -125,7 +125,19 @@ if ($mform->is_cancelled()) {
         $selectedserver = trim($aserverarray[$data->servers]);
         $selectedkey = trim($appkeyarray[$data->servers]);
 
-        build_category_structure($selectedserver, $selectedkey);
+        $task = new \block_panopto\task\build_category_structure();
+        $task->set_custom_data(['selectedserver' => $selectedserver, 'selectedkey' => $selectedkey]);
+
+        if ($taskid = \core\task\manager::queue_adhoc_task($task)) {
+            $task->set_id($taskid);
+            $progressbaridnumber = $task->progress_start();
+
+            if ($progressbaridnumber) {
+                $progressbar = \core\output\stored_progress_bar::get_by_idnumber($progressbaridnumber);
+                echo $progressbar->get_content();
+                echo "<p>" . get_string('viewtasklog', 'block_panopto', new moodle_url('/admin/tasklogs.php', ['filter' => '\block_panopto\task\build_category_structure '])) . "</p>";
+            }
+        }
 
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
     } else {
