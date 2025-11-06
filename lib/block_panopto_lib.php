@@ -128,8 +128,7 @@ function panopto_generate_wsdl_service_params($apiurl) {
  */
 function panopto_get_configured_panopto_servers() {
 
-    $numservers = get_config('block_panopto', 'server_number');
-    $numservers = isset($numservers) ? $numservers : 0;
+    $numservers = get_config('block_panopto', 'server_number') ?: 0;
 
     // Increment numservers by 1 to take into account starting at 0.
     ++$numservers;

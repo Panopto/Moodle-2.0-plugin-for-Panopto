@@ -31,8 +31,7 @@ if (empty($CFG)) {
 require_once(dirname(__FILE__) . '/classes/admin/trim_configtext.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
-$numservers = get_config('block_panopto', 'server_number');
-$numservers = isset($numservers) ? $numservers : 0;
+$numservers = get_config('block_panopto', 'server_number') ?: 0;
 
 // Increment numservers by 1 to take into account starting at 0.
 ++$numservers;
