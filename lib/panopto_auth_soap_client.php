@@ -38,7 +38,6 @@ require_once(dirname(__FILE__) . '/panopto_timeout_soap_client.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
-
     /**
      * @var array $authparam
      */
@@ -87,7 +86,7 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
         );
 
         $this->serviceparams =
-            panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
+            panopto_generate_wsdl_service_params('https://' . $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
         $this->serviceparams['wsdl_trace'] = true;
     }
 

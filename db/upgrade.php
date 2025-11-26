@@ -32,7 +32,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014121502) {
-
         // Add db fields for servername and application key per course.
         if (isset($CFG->block_panopto_server_name)) {
             $oldservername = $CFG->block_panopto_server_name;
@@ -70,7 +69,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2015012901) {
-
         // Define field publisher_mapping to be added to block_panopto_foldermap.
         $table = new xmldb_table('block_panopto_foldermap');
         $field = new xmldb_field('publisher_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '1', 'panopto_app_key');
@@ -155,7 +153,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2017031303) {
-
         // Get the roles using the old method so we can update current customers to the new tables.
         $pubroles = [];
         $creatorroles = [];
@@ -220,7 +217,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
             foreach ($existingcoursemappings as $existingmapping) {
                 if (isset($existingmapping->publisher_mapping) && !empty($existingmapping->publisher_mapping)) {
-                    $pubroles = explode("," , $existingmapping->publisher_mapping);
+                    $pubroles = explode(",", $existingmapping->publisher_mapping);
 
                     foreach ($pubroles as $pubrole) {
                         if (!empty($pubrole)) {
@@ -237,7 +234,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2017110600) {
-
         // Define table table where we will place all of our old/broken folder mappings. So customers can keep the data if needed.
         $oldfoldermaptable = new xmldb_table('block_panopto_old_foldermap');
         if (!$dbman->table_exists($oldfoldermaptable)) {
@@ -272,7 +268,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2018030200) {
-
         // Since this toggle got changed/removed for a select,
         // get the old value and if it's set then set the new feature as appropriate.
         if (get_config('block_panopto', 'prefix_new_folder_names')) {
@@ -284,7 +279,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2019070100) {
-
         // Define table table where we will place all of our category mappings.
         // So we can know which categories are linked to Panopto folders.
         $categorymaptable = new xmldb_table('block_panopto_categorymap');
@@ -327,7 +321,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2021063000) {
-
         $foldermaptable = new xmldb_table('block_panopto_foldermap');
         $importmaptable = new xmldb_table('block_panopto_importmap');
         $creatormaptable = new xmldb_table('block_panopto_creatormap');

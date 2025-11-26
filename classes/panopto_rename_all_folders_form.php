@@ -26,7 +26,6 @@ require_once($CFG->libdir . '/formslib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panopto_rename_all_folders_form extends moodleform {
-
     /**
      * @var string $title
      */

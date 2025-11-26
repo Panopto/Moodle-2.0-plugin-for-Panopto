@@ -18,14 +18,14 @@
  * The user soap client for Panopto
  *
  * @package block_panopto
- * @copyright Panopto 2009 - 2016
+ * @copyright Panopto 2009 - 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
  * The user soap client for Panopto
  *
- * @copyright Panopto 2009 - 2016
+ * @copyright Panopto 2009 - 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -35,6 +35,7 @@ require_once(dirname(__FILE__) . '/UserManagement/UserManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/panopto_timeout_soap_client.php');
+require_once(dirname(__FILE__) . '/panopto_throttling.php');
 
 /**
  * Panopto user SOAP client
@@ -92,15 +93,24 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
         $this->authparam = new UserManagementStructAuthenticationInfo(
             $apiuserauthcode,
             null,
-            $apiuseruserkey);
+            $apiuseruserkey
+        );
 
         $this->serviceparams = panopto_generate_wsdl_service_params(
-            'https://'. $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl'
+            'https://' . $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl'
         );
 
         // We need to make sure the UpdateContactInfo call succeeded so we need to ensure SOAP_WAIT_ONE_WAY_CALLS is set.
         $this->serviceparams['wsdl_features'] = SOAP_WAIT_ONE_WAY_CALLS | SOAP_SINGLE_ELEMENT_ARRAYS | SOAP_USE_XSI_ARRAY_TYPE;
 
+        // Initialize the parent SoapClient with the required parameters.
+        $wsdlurl = 'https://' . $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl';
+        $soapoptions = array_merge($this->serviceparams, [
+            'uri' => 'http://tempuri.org/',
+            'location' => 'https://' . $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc',
+        ]);
+
+        parent::__construct($wsdlurl, $soapoptions);
     }
 
     /**
@@ -111,17 +121,38 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
      * @param string $email user email address
      * @param array $externalgroupids array of group ids the user needs to be in
      * @param string $username panopto username
+     * @return bool True on success
      */
     public function sync_external_user($firstname, $lastname, $email, $externalgroupids, $username = "") {
+        // Use throttling system for this operation with original strict behavior.
+        return panopto_throttling::execute_with_throttling(
+            [$this, 'sync_external_user_impl'],
+            [$firstname, $lastname, $email, $externalgroupids, $username],
+            'usermanagement_sync',
+            'sync_external_user',
+            null // Userid not needed for context here.
+        );
+    }
+
+    /**
+     * Internal implementation of sync_external_user with throttling applied
+     *
+     * @param string $firstname user first name
+     * @param string $lastname user last name
+     * @param string $email user email address
+     * @param array $externalgroupids array of group ids the user needs to be in
+     * @param string $username panopto username
+     * @return bool True on success
+     */
+    public function sync_external_user_impl($firstname, $lastname, $email, $externalgroupids, $username) {
 
         // Get user from panopto, and send notifications status.
         $instancename = \get_config('block_panopto', 'instance_name');
         $panoptouser = $this->get_user_by_key($instancename . '\\' . $username);
         $sendemailnotifications = $panoptouser->EmailSessionNotifications ?? false;
 
-        if (!isset($this->usermanagementservicesync)) {
-            $this->usermanagementservicesync = new UserManagementServiceSync($this->serviceparams);
-        }
+        // Always create a fresh SOAP client instance to avoid state corruption from previous calls.
+        $usermanagementservicesync = new UserManagementServiceSync($this->serviceparams);
 
         $syncparamsobject = new UserManagementStructSyncExternalUser(
             $this->authparam,
@@ -132,48 +163,92 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
             $externalgroupids
         );
 
-        // Returns false if the call failed.
-        if (!$this->usermanagementservicesync->SyncExternalUser($syncparamsobject)) {
-            \panopto_data::print_log(var_export($this->usermanagementservicesync->getLastError(), true));
+        // Execute the sync operation.
+        if (!$usermanagementservicesync->SyncExternalUser($syncparamsobject)) {
+            $error = $usermanagementservicesync->getLastError();
+            $errormsg = 'Unknown error';
+            if (is_array($error)) {
+                $errormsg = var_export($error, true);
+            } else if (is_object($error) && method_exists($error, 'getMessage')) {
+                $errormsg = $error->getMessage();
+            } else if (is_string($error)) {
+                $errormsg = $error;
+            }
+            \panopto_data::print_log("UserManagement sync failed for user {$username}: " . $errormsg);
+            throw new Exception("UserManagement sync failed: " . $errormsg);
         }
+        return true;
     }
 
     /**
      * Searches for an existing panopto user by its username/userkey and returns it if found, returns null if not found
      *
      * @param string $userkey the username/key being searched.
+     * @return mixed User object or false if not found
      */
     public function get_user_by_key($userkey) {
-        $result = false;
+        return panopto_throttling::execute_with_throttling(
+            [$this, 'get_user_by_key_impl'],
+            [$userkey],
+            'usermanagement_get',
+            'get_user_by_key',
+            null
+        );
+    }
 
-        if (!isset($this->usermanagementserviceget)) {
-            $this->usermanagementserviceget = new UserManagementServiceGet($this->serviceparams);
-        }
+    /**
+     * Internal implementation of get_user_by_key with throttling applied
+     *
+     * @param string $userkey the username/key being searched.
+     * @return mixed User object or false if not found
+     */
+    public function get_user_by_key_impl($userkey) {
+
+        // Always create a fresh SOAP client instance to avoid state corruption from previous calls.
+        $this->usermanagementserviceget = new UserManagementServiceGet($this->serviceparams);
 
         $getuserbykeyparams = new UserManagementStructGetUserByKey(
             $this->authparam,
             $userkey
         );
 
-        // Throws a soapfault if the call failed.
+        // Try primary lookup.
         if ($this->usermanagementserviceget->GetUserByKey($getuserbykeyparams)) {
-            $result = $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
+            return $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
         } else {
-            // Try again in case if username is unified i.e unified\user, but user from moodle DB is still server\user.
+            // Try again with unified username format.
             $username = preg_replace('/^[^\\\\]*\\\\/', 'unified\\', $userkey);
             $getuserbykeyparams = new UserManagementStructGetUserByKey(
                 $this->authparam,
                 $username
             );
+
             if ($this->usermanagementserviceget->GetUserByKey($getuserbykeyparams)) {
-                $result = $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
+                return $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
             } else {
-                $lasterror = $this->usermanagementserviceget->getLastError()['UserManagementServiceGet::GetUserByKey'];
-                \panopto_data::print_log(var_export($lasterror, true));
-                throw $lasterror;
+                $errordata = $this->usermanagementserviceget->getLastError();
+                $lasterror = isset($errordata['UserManagementServiceGet::GetUserByKey']) ?
+                    $errordata['UserManagementServiceGet::GetUserByKey'] : $errordata;
+
+                $errormsg = 'Unknown error';
+                if (is_array($lasterror)) {
+                    $errormsg = var_export($lasterror, true);
+                } else if (is_object($lasterror) && method_exists($lasterror, 'getMessage')) {
+                    $errormsg = $lasterror->getMessage();
+                } else if (is_string($lasterror)) {
+                    $errormsg = $lasterror;
+                }
+
+                \panopto_data::print_log("GetUserByKey failed: " . $errormsg);
+
+                // Throw a proper Exception, not the raw error object.
+                if (is_object($lasterror) && $lasterror instanceof Exception) {
+                    throw $lasterror;
+                } else {
+                    throw new Exception("GetUserByKey failed: " . $errormsg);
+                }
             }
         }
-        return $result;
     }
 
     /**
@@ -191,8 +266,19 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
      * @param string $usersettingsurl
      * @param string $password the password for the new user
      */
-    public function create_user($email, $emailsessionnotifications, $firstname, $groupmemberships,
-                                $lastname, $systemrole, $userbio, $userid, $userkey, $usersettingsurl, $password) {
+    public function create_user(
+        $email,
+        $emailsessionnotifications,
+        $firstname,
+        $groupmemberships,
+        $lastname,
+        $systemrole,
+        $userbio,
+        $userid,
+        $userkey,
+        $usersettingsurl,
+        $password
+    ) {
         $result = false;
 
         if (!isset($this->usermanagementservicecreate)) {
@@ -258,9 +344,27 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
         if ($this->usermanagementserviceupdate->UpdateContactInfo($updateuserparams)) {
             $result = $this->usermanagementserviceupdate->getResult();
         } else {
-            $lasterror = $this->usermanagementserviceupdate->getLastError()['UserManagementServiceUpdate::UpdateContactInfo'];
-            \panopto_data::print_log(var_export($lasterror, true));
-            throw $lasterror;
+            $errordata = $this->usermanagementserviceupdate->getLastError();
+            $lasterror = isset($errordata['UserManagementServiceUpdate::UpdateContactInfo']) ?
+                $errordata['UserManagementServiceUpdate::UpdateContactInfo'] : $errordata;
+
+            $errormsg = 'Unknown error';
+            if (is_array($lasterror)) {
+                $errormsg = var_export($lasterror, true);
+            } else if (is_object($lasterror) && method_exists($lasterror, 'getMessage')) {
+                $errormsg = $lasterror->getMessage();
+            } else if (is_string($lasterror)) {
+                $errormsg = $lasterror;
+            }
+
+            \panopto_data::print_log("UpdateContactInfo failed: " . $errormsg);
+
+            // Throw a proper Exception.
+            if (is_object($lasterror) && $lasterror instanceof Exception) {
+                throw $lasterror;
+            } else {
+                throw new Exception("UpdateContactInfo failed: " . $errormsg);
+            }
         }
 
         return $result;

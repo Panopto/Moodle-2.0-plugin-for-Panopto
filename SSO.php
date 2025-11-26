@@ -50,8 +50,10 @@ foreach ($configuredserverarray as $possibleserver) {
 }
 
 if ($callbackverified) {
-    if (strpos($callbackurl, 'http%') !== false
-     || strpos($callbackurl, 'https%') !== false) {
+    if (
+        strpos($callbackurl, 'http%') !== false ||
+        strpos($callbackurl, 'https%') !== false
+    ) {
         $callbackurl = urldecode($callbackurl);
     }
 
@@ -101,10 +103,10 @@ if ($callbackverified) {
         switch ($selectedssotype) {
             case 'sync':
                 $ssosynctask->execute();
-            break;
+                break;
             case 'asyncsync':
                 \core\task\manager::queue_adhoc_task($ssosynctask);
-            break;
+                break;
         }
 
         // Strip ReturnUrl so we can append it on the end.

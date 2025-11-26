@@ -40,7 +40,6 @@ require_once(dirname(__FILE__) . '/panopto_session_soap_client.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panopto_category_data {
-
     /**
      * @var string $instancename course id class is being provisioned for
      */
@@ -153,7 +152,7 @@ class panopto_category_data {
             );
 
             if (!isset($this->sessionmanager)) {
-                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'session'));
+                \panopto_data::print_log(get_string('api_manager_unavailable', 'block_panopto', 'session'));
             }
         }
     }
@@ -172,7 +171,7 @@ class panopto_category_data {
             );
 
             if (!isset($this->authmanager)) {
-                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'auth'));
+                \panopto_data::print_log(get_string('api_manager_unavailable', 'block_panopto', 'auth'));
             }
         }
     }
@@ -210,29 +209,38 @@ class panopto_category_data {
      * @param object $leafcoursedata course data
      */
     public function ensure_category_branch($usehtmloutput, $leafcoursedata) {
-        require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/filter/multilang/filter.php');
-        global $DB;
+        global $CFG, $DB;
 
         if (!$this->hasvalidpanoptoversion) {
-
             $panoptoversioninfo = [
                 'activepanoptoversion' => $this->activepanoptoserverversion,
                 'requiredpanoptoversion' => self::$categoriesrequiredpanoptoversion,
             ];
 
             if ($usehtmloutput) {
-                include('views/ensure_category_branch_failed.html.php');
+                include($CFG->dirroot . '/blocks/panopto/views/ensure_category_branch_failed.html.php');
             } else {
                 \panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
             }
         } else {
             try {
-
                 $targetcategory = $DB->get_record('course_categories', ['id' => $this->moodlecategoryid]);
 
                 // Check if multilanguage categories are being used.
                 // If they are being used strip html from category name, and take first. If not just return category/folder name.
-                $multilanguagefilter = new filter_multilang('', []);
+
+                // Use the appropriate filter class based on Moodle version.
+                // Moodle 4.5+ uses the namespaced class, earlier versions use the old class.
+                if (class_exists('\filter_multilang\text_filter')) {
+                    // Moodle 4.5+ - use the new namespaced class.
+                    $multilanguagefilter = new \filter_multilang\text_filter('', []);
+                } else {
+                    // Moodle 4.1-4.4 - use the legacy class (with manual require if needed).
+                    if (!class_exists('filter_multilang')) {
+                        require_once(dirname(__FILE__, 4) . '/filter/multilang/filter.php');
+                    }
+                    $multilanguagefilter = new filter_multilang('', []);
+                }
                 $cleancategoryname = $multilanguagefilter->filter($targetcategory->name);
 
                 // Some users have categories with no name, so default it to id.
@@ -244,7 +252,7 @@ class panopto_category_data {
                 ];
 
                 if ($usehtmloutput) {
-                    include('views/ensure_category_branch_start.html.php');
+                    include($CFG->dirroot . '/blocks/panopto/views/ensure_category_branch_start.html.php');
                 } else {
                     \panopto_data::print_log_verbose(get_string('ensure_category_branch_start', 'block_panopto', $branchinfo));
                 }
@@ -298,7 +306,7 @@ class panopto_category_data {
                 } else if (!$usehtmloutput) {
                     \panopto_data::print_log(get_string('ensure_category_branch_failed', 'block_panopto'));
                 } else {
-                    include('views/ensure_category_branch_failed.html.php');
+                    include($CFG->dirroot . '/blocks/panopto/views/ensure_category_branch_failed.html.php');
                 }
 
                 return $categorydata;
@@ -316,7 +324,8 @@ class panopto_category_data {
      * @param object $leafcoursedata course data
      */
     private function save_category_data_to_table($categorybranchdata, $usehtmloutput, $leafcoursedata) {
-        global $DB;
+        global $CFG;
+
         $row = (object) [
             'category_id' => null,
             'panopto_id' => null,
@@ -327,7 +336,6 @@ class panopto_category_data {
         $ensuredbranch = '';
         $leafcoursesessiongroupid = (isset($leafcoursedata) && !empty($leafcoursedata)) ? $leafcoursedata->sessiongroupid : null;
         foreach ($categorybranchdata as $updatedcategory) {
-
             // Format the output string for the next child in the branch.
             // This is the string to be displayed in the log or UI, use name instead of Id so it's more readeable.
             if (!empty($ensuredbranch)) {
@@ -348,7 +356,7 @@ class panopto_category_data {
         }
 
         if ($usehtmloutput) {
-            include('views/ensure_category_branch_success.html.php');
+            include($CFG->dirroot . '/blocks/panopto/views/ensure_category_branch_success.html.php');
         } else {
             \panopto_data::print_log_verbose(get_string('ensure_category_branch_success', 'block_panopto', $ensuredbranch));
         }
@@ -362,7 +370,7 @@ class panopto_category_data {
      * @param string $selectedkey selected key
      */
     public static function build_category_structure($usehtmloutput, $selectedserver, $selectedkey) {
-        global $DB;
+        global $CFG, $DB;
 
         \panopto_data::print_log(get_string('build_category_structure_start', 'block_panopto', $selectedserver));
 
@@ -375,7 +383,7 @@ class panopto_category_data {
                 'requiredpanoptoversion' => self::$categoriesrequiredpanoptoversion];
 
             if ($usehtmloutput) {
-                include('views/ensure_category_branch_failed.html.php');
+                include($CFG->dirroot . '/blocks/panopto/views/ensure_category_branch_failed.html.php');
             } else {
                 \panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
             }

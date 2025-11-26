@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
+require_once(dirname(__FILE__) . '/classes/external/get_content.php');
 
 /**
  * Base class for the Panopto block for Moodle.
@@ -35,7 +36,6 @@ require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class block_panopto extends block_base {
-
     /**
      * ID of the div element containing the contents of the Panopto block.
      */
@@ -101,7 +101,6 @@ class block_panopto extends block_base {
         );
 
         if (!empty($data->course)) {
-
             // Only perform this chunk if we are remapping to a new folder.
             $panoptodata = new \panopto_data($this->page->course->id);
 
@@ -147,24 +146,34 @@ class block_panopto extends block_base {
             return $this->content;
         }
 
-        $this->content = new stdClass;
-
-        // Initialize $this->content->text to an empty string here to avoid trying to append to it before
-        // It has been initialized and throwing a warning. Bug 33163.
+        $this->content = new stdClass();
         $this->content->text = '';
         $this->content->footer = '';
 
-        $params = ['id' => self::CONTENTID, 'courseid' => $COURSE->id];
+        // Ensure we have a valid course context.
+        if (!isset($this->context) || !$this->context instanceof context) {
+            $this->context = context_course::instance($COURSE->id);
+        }
 
-        $this->page->requires->yui_module('moodle-block_panopto-asyncload',
-                                    'M.block_panopto.asyncload.init',
-                                    [$params],
-                                    null,
-                                    true);
+        // Get the course context ID.
+        $contextid = $this->context->id;
 
-        $this->content->text = html_writer::tag('div', "<font id='loading_text'>" .
-            get_string('fetching_content', 'block_panopto') . '</font>', $params);
+        // Create a unique ID for this block instance.
+        $blockid = 'panopto_block_' . $this->instance->id;
 
+        // Add loading text.
+        $this->content->text .= '<div id="' . $blockid . '">';
+        $this->content->text .= '<div id="loading_text">' . get_string('loading_content', 'block_panopto') . '</div>';
+        $this->content->text .= '</div>';
+
+        $params = [
+            'id' => $blockid,
+            'courseid' => $COURSE->id,
+            'contextid' => $contextid,
+        ];
+
+        // Initialize the AMD module with the course ID and context.
+        $this->page->requires->js_call_amd('block_panopto/asyncload', 'initblock', [$params]);
         $this->content->text .= '<script type="text/javascript">' .
                     // Function to pop up Panopto live note taker.
                     'function panopto_launchNotes(url) {' .

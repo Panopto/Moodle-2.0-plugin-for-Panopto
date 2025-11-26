@@ -15,22 +15,31 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Create form for server selection.
+ * The reinitialize imports form.
  *
- * @package block_panopto
- * @copyright  Panopto 2009 - 2015
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_panopto
+ * @copyright  Panopto 2025
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class panopto_unprovision_course_form extends moodleform {
+class panopto_reinitialize_imports_form extends moodleform {
     /**
-     * Defines a Panopto unprovision form
+     * @var string $title
+     */
+    protected $title = '';
+
+    /**
+     * @var string $description
+     */
+    protected $description = '';
+
+    /**
+     * Defines a Panopto reinitialize import form
      */
     public function definition() {
-
-        global $DB, $aserverarray;
+        global $DB;
 
         $mform = & $this->_form;
 
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
+        $this->add_action_buttons(true, get_string('begin_reinitializing_imports', 'block_panopto'));
     }
 }

@@ -189,6 +189,7 @@ class PanoptoTimeoutSoapClient extends SoapClient {
         if (!$one_way) {
             return $response;
         }
+        return null;
     }
 }
 // @codingStandardsIgnoreEnd

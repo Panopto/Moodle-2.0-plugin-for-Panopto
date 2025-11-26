@@ -22,7 +22,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panoptoblock_lti_utility {
-
     /**
      * Get the id of the pre-configured LTI tool that matched the Panopto server a course is provisioned to.
      * If multiple LTI tools are configured to a single server this will get the first one.
@@ -51,12 +50,16 @@ class panoptoblock_lti_utility {
             $config = lti_get_type_type_config($type->id);
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
-            if (!empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
-                $type->state == LTI_TOOL_STATE_CONFIGURED) {
+            if (
+                !empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
+                $type->state == LTI_TOOL_STATE_CONFIGURED
+            ) {
                 $currentconfig = lti_get_type_config($type->id);
 
-                if ($islti1p3 || (!empty($requiredcustomparam) && !empty($currentconfig['customparameters']) &&
-                    stripos($currentconfig['customparameters'], $requiredcustomparam) !== false)) {
+                if (
+                    $islti1p3 || (!empty($requiredcustomparam) && !empty($currentconfig['customparameters']) &&
+                    stripos($currentconfig['customparameters'], $requiredcustomparam) !== false)
+                ) {
                     // Append matches, so we can filter later.
                     $idmatches[] = ['id' => $type->id, 'islti1p3' => $islti1p3];
                 } else if (empty($requiredcustomparam)) {
@@ -102,12 +105,16 @@ class panoptoblock_lti_utility {
             $config = lti_get_type_type_config($type->id);
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
-            if (!empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
-                $type->state == LTI_TOOL_STATE_CONFIGURED) {
+            if (
+                !empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
+                $type->state == LTI_TOOL_STATE_CONFIGURED
+            ) {
                 $currentconfig = lti_get_type_config($type->id);
 
-                if ($islti1p3 || (!empty($currentconfig['customparameters']) &&
-                    strpos($currentconfig['customparameters'], $requiredcustomparam) !== false)) {
+                if (
+                    $islti1p3 || (!empty($currentconfig['customparameters']) &&
+                    strpos($currentconfig['customparameters'], $requiredcustomparam) !== false)
+                ) {
                     $urlmatches[] = ['url' => $type->config['toolurl'], 'islti1p3' => $islti1p3];
                 }
             }
@@ -129,7 +136,7 @@ class panoptoblock_lti_utility {
      * @return string The HTML code containing the javascript code for the launch
      */
     public static function launch_tool($instance) {
-        list($endpoint, $params) = self::get_launch_data($instance);
+        [$endpoint, $params] = self::get_launch_data($instance);
 
         $debuglaunch = ( $instance->debuglaunch == 1 );
 
@@ -163,7 +170,7 @@ class panoptoblock_lti_utility {
                 $typeid = $tool->id;
                 $ltiversion = isset($tool->ltiversion) ? $tool->ltiversion : LTI_VERSION_1;
             } else {
-                $tool = lti_get_tool_by_url_match($instance->securetoolurl,  $instance->course);
+                $tool = lti_get_tool_by_url_match($instance->securetoolurl, $instance->course);
                 if ($tool) {
                     $typeid = $tool->id;
                     $ltiversion = isset($tool->ltiversion) ? $tool->ltiversion : LTI_VERSION_1;
@@ -332,7 +339,7 @@ class panoptoblock_lti_utility {
         }
 
         $target = '';
-        switch($launchcontainer) {
+        switch ($launchcontainer) {
             case LTI_LAUNCH_CONTAINER_EMBED:
             case LTI_LAUNCH_CONTAINER_EMBED_NO_BLOCKS:
                 $target = 'iframe';
@@ -354,11 +361,20 @@ class panoptoblock_lti_utility {
         if ($typeid && !$islti2) {
             $services = lti_get_services();
             foreach ($services as $service) {
-                $serviceparameters = $service->get_launch_parameters('basic-lti-launch-request',
-                        $course->id, $USER->id , $typeid, $instance->typeid);
+                $serviceparameters = $service->get_launch_parameters(
+                    'basic-lti-launch-request',
+                    $course->id,
+                    $USER->id,
+                    $typeid,
+                    $instance->typeid
+                );
                 foreach ($serviceparameters as $paramkey => $paramvalue) {
                     $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter(
-                        $toolproxy, $tool, $requestparams, $paramvalue, $islti2
+                        $toolproxy,
+                        $tool,
+                        $requestparams,
+                        $paramvalue,
+                        $islti2
                     );
                 }
             }
@@ -367,8 +383,12 @@ class panoptoblock_lti_utility {
         // Allow request params to be updated by sub-plugins.
         $plugins = core_component::get_plugin_list('ltisource');
         foreach (array_keys($plugins) as $plugin) {
-            $pluginparams = component_callback('ltisource_'.$plugin, 'before_launch',
-                [$instance, $endpoint, $requestparams], []);
+            $pluginparams = component_callback(
+                'ltisource_' . $plugin,
+                'before_launch',
+                [$instance, $endpoint, $requestparams],
+                []
+            );
 
             if (!empty($pluginparams) && is_array($pluginparams)) {
                 $requestparams = array_merge($requestparams, $pluginparams);
@@ -376,7 +396,6 @@ class panoptoblock_lti_utility {
         }
 
         if ((!empty($key) && !empty($secret)) || $ltiversion1p3) {
-
             // Lti_sign_jwt was not added until 3.7 so we need to support the original style of processing this.
             if (defined('LTI_VERSION_1P3')) {
                 if ($ltiversion !== LTI_VERSION_1P3) {
@@ -387,7 +406,6 @@ class panoptoblock_lti_utility {
             } else {
                 $params = lti_sign_parameters($requestparams, $endpoint, 'POST', $key, $secret);
             }
-
             $endpointurl = new \moodle_url($endpoint);
             $endpointparams = $endpointurl->params();
 
@@ -399,7 +417,6 @@ class panoptoblock_lti_utility {
                     }
                 }
             }
-
         } else {
             // If no key and secret, do the launch unsigned.
             $returnurlparams['unsigned'] = '1';
@@ -437,12 +454,16 @@ class panoptoblock_lti_utility {
             $config = lti_get_type_type_config($type->id);
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
-            if (!empty($targetservername) && strpos($type->config['toolurl'], $targetservername) !== false &&
-                $type->state == LTI_TOOL_STATE_CONFIGURED) {
+            if (
+                !empty($targetservername) && strpos($type->config['toolurl'], $targetservername) !== false &&
+                $type->state == LTI_TOOL_STATE_CONFIGURED
+            ) {
                 $currentconfig = lti_get_type_config($type->id);
 
-                if ($islti1p3 || (!empty($currentconfig['customparameters']) &&
-                    strpos($currentconfig['customparameters'], 'panopto_course_embed_tool') !== false)) {
+                if (
+                    $islti1p3 || (!empty($currentconfig['customparameters']) &&
+                    strpos($currentconfig['customparameters'], 'panopto_course_embed_tool') !== false)
+                ) {
                     // Append matches, so we can filter later.
                     $idmatches[] = ['type' => $type, 'islti1p3' => $islti1p3];
                 }
@@ -492,10 +513,22 @@ class panoptoblock_lti_utility {
      * @throws moodle_exception When the LTI tool type does not exist.`
      * @throws coding_exception For invalid media type and presentation target parameters.
      */
-    public static function build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '',
-                                                      $mediatypes = [], $presentationtargets = [], $autocreate = false,
-                                                      $multiple = true, $unsigned = false, $canconfirm = false,
-                                                      $copyadvice = false, $nonce = '', $pluginname = '') {
+    public static function build_content_item_selection_request(
+        $id,
+        $course,
+        moodle_url $returnurl,
+        $title = '',
+        $text = '',
+        $mediatypes = [],
+        $presentationtargets = [],
+        $autocreate = false,
+        $multiple = true,
+        $unsigned = false,
+        $canconfirm = false,
+        $copyadvice = false,
+        $nonce = '',
+        $pluginname = ''
+    ) {
         global $USER, $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
@@ -614,15 +647,20 @@ class panoptoblock_lti_utility {
         if ($id && !$islti2) {
             $services = lti_get_services();
             foreach ($services as $service) {
-                $serviceparameters = $service->get_launch_parameters('ContentItemSelectionRequest',
-                    $course->id, $USER->id , $id);
+                $serviceparameters = $service->get_launch_parameters(
+                    'ContentItemSelectionRequest',
+                    $course->id,
+                    $USER->id,
+                    $id
+                );
                 foreach ($serviceparameters as $paramkey => $paramvalue) {
                     $requestparams['custom_' . $paramkey] = lti_parse_custom_parameter(
                         $toolproxy,
                         $tool,
                         $requestparams,
                         $paramvalue,
-                        $islti2);
+                        $islti2
+                    );
                 }
             }
         }
@@ -630,8 +668,12 @@ class panoptoblock_lti_utility {
         // Allow request params to be updated by sub-plugins.
         $plugins = core_component::get_plugin_list('ltisource');
         foreach (array_keys($plugins) as $plugin) {
-            $pluginparams =
-                component_callback('ltisource_' . $plugin, 'before_launch', [$instance, $toolurlout, $requestparams], []);
+            $pluginparams = component_callback(
+                'ltisource_' . $plugin,
+                'before_launch',
+                [$instance, $toolurlout, $requestparams],
+                []
+            );
 
             if (!empty($pluginparams) && is_array($pluginparams)) {
                 $requestparams = array_merge($requestparams, $pluginparams);

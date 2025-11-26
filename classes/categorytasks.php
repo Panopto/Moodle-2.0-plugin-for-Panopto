@@ -40,7 +40,6 @@ require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
  * When a category is moved or updated: course_category_updated is called
  */
 class block_panopto_categorytasks {
-
     /**
      * Called when a category has been created
      *
@@ -48,13 +47,14 @@ class block_panopto_categorytasks {
      */
     public static function coursecategorycreated(\core\event\course_category_created $event) {
 
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
         if (get_config('block_panopto', 'enforce_category_structure')) {
-
             $task = new \block_panopto\task\ensure_category();
             $task->set_custom_data([
                 'categoryid' => $event->contextinstanceid,
@@ -74,13 +74,14 @@ class block_panopto_categorytasks {
      * @param \core\event\course_category_updated $event
      */
     public static function coursecategoryupdated(\core\event\course_category_updated $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
         if (get_config('block_panopto', 'enforce_category_structure')) {
-
             $task = new \block_panopto\task\ensure_category();
             $task->set_custom_data([
                 'categoryid' => $event->contextinstanceid,

@@ -41,12 +41,9 @@ $appkeyarray = [];
 
 $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
-
-// Increment numservers by 1 to take into account starting at 0.
-++$numservers;
+$numservers += 1;
 
 for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker++) {
-
     // Generate strings corresponding to potential servernames in the config.
     $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
     $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
@@ -112,13 +109,16 @@ if ($mform->is_cancelled()) {
     $selectedserver = trim($aserverarray[$data->servers]);
     $selectedkey = trim($appkeyarray[$data->servers]);
 
-    if (isset($selectedserver) && !empty($selectedserver) &&
-        isset($selectedkey) && !empty($selectedkey)) {
-
+    if (
+        isset($selectedserver) && !empty($selectedserver) &&
+        isset($selectedkey) && !empty($selectedkey)
+    ) {
         $panoptodata = new \panopto_data($courseid);
 
-        if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
-            ($panoptodata->servername !== $selectedserver)) {
+        if (
+            !isset($panoptodata->servername) || empty($panoptodata->servername) ||
+            ($panoptodata->servername !== $selectedserver)
+        ) {
             $panoptodata->sessiongroupid = null;
         }
 
@@ -128,18 +128,16 @@ if ($mform->is_cancelled()) {
         $provisioningdata = $panoptodata->get_provisioning_info();
         $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
-        include('views/provisioned_course.html.php');
+        include(dirname(__FILE__) . '/views/provisioned_course.html.php');
         echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else {
         $mform->display();
     }
 } else {
-
     // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
     if (count($aserverarray) < 1) {
         echo get_string('no_server', 'block_panopto') .
         "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
-
     } else if (count($aserverarray) === 1) {
         // Get first element from associative array. aServerArray and appKeyArray will have same key values.
         $key = array_keys($aserverarray);
@@ -151,8 +149,10 @@ if ($mform->is_cancelled()) {
         // If we are not using the same server remove the folder ID reference.
         // NOTE: A Moodle course can only point to one Panopto server at a time.
         // So reprovisioning to a different server erases the folder mapping to the original server.
-        if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
-            ($panoptodata->servername !== $selectedserver)) {
+        if (
+            !isset($panoptodata->servername) || empty($panoptodata->servername) ||
+            ($panoptodata->servername !== $selectedserver)
+        ) {
             $panoptodata->sessiongroupid = null;
         }
 
@@ -162,7 +162,7 @@ if ($mform->is_cancelled()) {
         $provisioningdata = $panoptodata->get_provisioning_info();
         $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
-        include('views/provisioned_course.html.php');
+        include(dirname(__FILE__) . '/views/provisioned_course.html.php');
         echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else {
         $panoptodata = new \panopto_data($courseid);
@@ -170,7 +170,7 @@ if ($mform->is_cancelled()) {
             $provisioningdata = $panoptodata->get_provisioning_info();
             $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
-            include('views/provisioned_course.html.php');
+            include(dirname(__FILE__) . '/views/provisioned_course.html.php');
             echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
         } else {
             $mform->display();

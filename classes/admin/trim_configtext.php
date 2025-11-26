@@ -29,7 +29,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class admin_setting_configtext_trimmed extends admin_setting_configtext {
-
     /**
      * Write data to storage
      *
