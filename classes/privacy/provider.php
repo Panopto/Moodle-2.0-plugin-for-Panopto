@@ -27,51 +27,29 @@ namespace block_panopto\privacy;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/my_userlist.php');
+require_once(dirname(__FILE__) . '/my_userlist_provider.php');
+require_once(dirname(__FILE__) . '/my_userdataprovider.php');
 
 use core_privacy\local\metadata\collection;
 
-// @codingStandardsIgnoreStart
-if (interface_exists('\core_privacy\local\request\userlist')) {
-    interface my_userlist extends \core_privacy\local\request\userlist {
-    }
-} else {
-    interface my_userlist {
-    }
-}
-
-if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
-    interface my_userlist_provider extends \core_privacy\local\request\core_userlist_provider {
-    }
-} else {
-    interface my_userlist_provider {
-    }
-}
-
-if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
-    interface my_userdataprovider extends \core_privacy\local\request\core_user_data_provider {
-    }
-} else {
-    interface my_userdataprovider {
-    }
-}
-// @codingStandardsIgnoreEnd
-
+// phpcs:disable Universal.OOStructures.AlphabeticExtendsImplements
 /**
  * Provider that stores user data.
+ * This plugin does store personal user data.
  *
  * @package block_panopto
  * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
-        // This plugin does store personal user data.
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\data_provider,
-        \core_privacy\local\request\plugin\provider,
-        my_userdataprovider,
-        my_userlist_provider,
-        my_userlist {
-
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\data_provider,
+    \core_privacy\local\request\plugin\provider,
+    my_userdataprovider,
+    my_userlist,
+    my_userlist_provider {
+// phpcs:enable Universal.OOStructures.AlphabeticExtendsImplements
     /**
      * Get metadata
      *
@@ -102,7 +80,8 @@ class provider implements
             $currentpanopto = new \panopto_data($currentcourse->id);
             if ($currentpanopto->has_valid_panopto()) {
                 $contextlist->add_from_sql(
-                    "SELECT c.id FROM {context} c WHERE c.id = :id", ['id' => \context_course::instance($currentcourse->id)->id]
+                    "SELECT c.id FROM {context} c WHERE c.id = :id",
+                    ['id' => \context_course::instance($currentcourse->id)->id]
                 );
             }
         }
@@ -150,11 +129,13 @@ class provider implements
             // Search for user in panopto, if they exist then export the below data, if they do not exist then skip.
             $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $userinfo->username);
 
-            if ($panoptouser != null &&
+            if (
+                $panoptouser != null &&
                 !\panopto_is_guid_empty($panoptouser->UserId) &&
                 \panopto_user_info_valid($panoptouser->FirstName) &&
                 \panopto_user_info_valid($panoptouser->LastName) &&
-                \panopto_user_info_valid($panoptouser->Email)) {
+                \panopto_user_info_valid($panoptouser->Email)
+            ) {
                 $subcontext = [];
                 $subcontext[] = \get_string('pluginname', 'block_panopto');
                 $subcontext[] = $currentpanopto->servername;

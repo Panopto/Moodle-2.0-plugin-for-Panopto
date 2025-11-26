@@ -73,7 +73,7 @@ if ($mform->is_cancelled()) {
 
     echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
 } else {
-    include('views/bulk_task_rename_warning.html.php');
+    include(dirname(__FILE__) . '/views/bulk_task_rename_warning.html.php');
 
     $mform->display();
 }

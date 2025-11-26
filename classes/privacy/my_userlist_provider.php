@@ -15,22 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Create form for server selection.
+ * Compatibility interface for userlist provider.
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2015
+ * @copyright Panopto 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class panopto_unprovision_course_form extends moodleform {
-    /**
-     * Defines a Panopto unprovision form
-     */
-    public function definition() {
 
-        global $DB, $aserverarray;
+namespace block_panopto\privacy;
 
-        $mform = & $this->_form;
+defined('MOODLE_INTERNAL') || die();
 
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
+// @codingStandardsIgnoreStart
+if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
+    interface my_userlist_provider extends \core_privacy\local\request\core_userlist_provider {
+    }
+} else {
+    interface my_userlist_provider {
     }
 }
+// @codingStandardsIgnoreEnd
+

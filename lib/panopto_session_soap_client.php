@@ -108,7 +108,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         );
 
         $this->serviceparams = panopto_generate_wsdl_service_params(
-            'https://'. $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl'
+            'https://' . $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl'
         );
     }
 
@@ -398,9 +398,8 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $folderlist = $retobj->GetCreatorFoldersListResult->Results->Folder;
 
             if ($totalresults > $resultsperpage) {
-
                 $folderstoget = $totalresults - $resultsperpage;
-                ++$currentpage;
+                $currentpage += 1;
                 while ($folderstoget > 0) {
                     $pagination = new SessionManagementStructPagination($resultsperpage, $currentpage);
 
@@ -428,7 +427,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
                         );
                     }
 
-                    ++$currentpage;
+                    $currentpage += 1;
                     $folderstoget -= $resultsperpage;
                 }
             } else if ($totalresults === 0) {
@@ -487,7 +486,6 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $folderlist = $retobj->GetExtendedCreatorFoldersListResult->Results->ExtendedFolder;
 
             if ($totalresults > $resultsperpage) {
-
                 $folderstoget = $totalresults - $resultsperpage;
                 ++$currentpage;
                 while ($folderstoget > 0) {
@@ -575,7 +573,6 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $folderlist = $retobj->GetFoldersListResult->Results->Folder;
 
             if ($totalresults > $resultsperpage) {
-
                 $folderstoget = $totalresults - $resultsperpage;
                 ++$currentpage;
                 while ($folderstoget > 0) {
@@ -808,11 +805,22 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     /**
      * Handle error
      *
-     * @param object $lasterror last error message
+     * @param mixed $lasterror last error message (can be Exception, array, or string)
+     * @return stdClass Error object with message and flags
      */
     private function handle_error($lasterror) {
-        $ret = new stdClass;
-        $ret->errormessage = $lasterror->getMessage();
+        $ret = new stdClass();
+
+        // Extract error message from various types.
+        if (is_array($lasterror)) {
+            $ret->errormessage = var_export($lasterror, true);
+        } else if (is_object($lasterror) && method_exists($lasterror, 'getMessage')) {
+            $ret->errormessage = $lasterror->getMessage();
+        } else if (is_string($lasterror)) {
+            $ret->errormessage = $lasterror;
+        } else {
+            $ret->errormessage = 'Unknown error: ' . var_export($lasterror, true);
+        }
 
         if (!empty($ret->errormessage)) {
             if (strpos($ret->errormessage, 'not found') !== false) {

@@ -94,6 +94,12 @@ if ($mform->is_cancelled()) {
     if ($courses) {
         $coursecount = count($courses);
 
+        // Raise PHP time limit for bulk unprovisioning operations to prevent timeouts.
+        // Only needed for large batches (50+ courses) where cumulative time could exceed limits.
+        if ($coursecount >= 50) {
+            core_php_time_limit::raise();
+        }
+
         foreach ($courses as $courseid) {
             if (empty($courseid)) {
                 continue;
@@ -104,7 +110,7 @@ if ($mform->is_cancelled()) {
             $unprovisioninginfo = $panoptodata->get_provisioning_info();
             $unprovisionwassuccess = $panoptodata->unprovision_course();
 
-            include('views/unprovisioned_course.html.php');
+            include(dirname(__FILE__) . '/views/unprovisioned_course.html.php');
         }
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
     } else {

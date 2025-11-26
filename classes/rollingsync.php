@@ -50,7 +50,6 @@ require_once($CFG->libdir . '/blocklib.php');
  * Upon unenroll of user: roledeleted AND enrollmentdeleted is triggered
  */
 class block_panopto_rollingsync {
-
     /**
      * Called when a course has been created.
      *
@@ -60,7 +59,6 @@ class block_panopto_rollingsync {
         global $DB;
 
         if (get_config('block_panopto', 'auto_insert_lti_link_to_new_courses')) {
-
             // Get a matching LTI tool for the course.
             $tool = \panoptoblock_lti_utility::get_course_tool($event->courseid);
 
@@ -101,8 +99,10 @@ class block_panopto_rollingsync {
             $page->blocks->add_blocks([BLOCK_POS_LEFT => ['panopto']], $pagetypepattern);
         }
 
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -126,8 +126,10 @@ class block_panopto_rollingsync {
      * @param \core\event\course_deleted $event
      */
     public static function coursedeleted(\core\event\course_deleted $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -140,9 +142,11 @@ class block_panopto_rollingsync {
      * @param \core\event\course_restored $event
      */
     public static function courserestored(\core\event\course_restored $event) {
-        if (   !\panopto_data::is_main_block_configured()
-            || !\panopto_data::has_minimum_version()
-            || \panopto_data::is_block_disabled()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version() ||
+            \panopto_data::is_block_disabled()
+        ) {
             return;
         }
 
@@ -246,7 +250,6 @@ class block_panopto_rollingsync {
 
             // We should only perform the import if source course is provisioned in panopto.
             if ($isoriginalcourseprovisioned) {
-
                 // If courses are provisioned to different servers, log an error and return.
                 if (strcmp($panoptodata->servername, $originalpanoptodata->servername) !== 0) {
                     \panopto_data::print_log('ERROR: Mismatch in server name inside "courserestored" during course import/copy.');
@@ -276,8 +279,10 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_deleted $event
      */
     public static function userenrolmentdeleted(\core\event\user_enrolment_deleted $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -300,8 +305,10 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_updated $event
      */
     public static function userenrolmentupdated(\core\event\user_enrolment_updated $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -324,8 +331,10 @@ class block_panopto_rollingsync {
      * @param \core\event\role_assigned $event
      */
     public static function roleassigned(core\event\role_assigned $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -350,8 +359,10 @@ class block_panopto_rollingsync {
      * @param \core\event\role_unassigned $event
      */
     public static function roleunassigned(core\event\role_unassigned $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
@@ -376,13 +387,14 @@ class block_panopto_rollingsync {
      * @param \core\event\user_loggedin $event
      */
     public static function userloggedin(\core\event\user_loggedin $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
         if (get_config('block_panopto', 'sync_after_login')) {
-
             $task = new \block_panopto\task\sync_user_login();
             $task->set_custom_data([
                 'userid' => $event->userid,
@@ -403,13 +415,14 @@ class block_panopto_rollingsync {
      * @param \core\event\user_loggedinas $event
      */
     public static function userloggedinas(\core\event\user_loggedinas $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()) {
+        if (
+            !\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()
+        ) {
             return;
         }
 
         if (get_config('block_panopto', 'sync_after_login')) {
-
             $task = new \block_panopto\task\sync_user_login();
             $task->set_custom_data([
                 'userid' => $event->relateduserid,

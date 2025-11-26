@@ -63,24 +63,25 @@ $ismoodle41minimum = empty($CFG->version) ? false : $CFG->version >= 2022112800.
 $ltimessagehint = $ismoodle41minimum ? json_decode($ltimessagehintenc) : $ltimessagehintenc;
 $cmid = !empty($ltimessagehint->cmid) ? $ltimessagehint->cmid : '';
 
-list(
+[
     $pluginname,
     $callback,
     $toolid,
     $resourcelinkid,
     $contenturl,
     $customdata
-) = array_pad(explode(
-    ',',
-    $ismoodle41minimum ? $cmid : $ltimessagehint),
+] = array_pad(
+    explode(
+        ',',
+        $ismoodle41minimum ? $cmid : $ltimessagehint
+    ),
     6,
     null
 );
 
 $ispanoptoplugin = false;
 $pluginpath = '';
-switch($pluginname)
-{
+switch ($pluginname) {
     case 'mod_panoptosubmission':
         $ispanoptoplugin = true;
         $pluginpath = '/mod/panoptosubmission/contentitem_return.php';
@@ -103,18 +104,19 @@ switch($pluginname)
 }
 
 if (!$ispanoptoplugin) {
-    redirect($CFG->wwwroot . '/mod/lti/auth.php' .
-                "?client_id=$clientid" .
-                "&response_type=$responsetype" .
-                "&response_mode=$responsemode" .
-                '&redirect_uri=' . urlencode($redirecturi) .
-                "&scope=$scope" .
-                '&state=' . urlencode($state) .
-                '&nonce=' . urlencode($nonce) .
-                "&login_hint=$loginhint" .
-                "&prompt=$prompt" .
-                "&lti_message_hint=$ltimessagehintenc"
-            );
+    redirect(
+        $CFG->wwwroot . '/mod/lti/auth.php' .
+        "?client_id=$clientid" .
+        "&response_type=$responsetype" .
+        "&response_mode=$responsemode" .
+        '&redirect_uri=' . urlencode($redirecturi) .
+        "&scope=$scope" .
+        '&state=' . urlencode($state) .
+        '&nonce=' . urlencode($nonce) .
+        "&login_hint=$loginhint" .
+        "&prompt=$prompt" .
+        "&lti_message_hint=$ltimessagehintenc"
+    );
 }
 
 $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
@@ -143,10 +145,10 @@ if ($ok && ($responsetype !== 'id_token')) {
 if ($ok) {
     if ($ismoodle41minimum) {
         $launchid = $ltimessagehint->launchid;
-        list($courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 7);
+        [$courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64] = explode(',', $SESSION->$launchid, 7);
         unset($SESSION->$launchid);
     } else {
-        list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
+        [$courseid, $typeid, $id, $titleb64, $textb64] = explode(',', $SESSION->lti_message_hint, 5);
     }
 
     $config = lti_get_type_type_config($typeid);
@@ -237,9 +239,8 @@ if ($ok) {
         // If we get to this point we know this is a plug-in based request and will not support grading.
         $lti->custom->grading_not_supported = true;
 
-        list($endpoint, $params) = panoptoblock_lti_utility::get_launch_data($lti, $nonce);
+        [$endpoint, $params] = panoptoblock_lti_utility::get_launch_data($lti, $nonce);
     } else {
-
         require_login($course);
         // Set the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
         $returnurlparams = [
@@ -251,8 +252,22 @@ if ($ok) {
         $returnurl = new \moodle_url($pluginpath, $returnurlparams);
 
         // Prepare the request.
-        $request = panoptoblock_lti_utility::build_content_item_selection_request($typeid, $course, $returnurl, '', '',
-                                                            [], [], false, true, false, false, false, $nonce, $pluginname);
+        $request = panoptoblock_lti_utility::build_content_item_selection_request(
+            $typeid,
+            $course,
+            $returnurl,
+            '',
+            '',
+            [],
+            [],
+            false,
+            true,
+            false,
+            false,
+            false,
+            $nonce,
+            $pluginname
+        );
         $endpoint = $request->url;
         $params = $request->params;
     }

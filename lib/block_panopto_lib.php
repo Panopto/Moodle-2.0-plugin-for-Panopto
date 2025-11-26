@@ -65,7 +65,7 @@ function panopto_generate_auth_code($payload) {
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
-    ++$numservers;
+    $numservers += 1;
 
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
@@ -104,6 +104,9 @@ function panopto_validate_auth_code($payload, $authcode) {
 function panopto_generate_wsdl_service_params($apiurl) {
     $serviceparams = ['wsdl_url' => $apiurl];
 
+    // Set the SOAP service URI (namespace) - required for SOAP calls.
+    $serviceparams['wsdl_uri'] = 'http://tempuri.org/';
+
     // Check to see if the user set any proxy options.
     $proxyhost = get_config('block_panopto', 'wsdl_proxy_host');
     $proxyport = get_config('block_panopto', 'wsdl_proxy_port');
@@ -132,11 +135,10 @@ function panopto_get_configured_panopto_servers() {
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
-    ++$numservers;
+    $numservers += 1;
 
     $targetserverarray = [];
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
         // Generate strings corresponding to potential servernames in the config.
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
@@ -161,9 +163,8 @@ function panopto_get_target_panopto_server() {
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
-    ++$numservers;
+    $numservers += 1;
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
         // Generate strings corresponding to potential servernames in the config.
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
 
@@ -194,10 +195,9 @@ function panopto_get_valid_panopto_servers() {
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
-    ++$numservers;
+    $numservers += 1;
 
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
         // Generate strings corresponding to potential servernames in the config.
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
@@ -205,7 +205,6 @@ function panopto_get_valid_panopto_servers() {
 
         // If we have valid data for the server then try to ensure the category branch.
         if ($hasvaliddata) {
-
             $targetserver = new stdClass();
             $targetserver->name = $thisservername;
             $targetserver->appkey = $thisappkey;
@@ -225,10 +224,9 @@ function panopto_get_app_key($panoptoservername) {
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
-    ++$numservers;
+    $numservers += 1;
 
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
         // Generate strings corresponding to potential servernames in the config.
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
@@ -240,6 +238,71 @@ function panopto_get_app_key($panoptoservername) {
     }
 
     return null;
+}
+
+/**
+ * Validates Panopto configuration against the target server before bulk operations.
+ * This prevents common issues where production config is copied to test environments.
+ *
+ * @param string $servername The Panopto server name to validate
+ * @param string $applicationkey The application key to validate
+ * @return array Array with 'valid' boolean and 'error_message' string if invalid
+ */
+function panopto_validate_configuration($servername = null, $applicationkey = null) {
+    global $USER;
+
+    // Get configuration if not provided.
+    if ($servername === null || $applicationkey === null) {
+        $targetserver = panopto_get_target_panopto_server();
+        if (!$targetserver) {
+            return [
+                'valid' => false,
+                'error_message' => get_string('config_error_invalid_server_config', 'block_panopto'),
+            ];
+        }
+        $servername = $targetserver->name;
+        $applicationkey = $targetserver->appkey;
+    }
+
+    // Check if server is reachable.
+    $serverurl = 'https://' . $servername . '/Panopto';
+    if (!\panopto_data::is_server_alive($serverurl)) {
+        return [
+            'valid' => false,
+            'error_message' => get_string('config_error_server_unreachable', 'block_panopto', $servername),
+        ];
+    }
+
+    // Try to authenticate and validate configuration.
+    try {
+        // Create auth client to test authentication.
+        $apiuseruserkey = panopto_decorate_username($USER->username);
+        $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
+
+        $authclient = new panopto_auth_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
+
+        // Test authentication by getting server version.
+        $serverversion = $authclient->get_server_version();
+
+        if (!$serverversion) {
+            return [
+                'valid' => false,
+                'error_message' => get_string('config_error_auth_failed', 'block_panopto'),
+            ];
+        }
+
+        // If we get here, configuration is valid.
+        return [
+            'valid' => true,
+            'error_message' => '',
+        ];
+    } catch (Exception $e) {
+        \panopto_data::print_log('Configuration validation failed: ' . $e->getMessage());
+        return [
+            'valid' => false,
+            'error_message' => get_string('config_error_auth_failed', 'block_panopto'),
+        ];
+    }
 }
 
 /**
@@ -349,8 +412,10 @@ function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
         "INNER JOIN {role_context_levels} rcl ON (rcl.contextlevel = :targetcontextlevel AND rcl.roleid = r.id) " .
         "LEFT JOIN {role_names} rn ON (rn.contextid = :targetcontext AND rn.roleid = r.id) " .
         "ORDER BY r.sortorder ASC";
-    return $DB->get_records_sql($sql,
-        ['targetcontext' => $targetcontext->id, 'targetcontextlevel' => $targetcontext->contextlevel]);
+    return $DB->get_records_sql(
+        $sql,
+        ['targetcontext' => $targetcontext->id, 'targetcontextlevel' => $targetcontext->contextlevel]
+    );
 }
 
 /**

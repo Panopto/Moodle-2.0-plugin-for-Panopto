@@ -60,7 +60,7 @@ class sync_user_login extends \core\task\adhoc_task {
 
             // Sync the user to all courses mapped to the server.
             $serverpanopto->sync_external_user($eventdata['userid']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             \panopto_data::print_log($e->getMessage());
         }
     }

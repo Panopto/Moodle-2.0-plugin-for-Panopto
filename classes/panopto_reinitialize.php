@@ -15,22 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Create form for server selection.
+ * Panopto reinitialize.
  *
- * @package block_panopto
- * @copyright  Panopto 2009 - 2015
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_panopto
+ * @copyright  Panopto 2025
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class panopto_unprovision_course_form extends moodleform {
+abstract class panopto_reinitialize {
     /**
-     * Defines a Panopto unprovision form
+     * @var string No course exists.
      */
-    public function definition() {
-
-        global $DB, $aserverarray;
-
-        $mform = & $this->_form;
-
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
-    }
+    const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
+    /**
+     * @var string Invalid data.
+     */
+    const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
 }

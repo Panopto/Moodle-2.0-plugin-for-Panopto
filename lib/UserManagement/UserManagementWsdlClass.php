@@ -40,6 +40,11 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      * @var string
      */
     const WSDL_URL = 'wsdl_url';
+    /**
+     * Option key to define WSDL uri
+     * @var string
+     */
+    const WSDL_URI = 'wsdl_uri';
 
     /**
      * Option key to define WSDL login
@@ -295,21 +300,27 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
     {
         if(class_exists('UserManagementClassMap',true))
         {
+            // FORCE reset static SOAP client to ensure fresh instance
+            self::$soapClient = null;
+            
             $wsdlOptions = array();
             $wsdlOptions['classmap'] = UserManagementClassMap::classMap();
             $defaultWsdlOptions = self::getDefaultWsdlOptions();
-            foreach($defaultWsdlOptions as $optioName=>$optionValue)
+            
+            foreach($defaultWsdlOptions as $optionName=>$optionValue)
             {
-                if(array_key_exists($optioName,$_wsdlOptions) && !empty($_wsdlOptions[$optioName]))
-                    $wsdlOptions[str_replace('wsdl_','',$optioName)] = $_wsdlOptions[$optioName];
+                if(array_key_exists($optionName,$_wsdlOptions) && !empty($_wsdlOptions[$optionName]))
+                    $wsdlOptions[str_replace('wsdl_','',$optionName)] = $_wsdlOptions[$optionName];
                 elseif(!empty($optionValue))
-                    $wsdlOptions[str_replace('wsdl_','',$optioName)] = $optionValue;
+                    $wsdlOptions[str_replace('wsdl_','',$optionName)] = $optionValue;
             }
+            
             if(array_key_exists(str_replace('wsdl_','',self::WSDL_URL),$wsdlOptions))
             {
                 $wsdlUrl = $wsdlOptions[str_replace('wsdl_','',self::WSDL_URL)];
                 unset($wsdlOptions[str_replace('wsdl_','',self::WSDL_URL)]);
-                $soapClientClassName = self::getSoapClientClassName();
+                $soapClientClassName = self::getSoapClientClassName();                
+                
                 self::setSoapClient(new $soapClientClassName($wsdlUrl,$wsdlOptions));
             }
         }
@@ -360,8 +371,12 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      */
     public static function getDefaultWsdlOptions()
     {
+        // Get WSDL caching and trace settings from block configuration.
+        $wsdl_cache = get_config('block_panopto', 'wsdl_caching_enabled') ? WSDL_CACHE_BOTH : WSDL_CACHE_NONE;
+        $wsdl_trace = get_config('block_panopto', 'print_verbose_logs');
+        
         return array(
-                    self::WSDL_CACHE_WSDL=>WSDL_CACHE_NONE,
+                    self::WSDL_CACHE_WSDL=>$wsdl_cache,
                     self::WSDL_COMPRESSION=>null,
                     self::WSDL_CONNECTION_TIMEOUT=>null,
                     self::WSDL_ENCODING=>null,
@@ -371,7 +386,7 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
                     self::WSDL_PASSWORD=>null,
                     self::WSDL_SOAP_VERSION=>null,
                     self::WSDL_STREAM_CONTEXT=>null,
-                    self::WSDL_TRACE=>true,
+                    self::WSDL_TRACE=>$wsdl_trace,
                     self::WSDL_TYPEMAP=>null,
                     self::WSDL_URL=>null, // Requires definition to work
                     self::WSDL_USER_AGENT=>null,
@@ -382,7 +397,8 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
                     self::WSDL_LOCAL_CERT=>null,
                     self::WSDL_PASSPHRASE=>null,
                     self::WSDL_AUTHENTICATION=>null,
-                    self::WSDL_SSL_METHOD=>null);
+                    self::WSDL_SSL_METHOD=>null,
+                    self::WSDL_URI=>'http://tempuri.org/');
     }
     /**
      * Allows to set the SoapClient location to call

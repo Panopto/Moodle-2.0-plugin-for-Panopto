@@ -29,14 +29,11 @@ $plugin = (isset($plugin) ? $plugin : new stdClass());
 
 // Plugin version should normally be the same as the internal version.
 // If an admin wants to install with an older version number, however, set that here.
-$plugin->version = 2024120600;
+$plugin->version = 2025112600;
 
 // Requires this Moodle version - 4.1.0.
 $plugin->requires = 2022112800;
 $plugin->cron = 0;
 $plugin->component = 'block_panopto';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = [
-    'mod_forum' => ANY_VERSION,
-];
 /* End of file version.php */

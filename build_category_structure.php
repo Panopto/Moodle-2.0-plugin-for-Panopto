@@ -40,12 +40,9 @@ $appkeyarray = [];
 
 $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
+$numservers += 1;
 
-// Increment numservers by 1 to take into account starting at 0.
-++$numservers;
-
-for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
+for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker += 1) {
     // Generate strings corresponding to potential servernames in the config.
     $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
     $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);

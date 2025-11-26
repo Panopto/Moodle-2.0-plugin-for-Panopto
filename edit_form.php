@@ -35,7 +35,6 @@ require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class block_panopto_edit_form extends block_edit_form {
-
     /**
      * Core function for creation of form defined in block_panopto_edit_form class
      *
@@ -51,7 +50,7 @@ class block_panopto_edit_form extends block_edit_form {
             $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));
             $mform->addHelpButton('configheader', 'block_edit_header', 'block_panopto');
 
-            $params = new stdClass;
+            $params = new stdClass();
             $params->course_id = $COURSE->id;
             $params->return_url = $_SERVER['REQUEST_URI'];
             $querystring = http_build_query($params, '', '&');
@@ -69,8 +68,12 @@ class block_panopto_edit_form extends block_edit_form {
 
             $courselist = $panoptodata->get_course_options();
 
-            $mform->addElement('select', 'config_course', get_string('existing_course', 'block_panopto'),
-                $courselist['courses']);
+            $mform->addElement(
+                'select',
+                'config_course',
+                get_string('existing_course', 'block_panopto'),
+                $courselist['courses']
+            );
             $mform->addHelpButton('config_course', 'existing_course', 'block_panopto');
             $mform->setDefault('config_course', $courselist['selected']);
 
@@ -93,8 +96,13 @@ class block_panopto_edit_form extends block_edit_form {
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
             $mform->addHelpButton('rolemapheader', 'role_map_header', 'block_panopto');
 
-            $createselect = $mform->addElement('select', 'config_creator', get_string('creator', 'block_panopto'),
-                $rolearray, null);
+            $createselect = $mform->addElement(
+                'select',
+                'config_creator',
+                get_string('creator', 'block_panopto'),
+                $rolearray,
+                null
+            );
             $mform->addHelpButton('config_creator', 'creator', 'block_panopto');
             $createselect->setMultiple(true);
 
@@ -103,8 +111,13 @@ class block_panopto_edit_form extends block_edit_form {
                 $createselect->setSelected($currentmappings['creator']);
             }
 
-            $pubselect = $mform->addElement('select', 'config_publisher', get_string('publisher', 'block_panopto'),
-                $rolearray, null);
+            $pubselect = $mform->addElement(
+                'select',
+                'config_publisher',
+                get_string('publisher', 'block_panopto'),
+                $rolearray,
+                null
+            );
             $mform->addHelpButton('config_publisher', 'publisher', 'block_panopto');
             $pubselect->setMultiple(true);
 

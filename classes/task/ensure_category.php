@@ -62,7 +62,7 @@ class ensure_category extends \core\task\adhoc_task {
 
             // Sync the user to all courses mapped to the server.
             $serverpanopto->ensure_category_branch(false, null);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             \panopto_data::print_log($e->getMessage());
         }
     }

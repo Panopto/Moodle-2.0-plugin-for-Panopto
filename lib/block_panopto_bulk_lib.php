@@ -35,6 +35,8 @@
  * @param int $taskstep which task step we are on currently.
  */
 function panopto_update_task_progress($currentprogress, $totalitems, $progressstep, $taskstep) {
+    global $CFG;
+
     if (isset($taskstep) && !empty($taskstep)) {
         \panopto_data::print_log(get_string('bulk_task_new_step', 'block_panopto', $taskstep));
     }
@@ -45,7 +47,7 @@ function panopto_update_task_progress($currentprogress, $totalitems, $progressst
     }
 
     if ($currentprogress > 0) {
-        $progressobject = new stdClass;
+        $progressobject = new stdClass();
         $progressobject->currentprogress = $currentprogress;
         $progressobject->totalitems = $totalitems;
         \panopto_data::print_log(get_string('bulk_task_update_progress', 'block_panopto', $progressobject));
@@ -53,17 +55,17 @@ function panopto_update_task_progress($currentprogress, $totalitems, $progressst
 }
 
 /**
- * Checks to see if we need to throttle the bulk operation and does so if needed
+ * Enhanced throttling for bulk operations with configurable intervals.
  *
- * @param number $numberprocessed the current number of folders processed.
+ * @param int $processedcount the current number of operations processed.
+ * @param string $operationtype type of operation for throttling context
+ * @param int $totalcount total operations to process (optional)
+ * @return int Updated processed count
  */
-function panopto_handle_bulk_throttle($numberprocessed) {
-    if ($numberprocessed > 0 && $numberprocessed % 50 == 0) {
-        // Put in a minor break between batches to not make API calls too quickly.
-        sleep(10);
-    }
+function panopto_handle_bulk_throttle($processedcount, $operationtype = 'bulk_operations', $totalcount = null) {
+    require_once(dirname(__FILE__) . '/panopto_throttling.php');
 
-    return ++$numberprocessed;
+    return panopto_throttling::throttle_bulk_operation($processedcount, $operationtype, $totalcount);
 }
 
 /**
@@ -72,8 +74,10 @@ function panopto_handle_bulk_throttle($numberprocessed) {
  * @param string $targetuser the Panopto username for the current user (so the customer knows who to make an Admin)
  */
 function panopto_bulk_display_access_error($targetuser) {
+    global $CFG;
+
     if (!CLI_SCRIPT) {
-        include('views/bulk_task_access_error.html.php');
+        include($CFG->dirroot . '/blocks/panopto/views/bulk_task_access_error.html.php');
     }
 
     \panopto_data::print_log(
@@ -92,6 +96,11 @@ function panopto_bulk_display_access_error($targetuser) {
  * @param string $steptype progress step status such as 'validating', 'processing', etc.
  */
 function panopto_bulk_update_progress_bar($percentdone, $steptype) {
+    global $CFG;
+
+    if (!CLI_SCRIPT) {
+        include($CFG->dirroot . '/blocks/panopto/views/bulk_task_progress_bar.html.php');
+    }
 
     $periodstring = '';
     while (strlen($periodstring) < $percentdone % 4) {
@@ -100,7 +109,7 @@ function panopto_bulk_update_progress_bar($percentdone, $steptype) {
     // Javascript for updating the progress bar and information.
     $updatescriptstring = '<script language="javascript">' .
         'document.getElementById("panopto-progress-bar-' . $steptype . '").innerHTML="' .
-        '<div style=\'width:'.$percentdone.'%;background-color: #228B22;z-index:0;\'>&nbsp;</div>' .
+        '<div style=\'width:' . $percentdone . '%;background-color: #228B22;z-index:0;\'>&nbsp;</div>' .
         '<span style=\'z-index: 1;position: absolute;top: 0px;transform: translateX(-50%);\'>' .
             $percentdone . '% done ' . $steptype . $periodstring .
         '</span>"' .
@@ -115,15 +124,15 @@ function panopto_bulk_update_progress_bar($percentdone, $steptype) {
  * @param array $panoptocourseobjects all valid mappings ready to process
  * @param string $bulktaskname the name of the bulk task we are performing on the mappings
  * @param string $workercallback the name of the callback function we use to process a folder
+ * @param int|null $totalcount total operations to process (optional)
  */
-function panopto_bulk_process_folders($panoptocourseobjects, $bulktaskname, $workercallback) {
+function panopto_bulk_process_folders($panoptocourseobjects, $bulktaskname, $workercallback, $totalcount = null) {
     $currindex = 0;
     $totaltaskfolders = count($panoptocourseobjects);
     if ($totaltaskfolders > 0) {
         panopto_update_task_progress($currindex, $totaltaskfolders, 'processing', $bulktaskname);
         foreach ($panoptocourseobjects as $mappablecourse) {
-
-            $currindex = panopto_handle_bulk_throttle($currindex);
+            $currindex = panopto_handle_bulk_throttle($currindex, 'bulk_operations', $totalcount ?: $totaltaskfolders);
 
             panopto_update_task_progress($currindex, $totaltaskfolders, 'processing', null);
 
@@ -138,12 +147,13 @@ function panopto_bulk_process_folders($panoptocourseobjects, $bulktaskname, $wor
  * @param object $mappablecourse the current folder we are provisioning
  */
 function panopto_bulk_reprovision_callback($mappablecourse) {
+    global $CFG;
 
     $provisioningdata = $mappablecourse->provisioninginfo;
-    $provisioneddata = $mappablecourse->panopto->provision_course($provisioningdata, true);
+    $provisioneddata = $mappablecourse->panopto->provision_course($provisioningdata, true, true); // Is_bulk_operation = true.
 
     if (!CLI_SCRIPT) {
-        include('views/provisioned_course.html.php');
+        include($CFG->dirroot . '/blocks/panopto/views/provisioned_course.html.php');
     }
     $mappablecourse->panopto->ensure_auth_manager();
     $activepanoptoserverversion = $mappablecourse->panopto->authmanager->get_server_version();
@@ -171,12 +181,11 @@ function panopto_bulk_reprovision_callback($mappablecourse) {
 function panopto_bulk_rename_callback($mappablecourse) {
     // Display the name information for the user.
     // Provisioninginfo should still contain the original name.
-    $currentfoldernamecontainer = new stdClass;
+    $currentfoldernamecontainer = new stdClass();
     $currentfoldernamecontainer->oldname = $mappablecourse->provisioninginfo->fullname;
     $currentfoldernamecontainer->moodleid = $mappablecourse->panopto->moodlecourseid;
     if ($currentfoldernamecontainer->oldname != $mappablecourse->panopto->get_new_folder_name(null, null)) {
         if ($mappablecourse->panopto->update_folder_name()) {
-
             // The currentcoursename should get updated during the update_folder_name call.
             $currentfoldernamecontainer->newname = $mappablecourse->panopto->currentcoursename;
 
@@ -185,14 +194,14 @@ function panopto_bulk_rename_callback($mappablecourse) {
             );
 
             if (!CLI_SCRIPT) {
-                include('views/bulk_rename_single_success.html.php');
+                include($CFG->dirroot . '/blocks/panopto/views/bulk_rename_single_success.html.php');
             }
         } else {
             \panopto_data::print_log(
                 get_string('bulk_rename_single_failed', 'block_panopto', $mappablecourse->panopto->moodlecourseid)
             );
             if (!CLI_SCRIPT) {
-                include('views/bulk_rename_single_failed.html.php');
+                include($CFG->dirroot . '/blocks/panopto/views/bulk_rename_single_failed.html.php');
             }
         }
     } else {
@@ -204,7 +213,7 @@ function panopto_bulk_rename_callback($mappablecourse) {
         );
 
         if (!CLI_SCRIPT) {
-            include('views/bulk_rename_single_success.html.php');
+            include($CFG->dirroot . '/blocks/panopto/views/bulk_rename_single_success.html.php');
         }
     }
 }
@@ -219,7 +228,7 @@ function panopto_bulk_rename_callback($mappablecourse) {
  * @param bool $skipimports whether or not to process imported folders.
  */
 function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
-    global $DB;
+    global $DB, $CFG;
 
     // Get all active courses mapped to Panopto.
     $oldpanoptocourses = $DB->get_records(
@@ -236,7 +245,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
     $numbertoprocess = isset($params[2]) ? intval($params[2]) : $totaltasksteps;
     $endingindex = isset($params[2]) ? $beginningindex + intval($params[2]) : $totaltasksteps + 1;
 
-    $processcountobject = new stdClass;
+    $processcountobject = new stdClass();
     $processcountobject->beginningindex = $beginningindex;
     $processcountobject->endingindex = $endingindex - 1;
 
@@ -245,6 +254,21 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
     $upgradestep = get_string('verifying_permission', 'block_panopto');
 
     $panoptocourseobjects = [];
+
+    // Perform configuration validation before proceeding with bulk operations.
+    \panopto_data::print_log(get_string('bulk_task_config_validation', 'block_panopto'));
+    $configvalidation = panopto_validate_configuration();
+
+    if (!$configvalidation['valid']) {
+        \panopto_data::print_log(get_string('bulk_task_config_error', 'block_panopto', $configvalidation['error_message']));
+
+        if (!CLI_SCRIPT) {
+            include($CFG->dirroot . '/blocks/panopto/views/bulk_task_access_error.html.php');
+        }
+
+        // Return empty array to prevent bulk operations.
+        return [];
+    }
 
     $getunamepanopto = new \panopto_data(null);
 
@@ -264,7 +288,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
         $numberprocessed = panopto_handle_bulk_throttle($numberprocessed);
         panopto_update_task_progress($numberprocessed, $numbertoprocess, 'validating', null);
 
-        $oldpanoptocourse = new stdClass;
+        $oldpanoptocourse = new stdClass();
         $oldpanoptocourse->panopto = new \panopto_data($oldcourse->moodleid);
 
         $existingmoodlecourse = $DB->get_record('course', ['id' => $oldcourse->moodleid]);
@@ -279,7 +303,7 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                 $activepanoptoserverversion = $oldpanoptocourse->panopto->authmanager->get_server_version();
                 if (!version_compare($activepanoptoserverversion, \panopto_data::$requiredpanoptoversion, '>=')) {
                     if (!CLI_SCRIPT) {
-                        include('views/bulk_task_version_error.html.php');
+                        include($CFG->dirroot . '/blocks/panopto/views/bulk_task_version_error.html.php');
                     }
 
                     \panopto_data::print_log(
@@ -290,7 +314,6 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                     );
                 }
             } else {
-
                 panopto_bulk_display_access_error($getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
 
                 // If the user does not have access on even one of the folders return nothing.
@@ -305,16 +328,19 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
         }
 
         $oldpanoptocourse->provisioninginfo = $oldpanoptocourse->panopto->get_provisioning_info();
-        if (isset($oldpanoptocourse->provisioninginfo->accesserror) &&
-            $oldpanoptocourse->provisioninginfo->accesserror === true) {
-
+        if (
+            isset($oldpanoptocourse->provisioninginfo->accesserror) &&
+            $oldpanoptocourse->provisioninginfo->accesserror === true
+        ) {
             panopto_bulk_display_access_error($getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
 
             // If the user does not have access on even one of the folders return nothing.
             return [];
         } else {
-            if (isset($oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder) &&
-                $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true) {
+            if (
+                isset($oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder) &&
+                $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true
+            ) {
                 // Course was mapped to a folder but that folder was not found, most likely folder was deleted on Panopto side.
                 // The true parameter moves the row to the old_foldermap instead of deleting it.
                 \panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
@@ -340,9 +366,11 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                     if ($moodlecourseexists && $hasvalidpanoptodata) {
                         $importpanoptofolder = $importpanopto->get_folders_by_id_no_sync();
 
-                        if ($importpanoptofolder == null ||
+                        if (
+                            $importpanoptofolder == null ||
                             (isset($importpanoptofolder->notfound) &&
-                            $importpanoptofolder->notfound == true)) {
+                            $importpanoptofolder->notfound == true)
+                        ) {
                             // In this case the folder was not found, not an access issue.
                             // Most likely the folder was deleted and this is an old entry.
                             // Move the entry to the old_foldermap so user still has a reference.
@@ -350,7 +378,6 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                             // We can still continue on with the upgrade.
                             // Assume this was an old entry that was deleted from Panopto side.
                         } else if (!empty($importpanoptofolder->errormessage)) {
-
                             // This case means the user failed to get the folder.
                             continue;
                         }
@@ -378,17 +405,23 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
  * $params[2] - The number of folders you would like to work on this execution.
  */
 function panopto_rename_all_folders($params) {
+    global $CFG;
     // This can take a very long time if users have many folders.
     core_php_time_limit::raise();
 
     if (!CLI_SCRIPT) {
-        include('views/bulk_task_progress_bar.html.php');
+        include($CFG->dirroot . '/blocks/panopto/views/bulk_task_progress_bar.html.php');
     }
 
+    // Get total count for better throttling.
+    $mappings = panopto_bulk_sanitize_and_get_mappings($params, true);
+    $totalcount = count($mappings);
+
     panopto_bulk_process_folders(
-        panopto_bulk_sanitize_and_get_mappings($params, true),
+        $mappings,
         get_string('bulk_rename_start_renaming', 'block_panopto'),
-        'panopto_bulk_rename_callback'
+        'panopto_bulk_rename_callback',
+        $totalcount
     );
 }
 
@@ -405,11 +438,12 @@ function panopto_rename_all_folders($params) {
  * $params[2] - The number of folders you would like to work on this execution.
  */
 function panopto_upgrade_all_folders($params) {
+    global $CFG;
     // This can take a very long time if users have many folders.
     core_php_time_limit::raise();
 
     if (!CLI_SCRIPT) {
-        include('views/bulk_task_progress_bar.html.php');
+        include($CFG->dirroot . '/blocks/panopto/views/bulk_task_progress_bar.html.php');
     }
 
     // We do not want to skip imports when bulk reprovisioning all folders.

@@ -30,57 +30,10 @@ if (empty($CFG)) {
 }
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once($CFG->libdir . '/formslib.php');
-
-/**
- * The reinitialize imports form.
- *
- * @package    block_panopto
- * @copyright  Panopto 2020
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class panopto_reinitialize_imports_form extends moodleform {
-
-    /**
-     * @var string $title
-     */
-    protected $title = '';
-
-    /**
-     * @var string $description
-     */
-    protected $description = '';
-
-    /**
-     * Defines a Panopto reinitialize import form
-     */
-    public function definition() {
-        global $DB;
-
-        $mform = & $this->_form;
-
-        $this->add_action_buttons(true, get_string('begin_reinitializing_imports', 'block_panopto'));
-    }
-}
+require_once(dirname(__FILE__) . '/classes/panopto_reinitialize_imports_form.php');
+require_once(dirname(__FILE__) . '/classes/panopto_reinitialize.php');
 
 require_login();
-
-/**
- * Panopto reinitialize.
- *
- * @package    block_panopto
- * @copyright  Panopto 2020
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-abstract class panopto_reinitialize {
-    /**
-     * @var string No course exists.
-     */
-    const NO_COURSE_EXISTS = 'NO_COURSE_EXISTS';
-    /**
-     * @var string Invalid data.
-     */
-    const INVALID_PANOPTO_DATA = 'INVALID_PANOPTO_DATA';
-}
 
 /**
  * Reinitialize all imports.
@@ -96,7 +49,6 @@ function reinitialize_all_imports() {
     \panopto_data::print_log(get_string('begin_reinitializing_imports', 'block_panopto'));
 
     foreach ($courseimports as $courseimport) {
-
         \panopto_data::print_log(get_string('reinitialize_import_started', 'block_panopto', $courseimport->target_moodle_id));
 
         if (!isset($coursepanoptoarray[$courseimport->target_moodle_id])) {
@@ -122,9 +74,10 @@ function reinitialize_all_imports() {
         $targetpanoptodata = null;
         $importresult = null;
 
-        if ($targetpanopto !== panopto_reinitialize::NO_COURSE_EXISTS &&
-            $targetpanopto !== panopto_reinitialize::INVALID_PANOPTO_DATA) {
-
+        if (
+            $targetpanopto !== panopto_reinitialize::NO_COURSE_EXISTS &&
+            $targetpanopto !== panopto_reinitialize::INVALID_PANOPTO_DATA
+        ) {
             $targetpanopto->ensure_auth_manager();
             $activepanoptoserverversion = $targetpanopto->authmanager->get_server_version();
             $useccv2 = version_compare(
@@ -143,7 +96,7 @@ function reinitialize_all_imports() {
             }
         }
 
-        include('views/imported_course.html.php');
+        include(dirname(__FILE__) . '/views/imported_course.html.php');
 
         \panopto_data::print_log(get_string('reinitialize_import_finished', 'block_panopto', $courseimport->target_moodle_id));
     }

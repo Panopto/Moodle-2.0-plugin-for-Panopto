@@ -15,22 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Create form for server selection.
+ * Panopto block external functions and service definitions.
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2015
+ * @category external
+ * @copyright  Panopto 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class panopto_unprovision_course_form extends moodleform {
-    /**
-     * Defines a Panopto unprovision form
-     */
-    public function definition() {
 
-        global $DB, $aserverarray;
+defined('MOODLE_INTERNAL') || die();
 
-        $mform = & $this->_form;
-
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
-    }
-}
+$functions = [
+    'block_panopto_get_content' => [
+        'classname' => 'block_panopto\external\get_content',
+        'methodname' => 'execute',
+        'description' => 'Get Panopto content for a course',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'block/panopto:view',
+    ],
+];

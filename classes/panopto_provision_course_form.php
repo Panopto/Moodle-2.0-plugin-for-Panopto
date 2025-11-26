@@ -22,7 +22,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class panopto_provision_course_form extends moodleform {
-
     /**
      * Defines a Panopto provision form
      */

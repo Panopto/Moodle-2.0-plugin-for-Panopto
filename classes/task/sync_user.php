@@ -49,13 +49,15 @@ class sync_user extends \core\task\adhoc_task {
             $eventdata = (array) $this->get_custom_data();
             $coursepanopto = new \panopto_data($eventdata['courseid']);
 
-            if (isset($coursepanopto->servername) &&
+            if (
+                isset($coursepanopto->servername) &&
                 !empty($coursepanopto->servername) &&
                 isset($coursepanopto->applicationkey) &&
-                !empty($coursepanopto->applicationkey)) {
+                !empty($coursepanopto->applicationkey)
+            ) {
                 $coursepanopto->sync_external_user($eventdata['userid']);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             \panopto_data::print_log($e->getMessage());
         }
     }

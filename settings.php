@@ -35,15 +35,18 @@ $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
 
 // Increment numservers by 1 to take into account starting at 0.
-++$numservers;
+$numservers += 1;
 
 $targetserverarray = panopto_get_configured_panopto_servers();
 
 if ($ADMIN->fulltree) {
-
-    $settings->add(new admin_setting_heading('block_panopto/panopto_server_config',
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_server_config',
             get_string('block_global_panopto_server_config', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $settings->add(
         new admin_setting_configselect(
@@ -109,15 +112,21 @@ if ($ADMIN->fulltree) {
         )
     );
     $settings->add(
-        new admin_setting_configduration('block_panopto/check_server_interval',
+        new admin_setting_configduration(
+            'block_panopto/check_server_interval',
             get_string('block_panopto_check_server_interval', 'block_panopto'),
             get_string('block_panopto_check_server_interval_desc', 'block_panopto'),
-            30)
+            30
+        )
     );
 
-    $settings->add(new admin_setting_heading('block_panopto/panopto_syncing_options',
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_syncing_options',
             get_string('block_global_panopto_syncing_options', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $settings->add(
         new admin_setting_configcheckbox(
@@ -164,9 +173,39 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $settings->add(new admin_setting_heading('block_panopto/panopto_folder_and_category_options',
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/api_throttling',
+            get_string('block_panopto_api_throttling_heading', 'block_panopto'),
+            get_string('block_panopto_api_throttling_desc', 'block_panopto')
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/enable_api_throttling',
+            get_string('block_panopto_enable_api_throttling', 'block_panopto'),
+            get_string('block_panopto_enable_api_throttling_desc', 'block_panopto'),
+            1
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/throttling_debug_logging',
+            get_string('block_panopto_throttling_debug_logging', 'block_panopto'),
+            get_string('block_panopto_throttling_debug_logging_desc', 'block_panopto'),
+            0
+        )
+    );
+
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_folder_and_category_options',
             get_string('block_global_panopto_folder_and_category_options', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $possiblefoldernamestyles = \panopto_data::getpossiblefoldernamestyles();
     $settings->add(
@@ -263,9 +302,22 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $settings->add(new admin_setting_heading('block_panopto/panopto_role_options',
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/lti_category_provisioning',
+            get_string('block_panopto_lti_category_provisioning', 'block_panopto'),
+            get_string('block_panopto_lti_category_provisioning_desc', 'block_panopto'),
+            0
+        )
+    );
+
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_role_options',
             get_string('block_global_panopto_role_options', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $systemcontext = context_system::instance();
     $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);
@@ -305,9 +357,13 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $settings->add(new admin_setting_heading('block_panopto/panopto_http_and_debug_settings',
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_http_and_debug_settings',
             get_string('block_global_panopto_http_and_debug_settings', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $settings->add(
         new admin_setting_configcheckbox(
@@ -323,6 +379,15 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_print_verbose_logs', 'block_panopto'),
             get_string('block_panopto_print_verbose_logs_desc', 'block_panopto'),
             0
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/wsdl_caching_enabled',
+            get_string('block_panopto_wsdl_caching_enabled', 'block_panopto'),
+            get_string('block_panopto_wsdl_caching_enabled_desc', 'block_panopto'),
+            1
         )
     );
 
@@ -375,9 +440,13 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $settings->add(new admin_setting_heading('block_panopto/panopto_bulk_and_batch_tools',
+    $settings->add(
+        new admin_setting_heading(
+            'block_panopto/panopto_bulk_and_batch_tools',
             get_string('block_global_panopto_bulk_and_batch_tools', 'block_panopto'),
-            ''));
+            ''
+        )
+    );
 
     $categorystructurelink = '<a id="panopto_build_category_structure_btn" href="' . $CFG->wwwroot .
         '/blocks/panopto/build_category_structure.php">' .
