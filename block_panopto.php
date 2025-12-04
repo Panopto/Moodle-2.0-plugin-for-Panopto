@@ -26,7 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
-require_once(dirname(__FILE__) . '/classes/external/get_content.php');
 
 /**
  * Base class for the Panopto block for Moodle.
