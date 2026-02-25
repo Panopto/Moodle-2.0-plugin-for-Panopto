@@ -1003,7 +1003,7 @@ class SessionManagementSoapClient extends PanoptoTimeoutSoapClient {
     /**
      * Constructor wrapper
      */
-    public function __construct ($wsdl, array $options = null) {
+    public function __construct ($wsdl, ?array $options = null) {
         parent::__construct($wsdl, $options);
     }
 

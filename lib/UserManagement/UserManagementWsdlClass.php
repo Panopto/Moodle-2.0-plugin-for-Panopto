@@ -300,9 +300,6 @@ class UserManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
     {
         if(class_exists('UserManagementClassMap',true))
         {
-            // FORCE reset static SOAP client to ensure fresh instance
-            self::$soapClient = null;
-            
             $wsdlOptions = array();
             $wsdlOptions['classmap'] = UserManagementClassMap::classMap();
             $defaultWsdlOptions = self::getDefaultWsdlOptions();
@@ -1003,7 +1000,7 @@ class UserManagementSoapClient extends PanoptoTimeoutSoapClient {
     /**
      * Constructor wrapper
      */
-    public function __construct ($wsdl, array $options = null) {
+    public function __construct ($wsdl, ?array $options = null) {
         parent::__construct($wsdl, $options);
     }
 

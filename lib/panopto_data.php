@@ -285,7 +285,9 @@ class panopto_data {
 
     /**
      * Determines if fallback server configuration should be used.
-     * Only use fallback for LTI contexts or when auto-provisioning is enabled.
+     * Only use fallback for LTI contexts and course-creation auto-provisioning.
+     * Do not use fallback for block-view auto-provisioning because it masks the
+     * unprovisioned state check that triggers provisioning on first block view.
      *
      * @return bool
      */
@@ -295,9 +297,10 @@ class panopto_data {
             return true;
         }
 
-        // Check if auto-provisioning is enabled (courses will be auto-provisioned anyway).
+        // Keep fallback for course-creation provisioning only.
+        // onblockview must remain unfilled so the auto-provision condition can trigger.
         $autoprovision = get_config('block_panopto', 'auto_provision_new_courses');
-        if ($autoprovision === 'onblockview' || $autoprovision === 'oncoursecreation') {
+        if ($autoprovision === 'oncoursecreation') {
             return true;
         }
 
