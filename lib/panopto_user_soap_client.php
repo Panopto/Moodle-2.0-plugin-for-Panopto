@@ -105,10 +105,18 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
 
         // Initialize the parent SoapClient with the required parameters.
         $wsdlurl = 'https://' . $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl';
-        $soapoptions = array_merge($this->serviceparams, [
+        $soapoptions = [
             'uri' => 'http://tempuri.org/',
             'location' => 'https://' . $servername . '/Panopto/PublicAPI/4.6/UserManagement.svc',
-        ]);
+        ];
+
+        // Convert wsdl_ prefixed options to SoapClient native options.
+        if (!empty($this->serviceparams['wsdl_proxy_host'])) {
+            $soapoptions['proxy_host'] = $this->serviceparams['wsdl_proxy_host'];
+        }
+        if (!empty($this->serviceparams['wsdl_proxy_port'])) {
+            $soapoptions['proxy_port'] = $this->serviceparams['wsdl_proxy_port'];
+        }
 
         parent::__construct($wsdlurl, $soapoptions);
     }
