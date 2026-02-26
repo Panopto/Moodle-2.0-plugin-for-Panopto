@@ -21,28 +21,24 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import $ from "jquery";
 import {call as fetchMany} from "core/ajax";
 
 export const initblock = (params) => {
     // Find the div containing the Panopto block's content.
-    const mynode = $('#' + params.id);
-    if (mynode.length) {
-        // Execute on DOM ready.
-        $(document).ready(() => {
-            const request = {
-                methodname: 'block_panopto_get_content',
-                args: {
-                    courseid: params.courseid
-                }
-            };
+    const mynode = document.getElementById(params.id);
+    if (mynode) {
+        const request = {
+            methodname: 'block_panopto_get_content',
+            args: {
+                courseid: params.courseid
+            }
+        };
 
-            fetchMany([request])[0].then((response) => {
-                mynode.html(response);
-                return response;
-            }).catch((error) => {
-                mynode.html(error);
-            });
+        fetchMany([request])[0].then((response) => {
+            mynode.innerHTML = response;
+            return response;
+        }).catch((error) => {
+            mynode.innerHTML = error;
         });
     }
 };
