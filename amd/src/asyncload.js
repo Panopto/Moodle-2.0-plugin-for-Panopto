@@ -16,25 +16,20 @@
 /**
  * AMD module for displaying Panopto content asynchronously.
  *
- * @package block_panopto
+ * @module block_panopto/asyncload
  * @copyright  Panopto 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define([
         "jquery",
         "core/ajax",
-        "core/str",
-], ($, ajax, str) =>
-{
-    var init = (params) =>
-    {
+], ($, ajax) => {
+    var init = (params) => {
         // Find the div containing the Panopto block's content.
         var mynode = $('#' + params.id);
-        if (mynode.length)
-        {
+        if (mynode.length) {
             // Execute on DOM ready.
-            $(document).ready(function()
-            {
+            $(document).ready(function() {
                 var request = {
                     methodname: 'block_panopto_get_content',
                     args: {
@@ -42,21 +37,15 @@ define([
                     }
                 };
 
-                ajax.call([request])[0].done(function(response)
-                {
+                ajax.call([request])[0].done(function(response) {
                     mynode.find('#loading_text').remove();
                     mynode.html(response);
                 })
-                .fail(function(error)
-                {
+                .fail(function(error) {
                     mynode.find('#loading_text').remove();
                     mynode.html(error);
                 });
             });
-        }
-        else
-        {
-            console.error("Couldn't find element with id: " + params.id);
         }
     };
     return {
