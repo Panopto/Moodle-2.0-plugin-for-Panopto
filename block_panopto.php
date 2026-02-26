@@ -162,7 +162,7 @@ class block_panopto extends block_base {
 
         // Add loading text.
         $this->content->text .= '<div id="' . $blockid . '">';
-        $this->content->text .= '<div id="loading_text">' . get_string('loading_content', 'block_panopto') . '</div>';
+        $this->content->text .= '<div class="loading_text">' . get_string('loading_content', 'block_panopto') . '</div>';
         $this->content->text .= '</div>';
 
         $params = [

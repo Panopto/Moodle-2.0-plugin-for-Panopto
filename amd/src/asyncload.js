@@ -38,11 +38,11 @@ export const initblock = (params) => {
             };
 
             fetchMany([request])[0].then((response) => {
-                mynode.find('#loading_text').remove();
+                mynode.find('.loading_text').remove();
                 mynode.html(response);
                 return response;
             }).catch((error) => {
-                mynode.find('#loading_text').remove();
+                mynode.find('.loading_text').remove();
                 mynode.html(error);
             });
         });
