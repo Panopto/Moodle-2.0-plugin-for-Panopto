@@ -264,6 +264,9 @@ $string['provision_only_target_on_copy'] = 'Only provision the target course dur
 $string['provision_successful'] = 'Successfully provisioned course folder with Id: {$a}';
 $string['provisioncourseselect'] = 'Select courses to provision.';
 $string['provisioncourseselect_help'] = 'Multiple selections are possible by Ctrl-clicking (Windows) or Cmd-clicking (Mac).';
+$string['provisionerror'] = 'Error provisioning {$a} course(s), check logs for details.';
+$string['provisionsuccess'] = '{$a} course(s) successfully provisioned';
+$string['provisiontaskfail'] = 'Failed to provision {$a} courses';
 $string['publisher'] = 'Publisher';
 $string['publisher_help'] = 'A Publisher can approve content submitted by Creators';
 $string['publishers'] = 'Publishers';
@@ -306,4 +309,5 @@ $string['users_have_been_synced'] = 'The below users have been synced and should
 $string['users_will_be_synced_custom'] = 'Future users will automatically be synced according to your custom Panopto settings.';
 $string['verifying_permission'] = 'Verifying permission';
 $string['viewers'] = 'Viewers';
+$string['viewtasklog'] = 'Once the task has completed, <a href="{$a}">view the logs</a> to check the status.';
 $string['watch_live'] = 'Watch live';
