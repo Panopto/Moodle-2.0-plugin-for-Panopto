@@ -21,6 +21,8 @@
  * @copyright  Panopto 2009 - 2018 /With contributions from Spenser Jones (sjones@ambrose.edu), and Tim Lock
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use core\output\stored_progress_bar;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -368,8 +370,14 @@ class panopto_category_data {
      * @param bool $usehtmloutput if we should use html output or not
      * @param string $selectedserver server name
      * @param string $selectedkey selected key
+     * @param ?stored_progress_bar $progress Optional progress bar to update during build.
      */
-    public static function build_category_structure($usehtmloutput, $selectedserver, $selectedkey) {
+    public static function build_category_structure(
+        $usehtmloutput,
+        $selectedserver,
+        $selectedkey,
+        ?stored_progress_bar $progress = null
+    ) {
         global $CFG, $DB;
 
         \panopto_data::print_log(get_string('build_category_structure_start', 'block_panopto', $selectedserver));
@@ -392,11 +400,19 @@ class panopto_category_data {
             $leafcategories = $DB->get_records_sql(
                 'SELECT id FROM {course_categories} WHERE id NOT IN (SELECT parent FROM {course_categories})'
             );
+            $built = 0;
 
             foreach ($leafcategories as $leafcategory) {
                 $categorybuilder->moodlecategoryid = $leafcategory->id;
                 $categorybuilder->sessiongroupid = self::get_panopto_category_id($leafcategory->id, $selectedserver);
-                $categorybuilder->ensure_category_branch($usehtmloutput, null);
+                if ($categorybuilder->ensure_category_branch(false, null) && $progress) {
+                    $built++;
+                    $progress->update($built, count($leafcategories), get_string('categoriesbuilt', 'block_panopto', $built));
+                }
+            }
+            if ($built < count($leafcategories) && $progress) {
+                $progress->error(get_string('categoriesbuilderror', 'block_panopto'));
+                \panopto_data::print_log('categoriesbuilderror', 'block_panopto');
             }
         }
     }
