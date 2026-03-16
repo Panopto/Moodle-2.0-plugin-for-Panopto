@@ -169,6 +169,8 @@ $string['bulk_task_update_progress'] = 'Processing folder {$a->currentprogress} 
 $string['bulk_task_version_error'] = 'Panopto Bulk Operation Error - Panopto Server requires newer version';
 $string['bulk_task_working_count'] = 'Starting on folder {$a->beginningindex} and processing up to folder {$a->endingindex}';
 $string['categories_need_newer_panopto'] = 'Category calls need a Panopto server version of {$a->requiredpanoptoversion} to succeed, the targeted Panopto server\'s version is {$a->activepanoptoversion}.';
+$string['categoriesbuilderror'] = 'Categories build error';
+$string['categoriesbuilt'] = '{$a} categories built';
 $string['cli_category_invalid_arguments'] = 'Please run the command with the following arguments \'build_category_structure.php <panoptoservername> <applicationkey>\'';
 $string['cli_heading_build_category_structure'] = 'Sync all Moodle categories to Panopto';
 $string['completed_recordings'] = 'Completed recordings';
@@ -306,4 +308,5 @@ $string['users_have_been_synced'] = 'The below users have been synced and should
 $string['users_will_be_synced_custom'] = 'Future users will automatically be synced according to your custom Panopto settings.';
 $string['verifying_permission'] = 'Verifying permission';
 $string['viewers'] = 'Viewers';
+$string['viewtasklog'] = 'Once the task has completed, <a href="{$a}">view the logs</a> to check the status.';
 $string['watch_live'] = 'Watch live';

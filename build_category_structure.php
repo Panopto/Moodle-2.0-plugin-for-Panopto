@@ -32,7 +32,6 @@ require_once($CFG->libdir . '/formslib.php');
 require_once(dirname(__FILE__) . '/classes/panopto_build_category_structure_form.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
-require_once(dirname(__FILE__) . '/lib/panopto_category_data.php');
 
 // Populate list of servernames to select from.
 $aserverarray = [];
@@ -64,26 +63,6 @@ if (count($aserverarray) == 1) {
 }
 
 require_login();
-
-/**
- * The category structure process workhorse function
- *
- * @param string $selectedserver server name
- * @param string $selectedkey selected key
- */
-function build_category_structure($selectedserver, $selectedkey) {
-    global $DB;
-
-    $defaultmaxtime = ini_get('max_execution_time');
-
-    $twohoursinseconds = 7200;
-
-    set_time_limit($twohoursinseconds);
-
-    panopto_category_data::build_category_structure(true, $selectedserver, $selectedkey);
-
-    set_time_limit($defaultmaxtime);
-}
 
 $context = context_system::instance();
 
@@ -122,7 +101,24 @@ if ($mform->is_cancelled()) {
         $selectedserver = trim($aserverarray[$data->servers]);
         $selectedkey = trim($appkeyarray[$data->servers]);
 
-        build_category_structure($selectedserver, $selectedkey);
+        $task = new \block_panopto\task\build_category_structure();
+        $task->set_custom_data(['selectedserver' => $selectedserver, 'selectedkey' => $selectedkey]);
+
+        if ($taskid = \core\task\manager::queue_adhoc_task($task)) {
+            $task->set_id($taskid);
+
+            if ($progressbaridnumber = $task->progress_start()) {
+                $progressbar = \core\output\stored_progress_bar::get_by_idnumber($progressbaridnumber);
+                echo $progressbar->get_content();
+                echo "<p>" .
+                    get_string(
+                        'viewtasklog',
+                        'block_panopto',
+                        new moodle_url('/admin/tasklogs.php', ['filter' => '\block_panopto\task\build_category_structure '])
+                    ) .
+                    "</p>";
+            }
+        }
 
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
     } else {
