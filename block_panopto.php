@@ -75,30 +75,6 @@ class block_panopto extends block_base {
      * @param bool $nolongerused depcrecated variable
      */
     public function instance_config_save($data, $nolongerused = false) {
-
-        // Add roles mapping.
-        $publisherroles = (isset($data->publisher)) ? $data->publisher : [];
-        $creatorroles = (isset($data->creator)) ? $data->creator : [];
-
-        // Get the current role mappings set for the current course from the db.
-        $mappings = \panopto_data::get_course_role_mappings($this->page->course->id);
-
-        $oldcreators = array_diff($mappings['creator'], $creatorroles);
-        $oldpublishers = array_diff($mappings['publisher'], $publisherroles);
-
-        // Make sure the old unassigned roles get unset.
-        \panopto_data::unset_course_role_permissions(
-            $this->page->course->id,
-            $oldpublishers,
-            $oldcreators
-        );
-
-        \panopto_data::set_course_role_permissions(
-            $this->page->course->id,
-            $publisherroles,
-            $creatorroles
-        );
-
         if (!empty($data->course)) {
             // Only perform this chunk if we are remapping to a new folder.
             $panoptodata = new \panopto_data($this->page->course->id);

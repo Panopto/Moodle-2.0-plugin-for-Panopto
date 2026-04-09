@@ -407,5 +407,88 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2021063000, 'panopto');
     }
 
+    if ($oldversion < 2026031500) {
+        $systemcontextid = $DB->get_field('context', 'id', ['contextlevel' => 10]);
+        $mappedpublisherroles = get_config('block_panopto', 'publisher_role_mapping');
+        $mappedpublisherroles = $mappedpublisherroles ? explode(',', $mappedpublisherroles) : [];
+        $mappedcreatorroles = get_config('block_panopto', 'creator_role_mapping');
+        $mappedcreatorroles = $mappedcreatorroles ? explode(',', $mappedcreatorroles) : [];
+
+        /*
+         * $mappedroles: array of course-level roles currently having overridden capabilities, for example:
+         *   [
+         *      ['roleid' => 2, 'capability' => 'block/panopto:provision_aspublisher'],
+         *      ['roleid' => 3, 'capability' => 'block/panopto:provision_aspublisher'],
+         *      ['roleid' => 3, 'capability' => 'block/panopto:provision_asteacher'],
+         *      ['roleid' => 4, 'capability' => 'block/panopto:provision_asteacher'],
+         *   ]
+         */
+        $mappedroles = array_merge(
+            array_map(function (int $value) {
+                return ['capability' => 'block/panopto:provision_aspublisher', 'roleid' => $value];
+            }, $mappedpublisherroles),
+            array_map(function (int $value) {
+                return ['capability' => 'block/panopto:provision_asteacher', 'roleid' => $value];
+            }, $mappedcreatorroles)
+        );
+
+        foreach ($mappedroles as $rc) {
+            $roleid = $rc['roleid'];
+            $capability = $rc['capability'];
+            $params = ['roleid' => $roleid, 'contextid' => $systemcontextid,
+                'capability' => $capability];
+
+            // Modify course-level roles making provision_as... = "Allow" (only
+            // if there's no existing record for this capability for the role).
+            if (!$DB->record_exists('role_capabilities', $params)) {
+                $record = new stdClass();
+                $record->contextid = $systemcontextid;
+                $record->roleid = $roleid;
+                $record->capability = $capability;
+                $record->permission = 1;
+                $record->timemodified = time();
+                $DB->insert_record('role_capabilities', $record);
+            }
+
+            // Delete overridden capabilities at course level.
+            $DB->execute(
+                "DELETE FROM {role_capabilities}
+                       WHERE capability = :capability
+                             AND roleid = $roleid AND permission = 1
+                             AND contextid IN (SELECT id FROM {context} WHERE contextlevel = 50)",
+                ['capability' => $capability]
+            );
+        }
+
+        // Delete configs of removed settings.
+        unset_config('publisher_system_role_mapping', 'block_panopto');
+        unset_config('publisher_role_mapping', 'block_panopto');
+        unset_config('creator_role_mapping', 'block_panopto');
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2026031500, 'panopto');
+    }
+
+    if ($oldversion < 2026031600) {
+        // Drop old table block_panopto_creatormap.
+        $table = new xmldb_table('block_panopto_creatormap');
+
+        // Conditionally launch drop table for block_panopto_creatormap.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Drop old table block_panopto_publishermap.
+        $table = new xmldb_table('block_panopto_publishermap');
+
+        // Conditionally launch drop table for block_panopto_publishermap.
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2026031600, 'panopto');
+    }
+
     return true;
 }

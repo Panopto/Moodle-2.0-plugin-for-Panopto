@@ -345,9 +345,6 @@ function panopto_bulk_sanitize_and_get_mappings($params, $skipimports) {
                 // The true parameter moves the row to the old_foldermap instead of deleting it.
                 \panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
 
-                // Recreate the default role mappings that were deleted by the above line.
-                $oldpanoptocourse->panopto->check_course_role_mappings();
-
                 // Imports SHOULD still work for this case, so continue to below code.
             }
 

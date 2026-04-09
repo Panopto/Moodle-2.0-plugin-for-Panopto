@@ -36,32 +36,6 @@
             <INDEX NAME="mdl_blocpanoimpo_imp_ix" UNIQUE="false" FIELDS="import_moodle_id" COMMENT="index on the imported course id"/>
         </INDEXES>
     </TABLE>
-    <TABLE NAME="block_panopto_creatormap" COMMENT="a table that maps Moodle roles to the creator capability when provisioning to Panopto">
-        <FIELDS>
-            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of mapping row, key"/>
-            <FIELD NAME="moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the course the mapping belongs to"/>
-            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in Moodle of the role given the creator permissions"/>
-        </FIELDS>
-        <KEYS>
-            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for creator map table"/>
-        </KEYS>
-        <INDEXES>
-            <INDEX NAME="mdl_blocpanocrea_moo_ix" UNIQUE="false" FIELDS="moodle_id" COMMENT="index on moodle course id"/>
-        </INDEXES>
-    </TABLE>
-    <TABLE NAME="block_panopto_publishermap" COMMENT="a table that maps Moodle roles to the publisher capability when provisioning to Panopto">
-        <FIELDS>
-            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of mapping row, key"/>
-            <FIELD NAME="moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the course the mapping belongs to"/>
-            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in Moodle of the role given the publisher permissions"/>
-        </FIELDS>
-        <KEYS>
-            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for publisher map table"/>
-        </KEYS>
-        <INDEXES>
-            <INDEX NAME="mdl_blocpanopubl_moo_ix" UNIQUE="false" FIELDS="moodle_id" COMMENT="index on moodle course id"/>
-        </INDEXES>
-    </TABLE>
     <TABLE NAME="block_panopto_old_foldermap" COMMENT="Map Moodle courses to inactive ClientData style Panopto folders">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the table, please edit me"/>

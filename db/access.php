@@ -43,12 +43,15 @@ $capabilities = [
     ],
     'block/panopto:provision_asteacher' => [
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => [],
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+        ],
     ],
     'block/panopto:provision_aspublisher' => [
         'captype' => 'write',
-        'contextlevel' => CONTEXT_BLOCK,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [],
     ],
     'block/panopto:addinstance' => [

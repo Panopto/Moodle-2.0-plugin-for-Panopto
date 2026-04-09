@@ -88,43 +88,36 @@ class block_panopto_edit_form extends block_edit_form {
 
             $currentcourseroles = role_fix_names($currentcourseroles, $context, ROLENAME_ALIAS, true);
 
-            while ($role = current($currentcourseroles)) {
-                $rolearray[key($currentcourseroles)] = $currentcourseroles[key($currentcourseroles)];
-                next($currentcourseroles);
-            }
-
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
             $mform->addHelpButton('rolemapheader', 'role_map_header', 'block_panopto');
 
-            $createselect = $mform->addElement(
-                'select',
+            $roles = [];
+
+            foreach ($currentmappings['creator'] as $currentmapping) {
+                $roles[] = $currentcourseroles[$currentmapping];
+            }
+
+            $mform->addElement(
+                'static',
                 'config_creator',
                 get_string('creator', 'block_panopto'),
-                $rolearray,
-                null
+                implode(', ', $roles)
             );
             $mform->addHelpButton('config_creator', 'creator', 'block_panopto');
-            $createselect->setMultiple(true);
 
-            // Set default selected to previous setting.
-            if (!empty($currentmappings['creator'])) {
-                $createselect->setSelected($currentmappings['creator']);
+            $roles = [];
+
+            foreach ($currentmappings['publisher'] as $currentmapping) {
+                $roles[] = $currentcourseroles[$currentmapping];
             }
 
-            $pubselect = $mform->addElement(
-                'select',
+            $mform->addElement(
+                'static',
                 'config_publisher',
                 get_string('publisher', 'block_panopto'),
-                $rolearray,
-                null
+                implode(', ', $roles)
             );
             $mform->addHelpButton('config_publisher', 'publisher', 'block_panopto');
-            $pubselect->setMultiple(true);
-
-            // Set default selected to previous setting.
-            if (!empty($currentmappings['publisher'])) {
-                $pubselect->setSelected($currentmappings['publisher']);
-            }
         } else {
             $mform->addElement('static', 'error', '', get_string('block_edit_error', 'block_panopto'));
         }

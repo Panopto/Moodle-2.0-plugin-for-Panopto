@@ -319,42 +319,43 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    $systemcontext = context_system::instance();
-    $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);
-    $systemrolearray = role_fix_names($systemrolearray, $systemcontext, ROLENAME_ALIAS, true);
-
-    $systempublishersetting = new admin_setting_configmultiselect(
-        'block_panopto/publisher_system_role_mapping',
-        get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
-        get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
-        [],
-        $systemrolearray
-    );
-    $systempublishersetting->set_updatedcallback('panopto_update_system_publishers');
-    $settings->add($systempublishersetting);
-
     $coursecontext = context_course::instance(SITEID);
-    $courserolearray = get_all_roles($coursecontext);
+    $courserolearray = get_roles_with_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $coursecontext);
     $courserolearray = role_fix_names($courserolearray, $coursecontext, ROLENAME_ALIAS, true);
+    $rolelist = [];
 
+    foreach ($courserolearray as $roleid => $rolename) {
+        $rolelist[] = html_writer::link(
+            new \moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $roleid]),
+            $rolename
+        );
+    }
+
+    $a = (object)[
+        'url' => new moodle_url('/admin/roles/manage.php'),
+        'capability' => get_string('panopto:provision_aspublisher', 'block_panopto'),
+    ];
+    $description = implode(', ', $rolelist) . '<br>' . get_string('provisionrole_help', 'block_panopto', $a);
     $settings->add(
-        new admin_setting_configmultiselect(
-            'block_panopto/publisher_role_mapping',
-            get_string('block_panopto_publisher_mapping', 'block_panopto'),
-            get_string('block_panopto_publisher_mapping_desc', 'block_panopto'),
-            [],
-            $courserolearray
-        )
+        new admin_setting_description('publisher_role_mapping', get_string('publisherrolemapping', 'block_panopto'), $description)
     );
+    $settings->add(new admin_setting_description('space', '', ''));
 
+    $courserolearray = get_roles_with_capability('block/panopto:provision_asteacher', CAP_ALLOW, $coursecontext);
+    $courserolearray = role_fix_names($courserolearray, $coursecontext, ROLENAME_ALIAS, true);
+    $rolelist = [];
+
+    foreach ($courserolearray as $roleid => $rolename) {
+        $rolelist[] = html_writer::link(
+            new \moodle_url('/admin/roles/define.php', ['action' => 'edit', 'roleid' => $roleid]),
+            $rolename
+        );
+    }
+
+    $a->capability = get_string('panopto:provision_asteacher', 'block_panopto');
+    $description = implode(', ', $rolelist) . '<br>' . get_string('provisionrole_help', 'block_panopto', $a);
     $settings->add(
-        new admin_setting_configmultiselect(
-            'block_panopto/creator_role_mapping',
-            get_string('block_panopto_creator_mapping', 'block_panopto'),
-            get_string('block_panopto_creator_mapping_desc', 'block_panopto'),
-            [3, 4],
-            $courserolearray
-        )
+        new admin_setting_description('creator_role_mapping', get_string('creatorrolemapping', 'block_panopto'), $description)
     );
 
     $settings->add(
