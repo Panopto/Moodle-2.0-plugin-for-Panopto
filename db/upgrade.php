@@ -407,5 +407,20 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2021063000, 'panopto');
     }
 
+    if ($oldversion < 2026022501) {
+
+        // Define index mdl_blocpanofold_panid_ix (not unique) to be added to block_panopto_foldermap.
+        $table = new xmldb_table('block_panopto_foldermap');
+        $index = new xmldb_index('mdl_blocpanofold_panid_ix', XMLDB_INDEX_NOTUNIQUE, ['panopto_id']);
+
+        // Conditionally launch add index mdl_blocpanofold_panid_ix.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2026022501, 'panopto');
+    }
+
     return true;
 }
