@@ -16,50 +16,29 @@
 /**
  * AMD module for displaying Panopto content asynchronously.
  *
- * @package block_panopto
+ * @module block_panopto/asyncload
  * @copyright  Panopto 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define([
-        "jquery",
-        "core/ajax",
-        "core/str",
-], ($, ajax, str) =>
-{
-    var init = (params) =>
-    {
-        // Find the div containing the Panopto block's content.
-        var mynode = $('#' + params.id);
-        if (mynode.length)
-        {
-            // Execute on DOM ready.
-            $(document).ready(function()
-            {
-                var request = {
-                    methodname: 'block_panopto_get_content',
-                    args: {
-                        courseid: params.courseid
-                    }
-                };
 
-                ajax.call([request])[0].done(function(response)
-                {
-                    mynode.find('#loading_text').remove();
-                    mynode.html(response);
-                })
-                .fail(function(error)
-                {
-                    mynode.find('#loading_text').remove();
-                    mynode.html(error);
-                });
-            });
-        }
-        else
-        {
-            console.error("Couldn't find element with id: " + params.id);
-        }
-    };
-    return {
-        initblock: init,
-    };
-});
+import {call as fetchMany} from "core/ajax";
+
+export const initblock = (params) => {
+    // Find the div containing the Panopto block's content.
+    const mynode = document.getElementById(params.id);
+    if (mynode) {
+        const request = {
+            methodname: 'block_panopto_get_content',
+            args: {
+                courseid: params.courseid
+            }
+        };
+
+        fetchMany([request])[0].then((response) => {
+            mynode.innerHTML = response;
+            return response;
+        }).catch((error) => {
+            mynode.innerHTML = error;
+        });
+    }
+};
