@@ -26,10 +26,8 @@ namespace block_panopto\external;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/externallib.php');
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
 
-use external_api;
 use external_function_parameters;
 use external_value;
 use external_single_structure;
@@ -41,7 +39,7 @@ use external_single_structure;
  * @copyright Panopto 2009 - 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class get_content extends external_api {
+class get_content extends \core_external\external_api {
     /**
      * Returns description of method parameters
      * @return external_function_parameters
