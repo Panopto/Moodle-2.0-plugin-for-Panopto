@@ -38,13 +38,7 @@ global $courses;
 require_login();
 
 
-// Set course context if we are in a course, otherwise use system context.
-$courseidparam = optional_param('course_id', 0, PARAM_INT);
-if ($courseidparam != 0) {
-    $context = context_course::instance($courseidparam, MUST_EXIST);
-} else {
-    $context = context_system::instance();
-}
+$context = context_system::instance();
 
 $PAGE->set_context($context);
 
@@ -65,27 +59,17 @@ if ($mform->is_cancelled()) {
     $PAGE->set_title($unprovisiontitle);
     $PAGE->set_heading($unprovisiontitle);
 
-    if ($courseidparam != 0) {
-        // Course context.
-        require_capability('block/panopto:provision_course', $context);
+    require_capability('block/panopto:provision_multiple', $context);
 
-        $courses = [$courseidparam];
-        $editcourseurl = new moodle_url($returnurl);
-        $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
-    } else {
-        // System context.
-        require_capability('block/panopto:provision_multiple', $context);
-
-        $data = $mform->get_data();
-        if ($data) {
-            $courses = $data->courses;
-        }
-
-        $manageblocks = new moodle_url('/admin/blocks.php');
-        $panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
-        $PAGE->navbar->add(get_string('blocks'), $manageblocks);
-        $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
+    $data = $mform->get_data();
+    if ($data) {
+        $courses = $data->courses;
     }
+
+    $manageblocks = new moodle_url('/admin/blocks.php');
+    $panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
+    $PAGE->navbar->add(get_string('blocks'), $manageblocks);
+    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
 
     $PAGE->navbar->add($unprovisiontitle, new moodle_url($PAGE->url));
 

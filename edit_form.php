@@ -57,7 +57,10 @@ class block_panopto_edit_form extends block_edit_form {
 
             $provisionurl = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $querystring;
             $addtopanopto = get_string('add_to_panopto', 'block_panopto');
-            $unprovisionurl = "$CFG->wwwroot/blocks/panopto/unprovision_course_internal.php?id=" . $COURSE->id;
+            $unprovisionurl = new moodle_url(
+                '/blocks/panopto/unprovision_course_internal.php',
+                ['id' => $COURSE->id, 'sesskey' => sesskey()],
+            );
             $unprovisionfrommoodle = get_string('unprovision_from_moodle', 'block_panopto');
             $or = get_string('or', 'block_panopto');
             $html = "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>";

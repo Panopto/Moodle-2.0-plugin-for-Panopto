@@ -65,6 +65,8 @@ $PAGE->set_heading($unprovisiontitle);
 
 // Course context.
 require_capability('block/panopto:provision_course', $context);
+
+require_sesskey();
 $editcourseurl = new moodle_url($returnurl);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
 
@@ -74,17 +76,21 @@ $PAGE->navbar->add(get_string('blocks'), $manageblocks);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
 $PAGE->navbar->add($unprovisiontitle, new moodle_url($PAGE->url));
 
-echo $OUTPUT->header();
-
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
-} else {
+}
+
+echo $OUTPUT->header();
+
+if ($mform->get_data()) {
     $panoptodata = new \panopto_data($courseid);
     $unprovisioninginfo = $panoptodata->get_provisioning_info();
     $unprovisionwassuccess = $panoptodata->unprovision_course();
 
     include(dirname(__FILE__) . '/views/unprovisioned_course.html.php');
     echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+} else {
+    $mform->display();
 }
 
 echo $OUTPUT->footer();
