@@ -78,13 +78,15 @@ echo $OUTPUT->header();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
-} else {
+} else if ($mform->get_data()) {
     $panoptodata = new \panopto_data($courseid);
     $unprovisioninginfo = $panoptodata->get_provisioning_info();
     $unprovisionwassuccess = $panoptodata->unprovision_course();
 
     include(dirname(__FILE__) . '/views/unprovisioned_course.html.php');
     echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+} else {
+    $mform->display();
 }
 
 echo $OUTPUT->footer();
