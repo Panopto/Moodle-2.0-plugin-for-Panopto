@@ -139,31 +139,44 @@ if ($mform->is_cancelled()) {
         echo get_string('no_server', 'block_panopto') .
         "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else if (count($aserverarray) === 1) {
-        // Get first element from associative array. aServerArray and appKeyArray will have same key values.
-        $key = array_keys($aserverarray);
-        $selectedserver = trim($aserverarray[$key[0]]);
-        $selectedkey = trim($appkeyarray[$key[0]]);
+        // Requires an explicit confirm+sesskey step before provisioning runs.
+        $confirmed = optional_param('confirm', 0, PARAM_BOOL);
 
-        $panoptodata = new \panopto_data($courseid);
+        if (!$confirmed) {
+            echo $OUTPUT->confirm(
+                get_string('confirm_provision_course', 'block_panopto'),
+                new moodle_url($PAGE->url, ['confirm' => 1, 'sesskey' => sesskey()]),
+                new moodle_url($returnurl)
+            );
+        } else {
+            require_sesskey();
 
-        // If we are not using the same server remove the folder ID reference.
-        // NOTE: A Moodle course can only point to one Panopto server at a time.
-        // So reprovisioning to a different server erases the folder mapping to the original server.
-        if (
-            !isset($panoptodata->servername) || empty($panoptodata->servername) ||
-            ($panoptodata->servername !== $selectedserver)
-        ) {
-            $panoptodata->sessiongroupid = null;
+            // Get first element from associative array. aServerArray and appKeyArray will have same key values.
+            $key = array_keys($aserverarray);
+            $selectedserver = trim($aserverarray[$key[0]]);
+            $selectedkey = trim($appkeyarray[$key[0]]);
+
+            $panoptodata = new \panopto_data($courseid);
+
+            // If we are not using the same server remove the folder ID reference.
+            // NOTE: A Moodle course can only point to one Panopto server at a time.
+            // So reprovisioning to a different server erases the folder mapping to the original server.
+            if (
+                !isset($panoptodata->servername) || empty($panoptodata->servername) ||
+                ($panoptodata->servername !== $selectedserver)
+            ) {
+                $panoptodata->sessiongroupid = null;
+            }
+
+            $panoptodata->servername = $selectedserver;
+            $panoptodata->applicationkey = $selectedkey;
+
+            $provisioningdata = $panoptodata->get_provisioning_info();
+            $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
+
+            include(dirname(__FILE__) . '/views/provisioned_course.html.php');
+            echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
         }
-
-        $panoptodata->servername = $selectedserver;
-        $panoptodata->applicationkey = $selectedkey;
-
-        $provisioningdata = $panoptodata->get_provisioning_info();
-        $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
-
-        include(dirname(__FILE__) . '/views/provisioned_course.html.php');
-        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else {
         $panoptodata = new \panopto_data($courseid);
         if (in_array($panoptodata->servername, $aserverarray)) {
