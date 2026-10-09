@@ -57,6 +57,8 @@ $PAGE->set_pagelayout('base');
 
 $mform = new panopto_unprovision_form($PAGE->url);
 
+$needsconfirm = false;
+
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
 } else {
@@ -68,6 +70,13 @@ if ($mform->is_cancelled()) {
     if ($courseidparam != 0) {
         // Course context.
         require_capability('block/panopto:provision_course', $context);
+
+        $confirmed = optional_param('confirm', 0, PARAM_BOOL);
+        if (!$confirmed) {
+            $needsconfirm = true;
+        } else {
+            require_sesskey();
+        }
 
         $courses = [$courseidparam];
         $editcourseurl = new moodle_url($returnurl);
@@ -91,7 +100,13 @@ if ($mform->is_cancelled()) {
 
     echo $OUTPUT->header();
 
-    if ($courses) {
+    if ($needsconfirm) {
+        echo $OUTPUT->confirm(
+            get_string('confirm_unprovision_course', 'block_panopto'),
+            new moodle_url($PAGE->url, ['course_id' => $courseidparam, 'confirm' => 1, 'sesskey' => sesskey()]),
+            new moodle_url($returnurl)
+        );
+    } else if ($courses) {
         $coursecount = count($courses);
 
         // Raise PHP time limit for bulk unprovisioning operations to prevent timeouts.
