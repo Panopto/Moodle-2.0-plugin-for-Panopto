@@ -177,6 +177,7 @@ $string['config_error_instance_mismatch'] = 'Instance name "{$a->moodle_instance
 $string['config_error_invalid_server_config'] = 'Invalid server configuration. Server name or application key is missing/incorrect.';
 $string['config_error_server_unreachable'] = 'Cannot connect to Panopto server "{$a}". Check server URL and network connectivity.';
 $string['config_validation_success'] = 'Configuration validation successful - proceeding with bulk operation';
+$string['confirm_provision_course'] = 'Are you sure you want to provision this course to Panopto? This creates (or updates) a Panopto folder mapping for this course and syncs enrolled users.';
 $string['copy_access_error'] = 'User does not have access to Panopto folder linked to import source course with Id of {$a->importedcourseid}.';
 $string['copy_api_error'] = 'Error importing course with Id {$a->importedcourseid}. Please see the Panopto PHP error logs for more details.';
 $string['copy_api_error_auth'] = 'Error getting authorized with the panopto server {$a}.';
