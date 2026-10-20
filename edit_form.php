@@ -52,7 +52,7 @@ class block_panopto_edit_form extends block_edit_form {
 
             $params = new stdClass();
             $params->course_id = $COURSE->id;
-            $params->return_url = $_SERVER['REQUEST_URI'];
+            $params->return_url = $this->page->url->out(false);
             $querystring = http_build_query($params, '', '&');
 
             $provisionurl = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $querystring;
