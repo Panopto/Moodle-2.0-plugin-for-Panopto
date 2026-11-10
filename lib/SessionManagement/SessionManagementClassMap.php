@@ -20,6 +20,9 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class which returns the class map definition by the static method SessionManagementClassMap::classMap()
  * @package SessionManagement

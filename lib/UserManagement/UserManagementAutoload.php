@@ -26,6 +26,8 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+defined('MOODLE_INTERNAL') || die();
+
 require_once dirname(__FILE__) . '/UserManagementWsdlClass.php';
 require_once dirname(__FILE__) . '/Set/Response/UserManagementStructSetGroupIsPublicResponse.php';
 require_once dirname(__FILE__) . '/Set/Public/UserManagementStructSetGroupIsPublic.php';

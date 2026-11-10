@@ -7,3 +7,4 @@ nbproject/private/private.xml
 nbproject/private/private.properties
 nbproject/project.properties
 node_modules/
+*.orig

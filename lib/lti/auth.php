@@ -31,7 +31,8 @@ if (empty($CFG)) {
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/panoptoblock_lti_utility.php');
-require_once(dirname(__FILE__) . '../../panopto_data.php');
+require_once(dirname(__FILE__) . '/../panopto_data.php');
+require_once(dirname(__FILE__) . '/../block_panopto_lib.php');
 
 global $_POST, $_SERVER;
 
@@ -53,21 +54,21 @@ $ismoodle41minimum = empty($CFG->version) ? false : $CFG->version >= 2022112800.
 $ltimessagehint = $ismoodle41minimum ? json_decode($ltimessagehintenc) : $ltimessagehintenc;
 $cmid = !empty($ltimessagehint->cmid) ? $ltimessagehint->cmid : '';
 
+$hint = '';
+if ($ismoodle41minimum) {
+    $hint = is_string($cmid) ? $cmid : '';
+} else if (is_string($ltimessagehint)) {
+    $hint = $ltimessagehint;
+}
+
 [
     $pluginname,
     $callback,
     $toolid,
     $resourcelinkid,
     $contenturl,
-    $customdata
-] = array_pad(
-    explode(
-        ',',
-        $ismoodle41minimum ? $cmid : $ltimessagehint
-    ),
-    6,
-    null
-);
+    $custom,
+] = panoptoblock_lti_utility::parse_playback_launch_hint($hint);
 
 $ispanoptoplugin = false;
 $pluginpath = '';
@@ -208,30 +209,33 @@ if ($ok && !empty($prompt) && ($prompt !== 'none')) {
 }
 
 if ($ok) {
+    // This is the point where a signed launch carrying the user's identity claims is
+    // minted, so authorise here. require_login_or_repost() at the top of this file is
+    // called without a course, and its repost branch returns without any require_login.
+    require_login($course);
+
     if ($toolid) {
+        // Content URL arrives back from the tool inside lti_message_hint, so re-validate it
+        // here: this is where it becomes the endpoint the signed launch is POSTed to.
+        if (!empty($contenturl) && !panopto_is_allowed_panopto_host($contenturl)) {
+            throw new moodle_exception('invalid_content_host', 'block_panopto');
+        }
+
         $lti = new stdClass();
         $lti->id = $resourcelinkid;
         $lti->typeid = $toolid;
         $lti->launchcontainer = LTI_LAUNCH_CONTAINER_WINDOW;
         $lti->toolurl = $contenturl;
-        $lti->custom = new stdClass();
+        $lti->custom = $custom;
         $lti->instructorcustomparameters = [];
         $lti->debuglaunch = false;
         $lti->course = $courseid;
-        if ($customdata) {
-            $decoded = json_decode($customdata, true);
-
-            foreach ($decoded as $key => $value) {
-                $lti->custom->$key = $value;
-            }
-        }
 
         // If we get to this point we know this is a plug-in based request and will not support grading.
         $lti->custom->grading_not_supported = true;
 
         [$endpoint, $params] = panoptoblock_lti_utility::get_launch_data($lti, $nonce);
     } else {
-        require_login($course);
         // Set the return URL. We send the launch container along to help us avoid frames-within-frames when the user returns.
         $returnurlparams = [
             'course' => $courseid,
@@ -270,7 +274,7 @@ if ($ok) {
 if (isset($state)) {
     $params['state'] = $state;
 }
-$r = '<form action="' . $redirecturi . "\" name=\"ltiAuthForm\" id=\"ltiAuthForm\" " .
+$r = '<form action="' . s($redirecturi) . "\" name=\"ltiAuthForm\" id=\"ltiAuthForm\" " .
      "method=\"post\" enctype=\"application/x-www-form-urlencoded\">\n";
 if (!empty($params)) {
     foreach ($params as $key => $value) {

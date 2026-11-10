@@ -35,6 +35,9 @@ $capabilities = [
         ],
     ],
     'block/panopto:provision_multiple' => [
+        // Bulk provisioning sends every enrolled user's details to Panopto, and the same
+        // capability gates bulk unprovisioning, which drops course-to-folder mappings site-wide.
+        'riskbitmask' => RISK_CONFIG | RISK_PERSONAL | RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => [

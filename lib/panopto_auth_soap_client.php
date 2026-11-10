@@ -23,8 +23,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined Moodle internal because it is called from Panopto to authorize login.
-// @codingStandardsIgnoreLine
+defined('MOODLE_INTERNAL') || die();
+
 require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');

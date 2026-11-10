@@ -99,10 +99,7 @@ class block_panopto_rollingsync {
             $page->blocks->add_blocks([BLOCK_POS_LEFT => ['panopto']], $pagetypepattern);
         }
 
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 
@@ -110,13 +107,17 @@ class block_panopto_rollingsync {
 
         if ($allowautoprovision == 'oncoursecreation') {
             $task = new \block_panopto\task\provision_course();
+            // The task syncs the creator so they get folder access without relogging. It does not
+            // run as them: cron cancels a task whose user is suspended before it runs.
             $task->set_custom_data([
                 'courseid' => $event->courseid,
-                'relateduserid' => $event->relateduserid,
-                'contextid' => $event->contextid,
-                'eventtype' => 'role',
+                'creatorid' => (int) $event->userid,
             ]);
-            $task->execute();
+
+            // Provisioning talks to Panopto over SOAP. Always run that from cron: doing it
+            // here holds the course-create request open for the whole SOAP/WSDL round trip,
+            // which behind a slow HTTP proxy can be a full default_socket_timeout.
+            \core\task\manager::queue_adhoc_task($task);
         }
     }
 
@@ -126,6 +127,8 @@ class block_panopto_rollingsync {
      * @param \core\event\course_deleted $event
      */
     public static function coursedeleted(\core\event\course_deleted $event) {
+        // Local mapping cleanup only, no Panopto call, so this deliberately ignores the
+        // event_sync_enabled switch: a hidden block or disabled sync must not leave stale rows.
         if (
             !\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()
@@ -142,11 +145,7 @@ class block_panopto_rollingsync {
      * @param \core\event\course_restored $event
      */
     public static function courserestored(\core\event\course_restored $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version() ||
-            \panopto_data::is_block_disabled()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 
@@ -279,24 +278,7 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_deleted $event
      */
     public static function userenrolmentdeleted(\core\event\user_enrolment_deleted $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
-            return;
-        }
-
-        $task = new \block_panopto\task\sync_user();
-        $task->set_custom_data([
-            'courseid' => $event->courseid,
-            'userid' => $event->relateduserid,
-        ]);
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
+        self::queue_unenrolment_sync($event->courseid, $event->relateduserid);
     }
 
     /**
@@ -305,24 +287,36 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_updated $event
      */
     public static function userenrolmentupdated(\core\event\user_enrolment_updated $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        self::queue_unenrolment_sync($event->courseid, $event->relateduserid);
+    }
+
+    /**
+     * Queue a Panopto permission sync after an enrolment was removed, suspended or reactivated.
+     *
+     * Unlike role assignment this is not behind async_tasks: the sync is always queued. Running
+     * it inline blocked the unenrol/suspend request for the full SOAP round trip, and behind an
+     * HTTP proxy that meant waiting for default_socket_timeout on every action.
+     *
+     * @param int $courseid the course the enrolment belongs to
+     * @param int $userid the user whose enrolment changed
+     */
+    private static function queue_unenrolment_sync(int $courseid, int $userid): void {
+        if (!\panopto_data::should_handle_events()) {
+            return;
+        }
+
+        // Treat a missing setting as enabled so upgraded sites keep their current behaviour.
+        if (get_config('block_panopto', 'sync_on_unenrolment') === '0') {
             return;
         }
 
         $task = new \block_panopto\task\sync_user();
         $task->set_custom_data([
-            'courseid' => $event->courseid,
-            'userid' => $event->relateduserid,
+            'courseid' => $courseid,
+            'userid' => $userid,
         ]);
 
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
+        \core\task\manager::queue_adhoc_task($task);
     }
 
     /**
@@ -331,10 +325,7 @@ class block_panopto_rollingsync {
      * @param \core\event\role_assigned $event
      */
     public static function roleassigned(core\event\role_assigned $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 
@@ -359,10 +350,7 @@ class block_panopto_rollingsync {
      * @param \core\event\role_unassigned $event
      */
     public static function roleunassigned(core\event\role_unassigned $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 
@@ -387,10 +375,7 @@ class block_panopto_rollingsync {
      * @param \core\event\user_loggedin $event
      */
     public static function userloggedin(\core\event\user_loggedin $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 
@@ -415,10 +400,7 @@ class block_panopto_rollingsync {
      * @param \core\event\user_loggedinas $event
      */
     public static function userloggedinas(\core\event\user_loggedinas $event) {
-        if (
-            !\panopto_data::is_main_block_configured() ||
-            !\panopto_data::has_minimum_version()
-        ) {
+        if (!\panopto_data::should_handle_events()) {
             return;
         }
 

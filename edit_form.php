@@ -50,12 +50,7 @@ class block_panopto_edit_form extends block_edit_form {
             $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));
             $mform->addHelpButton('configheader', 'block_edit_header', 'block_panopto');
 
-            $params = new stdClass();
-            $params->course_id = $COURSE->id;
-            $params->return_url = $_SERVER['REQUEST_URI'];
-            $querystring = http_build_query($params, '', '&');
-
-            $provisionurl = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $querystring;
+            $provisionurl = $this->get_sync_course_url();
             $addtopanopto = get_string('add_to_panopto', 'block_panopto');
             $unprovisionurl = "$CFG->wwwroot/blocks/panopto/unprovision_course_internal.php?id=" . $COURSE->id;
             $unprovisionfrommoodle = get_string('unprovision_from_moodle', 'block_panopto');
@@ -128,6 +123,43 @@ class block_panopto_edit_form extends block_edit_form {
         } else {
             $mform->addElement('static', 'error', '', get_string('block_edit_error', 'block_panopto'));
         }
+    }
+
+    /**
+     * URL for "Sync this course to Panopto". Must include course_id so provision_course.php
+     * offers to provision this course rather than showing the bulk form. No sesskey: the GET
+     * only shows a confirmation, and its continue button posts the sesskey.
+     *
+     * @return string
+     */
+    private function get_sync_course_url() {
+        global $CFG;
+
+        $params = [
+            'course_id' => $this->page->course->id,
+            'return_url' => $this->get_block_config_url(),
+        ];
+
+        return $CFG->wwwroot . '/blocks/panopto/provision_course.php?' . http_build_query($params, '', '&');
+    }
+
+    /**
+     * Builds the return URL for Panopto pages linked from this form.
+     *
+     * $_SERVER['REQUEST_URI'] must not be used for this. block_edit_form is a dynamic form, so
+     * the configuration form is normally rendered by an AJAX request to /lib/ajax/service.php,
+     * and in that case REQUEST_URI points at that web service endpoint instead of at the page
+     * being edited. $this->page is the page the block lives on in both the AJAX and the
+     * non-AJAX case.
+     *
+     * Do not append bui_editid. That param is only the gear-icon href; Moodle intercepts
+     * the click and opens a modal. Loading it as a real page runs the legacy full-page
+     * editor (process_url_edit) instead of the modal, and saving that page is unstable.
+     *
+     * @return string the page the block lives on, relative to wwwroot.
+     */
+    private function get_block_config_url() {
+        return (new moodle_url($this->page->url))->out_as_local_url(false);
     }
 
     /**

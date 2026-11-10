@@ -53,11 +53,37 @@ class provision_course extends \core\task\adhoc_task {
 
             $panopto = new \panopto_data($eventdata['courseid']);
 
+            // This task provisions a course that had no folder when it was queued. If the course has a
+            // working mapping now, someone provisioned it in the meantime, perhaps to another server
+            // by hand, and switching it to the automatic target server would undo that.
+            if (!empty($panopto->servername) && !empty($panopto->applicationkey) && !empty($panopto->sessiongroupid)) {
+                \panopto_data::print_log(
+                    "Course {$eventdata['courseid']} is already provisioned to {$panopto->servername}; " .
+                    'skipping automatic provisioning.'
+                );
+                return;
+            }
+
             $targetserver = panopto_get_target_panopto_server();
             $panopto->servername = $targetserver->name;
             $panopto->applicationkey = $targetserver->appkey;
             $provisioninginfo = $panopto->get_provisioning_info();
-            $provisioneddata = $panopto->provision_course($provisioninginfo, false);
+
+            // Set when queued on course creation. Cron runs this task as the site admin, so sync the
+            // course creator here instead of letting provision_course() sync $USER.
+            $creatorid = (int) ($eventdata['creatorid'] ?? 0);
+
+            // A manual provision can also finish while this one is talking to Panopto, so ask
+            // provision_course() to keep a mapping that appears in the meantime.
+            $provisioneddata = $panopto->provision_course($provisioninginfo, $creatorid > 0, false, true);
+
+            if (!empty($provisioneddata->keptexistingmapping)) {
+                return;
+            }
+
+            if ($creatorid > 0 && isset($provisioneddata->Id) && !isset($provisioneddata->errormessage)) {
+                $panopto->sync_external_user($creatorid);
+            }
         } catch (\Exception $e) {
             \panopto_data::print_log($e->getMessage());
         }

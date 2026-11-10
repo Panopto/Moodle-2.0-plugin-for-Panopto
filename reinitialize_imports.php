@@ -42,7 +42,14 @@ require_login();
 function reinitialize_all_imports() {
     global $DB;
 
+    // Every import on the site is re-copied, which can take a long time.
+    core_php_time_limit::raise();
+
     $courseimports = $DB->get_records('block_panopto_importmap');
+
+    // Every target course the loop below needs, fetched in one query rather than one per target.
+    $targetcourseids = array_unique(array_column($courseimports, 'target_moodle_id'));
+    $existingtargetcourses = $DB->get_records_list('course', 'id', $targetcourseids, '', 'id');
 
     $coursepanoptoarray = [];
 
@@ -54,9 +61,7 @@ function reinitialize_all_imports() {
         if (!isset($coursepanoptoarray[$courseimport->target_moodle_id])) {
             $targetpanopto = new \panopto_data($courseimport->target_moodle_id);
 
-            $targetmoodlecourse = $DB->get_record('course', ['id' => $courseimport->target_moodle_id]);
-
-            $targetcourseexists = isset($targetmoodlecourse) && $targetmoodlecourse !== false;
+            $targetcourseexists = isset($existingtargetcourses[$courseimport->target_moodle_id]);
             $hasvalidpanoptodata = isset($targetpanopto->servername) && !empty($targetpanopto->servername) &&
                                            isset($targetpanopto->applicationkey) && !empty($targetpanopto->applicationkey);
 
@@ -99,6 +104,10 @@ function reinitialize_all_imports() {
         include(dirname(__FILE__) . '/views/imported_course.html.php');
 
         \panopto_data::print_log(get_string('reinitialize_import_finished', 'block_panopto', $courseimport->target_moodle_id));
+
+        // print_log only flushes when logs go to the screen, so on a site that logs to file this
+        // is what keeps the per-import blocks appearing while the run is still going.
+        panopto_bulk_flush_output();
     }
 }
 
@@ -137,7 +146,7 @@ if ($mform->is_cancelled()) {
 
     reinitialize_all_imports();
 
-    echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
+    echo html_writer::link($returnurl, get_string('back_to_config', 'block_panopto'));
 
     echo $OUTPUT->footer();
 } else {

@@ -51,7 +51,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $branchinfo['targetserver'] Target server name
                      */
-                    echo $branchinfo['targetserver'];
+                    echo s($branchinfo['targetserver']);
                     ?>
                 </div>
                 <div class='attribute'>
@@ -77,7 +77,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $branchinfo['categoryname'] Category name
                      */
-                    echo $branchinfo['categoryname'];
+                    echo s($branchinfo['categoryname']);
                     ?>
                 </div>
                 <?php

@@ -171,44 +171,9 @@ class block_panopto extends block_base {
             'contextid' => $contextid,
         ];
 
-        // Initialize the AMD module with the course ID and context.
+        // Initialize the AMD module with the course ID and context. It renders the block's content
+        // and handles its links, so the block needs no inline script.
         $this->page->requires->js_call_amd('block_panopto/asyncload', 'initblock', [$params]);
-        $this->content->text .= '<script type="text/javascript">' .
-                    // Function to pop up Panopto live note taker.
-                    'function panopto_launchNotes(url) {' .
-                        // Open empty notes window, then POST SSO form to it.
-                        'var notesWindow = window.open("", "PanoptoNotes", ' .
-                            '"width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");' .
-                        'document.SSO.action = url;' .
-                        'document.SSO.target = "PanoptoNotes";' .
-                        'document.SSO.submit();' .
-
-                        // Ensure the new window is brought to the front of the z-order.
-                        'notesWindow.focus();' .
-                    '}' .
-
-                    'function panopto_startSSO(linkElem) {' .
-                        'document.SSO.action = linkElem.href;' .
-                        'document.SSO.target = "_blank";' .
-                        'document.SSO.submit();' .
-
-                        // Cancel default link navigation.
-                        'return false;' .
-                    '}' .
-
-                    'function panopto_toggleHiddenLectures() {' .
-                        'var showAllToggle = document.getElementById("showAllToggle");' .
-                        'var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");' .
-
-                        'if (hiddenLecturesDiv.style.display == "block") {' .
-                            'hiddenLecturesDiv.style.display = "none";' .
-                            'showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";' .
-                        '} else {' .
-                        'hiddenLecturesDiv.style.display = "block";' .
-                        'showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";' .
-                    '}' .
-                '}' .
-            '</script>';
 
         return $this->content;
     }

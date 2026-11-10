@@ -20,6 +20,9 @@
  * @version 20150429-01
  * @date 2017-05-25
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class which returns the class map definition by the static method AuthManagementClassMap::classMap()
  * @package AuthManagement

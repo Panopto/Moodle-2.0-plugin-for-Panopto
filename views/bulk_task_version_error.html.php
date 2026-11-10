@@ -63,7 +63,7 @@ defined('MOODLE_INTERNAL') || die();
                  *
                  * @var string $oldpanoptocourse->panopto->servername Server name
                  */
-                echo $oldpanoptocourse->panopto->servername;
+                echo s($oldpanoptocourse->panopto->servername);
                 ?>
             </div>
             <div class="attribute">
@@ -115,7 +115,7 @@ defined('MOODLE_INTERNAL') || die();
                  *
                  * @var string $activepanoptoserverversion Active server version
                  */
-                echo $activepanoptoserverversion;
+                echo s($activepanoptoserverversion);
                 ?>
             </div>
         </div>

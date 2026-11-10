@@ -35,45 +35,105 @@ require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
 $servername = required_param('serverName', PARAM_HOST);
 $callbackurl = required_param('callbackURL', PARAM_URL);
+$expirationparam = optional_param('expiration', '', PARAM_RAW);
+$requestauthcodeparam = optional_param('authCode', '', PARAM_ALPHANUM);
+$action = optional_param('action', '', PARAM_ALPHA);
 $configuredserverarray = panopto_get_configured_panopto_servers();
+
+// Normalise before validating so that the host being checked is the host that will
+// actually be redirected to, rather than a still-encoded form of it.
+if (
+    strpos($callbackurl, 'http%') !== false ||
+    strpos($callbackurl, 'https%') !== false
+) {
+    $callbackurl = urldecode($callbackurl);
+}
+
+// Set these before any output so the error branches below do not render a page with no
+// context or URL set. The query string must be part of this URL: require_login() stores
+// qualified_me() as wantsurl, which is $PAGE->url once set, so without the params the
+// post-login return is SSO.php with nothing on it.
+$PAGE->set_context(context_system::instance());
+$PAGE->set_url(panopto_sso_page_url(
+    $servername,
+    $callbackurl,
+    $expirationparam,
+    $requestauthcodeparam,
+    $action
+));
 
 $callbackverified = false;
 foreach ($configuredserverarray as $possibleserver) {
     if (strcasecmp($possibleserver, $servername) == 0) {
+        // Anchored comparison, shared with panopto_is_allowed_panopto_host. A substring test
+        // would also accept hosts such as "demo.panopto.com.attacker.example" and redirect
+        // the signed payload off-site.
         $callbackhost = parse_url($callbackurl, PHP_URL_HOST);
-
-        if (stripos($callbackhost, $servername) !== false) {
-            $callbackverified = true;
-            break;
-        }
+        $callbackverified = panopto_host_matches_server($callbackhost, $servername);
+        break;
     }
 }
 
 if ($callbackverified) {
-    if (
-        strpos($callbackurl, 'http%') !== false ||
-        strpos($callbackurl, 'https%') !== false
-    ) {
-        $callbackurl = urldecode($callbackurl);
-    }
-
     // A float doesn't have the required precision.
     $expiration = preg_replace('/[^0-9\.]/', '', required_param('expiration', PARAM_RAW));
 
+    // The whitelist above still admits '', '.' and '1.2.3', all of which cast to a number
+    // that would sail through the expiry test below. Reject rather than rewrite: the string
+    // is re-signed verbatim further down, so normalising it here would break the signature.
+    if (!preg_match('/^[0-9]+(\.[0-9]+)?$/', $expiration)) {
+        echo $OUTPUT->header();
+
+        echo $OUTPUT->notification(get_string('sso_invalid_expiration', 'block_panopto'), 'notifyproblem');
+        echo $OUTPUT->continue_button(new moodle_url('/'));
+
+        echo $OUTPUT->footer();
+
+        return;
+    }
+
     $requestauthcode = required_param('authCode', PARAM_ALPHANUM);
-    $action = optional_param('action', '', PARAM_ALPHA);
+
+    if (panopto_is_sso_payload_expired($expiration)) {
+        echo $OUTPUT->header();
+
+        echo $OUTPUT->notification(get_string('sso_expired_payload', 'block_panopto'), 'notifyproblem');
+
+        // The payload cannot be re-signed from here, so the only forward path is back into
+        // Moodle to start the launch again. Without this the page is a dead end.
+        echo $OUTPUT->continue_button(new moodle_url('/'));
+
+        echo $OUTPUT->footer();
+
+        return;
+    }
 
     $relogin = ($action == 'relogin');
+    $isguest = isset($USER->username) && ($USER->username == 'guest');
 
-    if ($relogin || (isset($USER->username) && ($USER->username == 'guest'))) {
+    // Panopto cannot put a Moodle sesskey on its relogin link, so acting on it unconfirmed would
+    // let anyone holding a captured SSO URL log a user out. Ask first, as core's login/logout.php
+    // does; the continue button posts back with the sesskey. A guest session has nothing to lose.
+    // The sesskey is read with a default because confirm_sesskey() with no argument calls
+    // required_param() and throws on the first visit, before the confirmation can be shown.
+    $sesskey = optional_param('sesskey', '__notpresent__', PARAM_RAW);
+    if ($relogin && isloggedin() && !$isguest && !confirm_sesskey($sesskey)) {
+        echo $OUTPUT->header();
+        echo $OUTPUT->confirm(
+            get_string('logoutconfirm'),
+            new moodle_url($PAGE->url, ['sesskey' => sesskey()]),
+            new moodle_url('/')
+        );
+        echo $OUTPUT->footer();
+
+        return;
+    }
+
+    if ($relogin || $isguest) {
         require_logout();
 
         // Return to this page, minus the "action=relogin" parameter.
-        redirect($CFG->wwwroot . '/blocks/panopto/SSO.php' .
-                "?authCode=$requestauthcode" .
-                "&serverName=$servername" .
-                "&expiration=$expiration" .
-                '&callbackURL=' . urlencode($callbackurl));
+        redirect(panopto_sso_page_url($servername, $callbackurl, $expiration, $requestauthcode));
         return;
     }
 
@@ -81,10 +141,21 @@ if ($callbackverified) {
     require_login(0, false);
 
     // Reproduce canonically-ordered incoming auth payload.
+    // CallbackURL is not part of it: Panopto signs only serverName and expiration, so it cannot be
+    // added on this side without a matching Panopto change. What bounds a captured payload is the
+    // anchored callback host check and the expiry check above - where it can go, and for how long.
     $requestauthpayload = 'serverName=' . $servername . '&expiration=' . $expiration;
 
+    // Sign and verify with this server's own key. Without it the key would be found by searching
+    // the payload for a configured server name, which picks demo.panopto.com's key for a request
+    // from demo.panopto.com.au. A server with no key cannot sign anything, so it is refused.
+    $appkey = panopto_get_app_key($servername);
+
     // Verify passed in parameters are properly signed.
-    if (panopto_validate_auth_code($requestauthpayload, $requestauthcode)) {
+    if (
+        !panopto_is_string_empty($appkey) &&
+        panopto_validate_auth_code($requestauthpayload, $requestauthcode, $appkey)
+    ) {
         $userkey = panopto_decorate_username($USER->username);
 
 
@@ -93,7 +164,7 @@ if ($callbackverified) {
 
         $targetserver = new stdClass();
         $targetserver->name = $servername;
-        $targetserver->appkey = panopto_get_app_key($servername);
+        $targetserver->appkey = $appkey;
 
         $ssosynctask->set_custom_data([
             'userid' => $USER->id,
@@ -109,8 +180,10 @@ if ($callbackverified) {
                 break;
         }
 
-        // Strip ReturnUrl so we can append it on the end.
-        parse_str(parse_url($callbackurl, PHP_URL_QUERY), $params);
+        // Strip ReturnUrl so we can append it on the end. parse_url() returns null when the
+        // callback has no query string, and parse_str() rejects null on PHP 8.1+.
+        $callbackquery = parse_url($callbackurl, PHP_URL_QUERY);
+        parse_str(is_string($callbackquery) ? $callbackquery : '', $params);
         $returnurl = isset($params['ReturnUrl']) ? $params['ReturnUrl'] : "";
 
         // Handle fragment with hash.
@@ -130,7 +203,7 @@ if ($callbackverified) {
         // Generate canonically-ordered auth payload string.
         $responseparams = 'serverName=' . $servername . '&externalUserKey=' . $userkey . '&expiration=' . $expiration;
         // Sign payload with shared key and hash.
-        $responseauthcode = panopto_generate_auth_code($responseparams);
+        $responseauthcode = panopto_generate_auth_code($responseparams, $appkey);
 
         // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence.
         // (e.g. in the case of usernames that begin with digits).

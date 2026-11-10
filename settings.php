@@ -130,6 +130,14 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
         new admin_setting_configcheckbox(
+            'block_panopto/event_sync_enabled',
+            get_string('block_panopto_event_sync_enabled', 'block_panopto'),
+            get_string('block_panopto_event_sync_enabled_desc', 'block_panopto'),
+            1
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
             'block_panopto/sync_after_login',
             get_string('block_panopto_sync_after_login', 'block_panopto'),
             get_string('block_panopto_sync_after_login_desc', 'block_panopto'),
@@ -150,6 +158,14 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_sync_on_enrolment', 'block_panopto'),
             get_string('block_panopto_sync_on_enrolment_desc', 'block_panopto'),
             0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/sync_on_unenrolment',
+            get_string('block_panopto_sync_on_unenrolment', 'block_panopto'),
+            get_string('block_panopto_sync_on_unenrolment_desc', 'block_panopto'),
+            1
         )
     );
 

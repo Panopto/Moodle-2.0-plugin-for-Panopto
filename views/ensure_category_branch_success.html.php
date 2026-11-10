@@ -46,7 +46,7 @@ defined('MOODLE_INTERNAL') || die();
                  *
                  * @var string $ensuredbranch The ensured branch name or identifier
                  */
-                echo $ensuredbranch;
+                echo s($ensuredbranch);
                 ?>
             </div>
         </div>

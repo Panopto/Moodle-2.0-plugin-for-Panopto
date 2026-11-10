@@ -47,6 +47,7 @@ class panopto_build_category_structure_form extends moodleform {
         $mform = & $this->_form;
 
         $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->setType('servers', PARAM_INT);
         $mform->addHelpButton('servers', 'select_server', 'block_panopto');
 
         $this->add_action_buttons(true, get_string('begin_building_category_structure', 'block_panopto'));

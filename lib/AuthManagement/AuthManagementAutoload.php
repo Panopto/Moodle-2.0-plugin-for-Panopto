@@ -26,6 +26,8 @@
  * @version 20150429-01
  * @date 2017-05-25
  */
+defined('MOODLE_INTERNAL') || die();
+
 require_once dirname(__FILE__) . '/AuthManagementWsdlClass.php';
 require_once dirname(__FILE__) . '/Report/Info/AuthManagementStructReportIntegrationInfo.php';
 require_once dirname(__FILE__) . '/Get/Response/AuthManagementStructGetAuthenticatedUrlResponse.php';

@@ -27,6 +27,9 @@
  * @author Panopto
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This class stands for SessionManagementServiceGet originally named Get
  * @package SessionManagement

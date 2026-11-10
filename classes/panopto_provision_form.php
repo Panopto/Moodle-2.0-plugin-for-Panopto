@@ -56,10 +56,12 @@ class panopto_provision_form extends moodleform {
         asort($courses);
 
         $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->setType('servers', PARAM_INT);
         $mform->addHelpButton('servers', 'select_server', 'block_panopto');
 
         $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);
         $select->setMultiple(true);
+        $mform->setType('courses', PARAM_INT);
         $select->setSize(32);
         $mform->addHelpButton('courses', 'provisioncourseselect', 'block_panopto');
 

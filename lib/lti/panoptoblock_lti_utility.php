@@ -51,10 +51,14 @@ class panoptoblock_lti_utility {
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
             if (
-                !empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
+                self::tool_url_matches_server($type->config['toolurl'] ?? '', $targetservername) &&
                 $type->state == LTI_TOOL_STATE_CONFIGURED
             ) {
                 $currentconfig = lti_get_type_config($type->id);
+
+                if (self::is_folio_tool($currentconfig)) {
+                    continue;
+                }
 
                 if (
                     $islti1p3 || (!empty($requiredcustomparam) && !empty($currentconfig['customparameters']) &&
@@ -106,10 +110,14 @@ class panoptoblock_lti_utility {
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
             if (
-                !empty($targetservername) && stripos($type->config['toolurl'], $targetservername) !== false &&
+                self::tool_url_matches_server($type->config['toolurl'] ?? '', $targetservername) &&
                 $type->state == LTI_TOOL_STATE_CONFIGURED
             ) {
                 $currentconfig = lti_get_type_config($type->id);
+
+                if (self::is_folio_tool($currentconfig)) {
+                    continue;
+                }
 
                 if (
                     $islti1p3 || (!empty($currentconfig['customparameters']) &&
@@ -325,6 +333,10 @@ class panoptoblock_lti_utility {
         ));
 
         $launchcontainer = lti_get_launch_container($instance, $typeconfig);
+
+        // The sesskey is required here, not leaked: this is the launch presentation return URL, and
+        // core's mod/lti/return.php calls require_sesskey(). Built exactly as core's
+        // lti_get_launch_data() builds it; without it the return from every launch would fail.
         $returnurlparams = ['course' => $course->id,
                                  'launch_container' => $launchcontainer,
                                  'instanceid' => $instance->typeid,
@@ -455,10 +467,14 @@ class panoptoblock_lti_utility {
             $islti1p3 = $config->lti_ltiversion === LTI_VERSION_1P3;
 
             if (
-                !empty($targetservername) && strpos($type->config['toolurl'], $targetservername) !== false &&
+                self::tool_url_matches_server($type->config['toolurl'] ?? '', $targetservername) &&
                 $type->state == LTI_TOOL_STATE_CONFIGURED
             ) {
                 $currentconfig = lti_get_type_config($type->id);
+
+                if (self::is_folio_tool($currentconfig)) {
+                    continue;
+                }
 
                 if (
                     $islti1p3 || (!empty($currentconfig['customparameters']) &&
@@ -762,6 +778,10 @@ class panoptoblock_lti_utility {
     public static function require_login_or_repost(?int $courseid = null, ?context $repostcontext = null): void {
         global $PAGE, $_POST;
 
+        // The superglobals are deliberate, exactly as in core's mod/lti/contentitem_return.php.
+        // The repost marker must be removed from $_POST itself, because LTI 1.1 OAuth verification
+        // builds its signature base from $_POST. The repost page must post back to the exact request
+        // URI, query string included, since that carries the sesskey and ids the receiving page reads.
         if (!empty($_POST['repost'])) {
             unset($_POST['repost']);
         } else if (!isloggedin()) {
@@ -791,6 +811,51 @@ class panoptoblock_lti_utility {
         global $USER;
 
         return is_enrolled($targetcontext, $USER, 'mod/assign:submit');
+    }
+
+    /**
+     * Resolves the course an editor-embedded launch belongs to.
+     *
+     * The embed markup passes the course explicitly. Content embedded by older versions of the
+     * editor plugins did not, so fall back to reading the id out of the referer - but only when
+     * the referer is a course view page on this site. An unanchored search would let
+     * https://evil.example/course/view.php?id=99 pick the course, and with it the tool lookup
+     * and the context any capability is checked against
+     *
+     * Used by the TinyMCE button plugin. The Atto plugin keeps a local copy of this logic so it
+     * remains installable against older block releases that do not ship this helper.
+     *
+     * @return array [$courseid, $course, $context]; [0, null, null] when no course resolves
+     */
+    public static function resolve_launch_course() {
+        global $CFG, $DB, $PAGE;
+
+        $courseidparam = optional_param('course', 0, PARAM_INT);
+
+        if ($courseidparam <= 0) {
+            // Get_local_referer() returns '' for any referer that is not on this site.
+            $referer = get_local_referer(false);
+
+            if (strpos($referer, $CFG->wwwroot . '/course/view.php') === 0) {
+                $components = parse_url($referer);
+                parse_str($components['query'] ?? '', $results);
+
+                // Below is_scalar guards against ?id[]=1, which would make clean_param throw.
+                if (!empty($results['id']) && is_scalar($results['id'])) {
+                    $courseidparam = clean_param($results['id'], PARAM_INT);
+                }
+            }
+        }
+
+        if ($courseidparam <= 0) {
+            return [0, null, null];
+        }
+
+        $course = $DB->get_record('course', ['id' => $courseidparam], '*', MUST_EXIST);
+        $context = context_course::instance($course->id);
+        $PAGE->set_context($context);
+
+        return [$course->id, $course, $context];
     }
 
     /**
@@ -826,6 +891,46 @@ class panoptoblock_lti_utility {
     }
 
     /**
+     * Returns true when an LTI tool URL belongs to the given Panopto server
+     *
+     * Matching is on the URL host, with the same dot-anchored comparison SSO uses. A substring
+     * search of the whole URL accepted hosts such as demo.panopto.com.attacker.example, and also
+     * URLs that only mentioned the server in the path or query.
+     *
+     * @param string $toolurl the tool's configured launch URL
+     * @param string $servername a Panopto server name
+     * @return bool true when the tool URL host belongs to that server
+     */
+    public static function tool_url_matches_server($toolurl, $servername) {
+        global $CFG;
+        require_once($CFG->dirroot . '/blocks/panopto/lib/block_panopto_lib.php');
+
+        if (!is_string($toolurl) || $toolurl === '' || !is_string($servername) || $servername === '') {
+            return false;
+        }
+
+        $host = parse_url($toolurl, PHP_URL_HOST);
+        if (empty($host)) {
+            return false;
+        }
+
+        return panopto_host_matches_server($host, $servername);
+    }
+
+    /**
+     * Returns true if a pre-configured LTI tool is a Folio tool. Folio tools live on the same
+     * Panopto host but redirect the launch to the Folio service, so they must never be picked
+     * up by the Panopto content tool lookups.
+     *
+     * @param array $typeconfig the tool type config as returned by lti_get_type_config.
+     * @return bool true if the tool is configured with the folio_embed custom parameter.
+     */
+    private static function is_folio_tool($typeconfig) {
+        return !empty($typeconfig['customparameters'])
+            && stripos($typeconfig['customparameters'], 'folio_embed') !== false;
+    }
+
+    /**
      * Return filtered lti tool types
      * @return mixed
      */
@@ -852,5 +957,160 @@ class panoptoblock_lti_utility {
         $tooltypes = $DB->get_records_sql($sql, $params);
 
         return $tooltypes;
+    }
+
+    /**
+     * Copy only the content-item parameters a playback launch may echo.
+     *
+     * @param string $customdata JSON object from the launch request or the login hint.
+     * @param string $pluginname Plugin that owns the launch, used to choose the allowlist.
+     * @return stdClass Parameters safe to place on the LTI launch.
+     */
+    public static function filter_launch_custom_parameters($customdata, $pluginname) {
+        $filtered = new stdClass();
+        if (!is_string($customdata) || $customdata === '') {
+            return $filtered;
+        }
+
+        $decoded = json_decode($customdata, true);
+        if (!is_array($decoded)) {
+            return $filtered;
+        }
+
+        foreach (self::launch_custom_parameter_rules($pluginname) as $key => $pattern) {
+            if (!array_key_exists($key, $decoded) || !is_scalar($decoded[$key])) {
+                continue;
+            }
+
+            $value = $decoded[$key];
+            if (is_bool($value)) {
+                $value = $value ? 'true' : 'false';
+            } else {
+                $value = (string) $value;
+            }
+
+            if ($value === '' || preg_match($pattern, $value) !== 1) {
+                continue;
+            }
+
+            if ($key === 'use_panopto_interactive_view') {
+                $value = strtolower($value);
+            }
+            $filtered->$key = $value;
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Build the lti_message_hint for a playback launch.
+     *
+     * The payload is one JSON field after the plugin name.
+     *
+     * @param string $pluginname Plugin component name stored in the hint.
+     * @param string $callback Content-item callback. Empty for a playback launch.
+     * @param string|int $toolid Preconfigured tool id.
+     * @param string $resourcelinkid Resource link id for the launch.
+     * @param string $contenturl Launch URL. Empty when the tool's configured endpoint is used.
+     * @param stdClass $custom Filtered custom parameters.
+     * @return string Hint value passed to lti_initiate_login().
+     */
+    public static function build_playback_launch_hint(
+        $pluginname,
+        $callback,
+        $toolid,
+        $resourcelinkid,
+        $contenturl,
+        $custom
+    ) {
+        $json = json_encode([
+            'callback' => is_string($callback) ? $callback : '',
+            'toolid' => (string) $toolid,
+            'resourcelinkid' => is_scalar($resourcelinkid) ? (string) $resourcelinkid : '',
+            'contenturl' => is_string($contenturl) ? $contenturl : '',
+            'custom' => ($custom instanceof stdClass) ? $custom : new stdClass(),
+        ]);
+        if ($json === false) {
+            $json = '{"callback":"","toolid":"","resourcelinkid":"","contenturl":"","custom":{}}';
+        }
+
+        return $pluginname . ',' . $json;
+    }
+
+    /**
+     * Read a playback hint, or a legacy comma-separated hint.
+     *
+     * Rejoin legacy JSON so commas inside it stay intact.
+     *
+     * @param string $hint Raw lti_message_hint cmid value.
+     * @return array Plugin name, callback, tool id, resource link id, content URL, filtered custom.
+     */
+    public static function parse_playback_launch_hint($hint) {
+        $pluginname = '';
+        $callback = '';
+        $toolid = '';
+        $resourcelinkid = '';
+        $contenturl = '';
+        $custom = new stdClass();
+
+        if (!is_string($hint) || $hint === '') {
+            return [$pluginname, $callback, $toolid, $resourcelinkid, $contenturl, $custom];
+        }
+
+        // Split once, so commas inside the JSON payload stay intact.
+        $parts = explode(',', $hint, 2);
+        $pluginname = $parts[0];
+
+        if (isset($parts[1])) {
+            $payload = json_decode($parts[1], true);
+            if (is_array($payload) && array_key_exists('contenturl', $payload)) {
+                $callback = (isset($payload['callback']) && is_string($payload['callback']))
+                    ? $payload['callback'] : '';
+                $toolid = isset($payload['toolid']) && is_scalar($payload['toolid'])
+                    ? (string) $payload['toolid'] : '';
+                $resourcelinkid = (isset($payload['resourcelinkid']) && is_string($payload['resourcelinkid']))
+                    ? $payload['resourcelinkid'] : '';
+                $contenturl = (isset($payload['contenturl']) && is_string($payload['contenturl']))
+                    ? $payload['contenturl'] : '';
+                $custom = self::filter_launch_custom_parameters(
+                    json_encode($payload['custom'] ?? new stdClass()),
+                    $pluginname
+                );
+                return [$pluginname, $callback, $toolid, $resourcelinkid, $contenturl, $custom];
+            }
+        }
+
+        $parts = explode(',', $hint);
+        $callback = isset($parts[1]) ? trim($parts[1]) : '';
+        $toolid = $parts[2] ?? '';
+        $resourcelinkid = $parts[3] ?? '';
+
+        $contenturl = $parts[4] ?? '';
+        $customjson = (count($parts) > 5) ? implode(',', array_slice($parts, 5)) : '';
+        $custom = self::filter_launch_custom_parameters($customjson, $pluginname);
+
+        return [$pluginname, $callback, $toolid, $resourcelinkid, $contenturl, $custom];
+    }
+
+    /**
+     * Allowlist of content-item custom parameters for one plugin.
+     *
+     * @param string $pluginname Plugin component name.
+     * @return array Parameter name => value pattern.
+     */
+    private static function launch_custom_parameter_rules($pluginname) {
+        $guidpattern = '/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/';
+
+        // Panopto sends context_playlist instead of context_delivery when a playlist is selected.
+        $rules = [
+            'context_delivery' => $guidpattern,
+            'context_playlist' => $guidpattern,
+        ];
+
+        if ($pluginname === 'tiny_panoptoltibutton' || $pluginname === 'atto_panoptoltibutton') {
+            $rules['use_panopto_interactive_view'] = '/^(?:true|false)$/i';
+        }
+
+        return $rules;
     }
 }

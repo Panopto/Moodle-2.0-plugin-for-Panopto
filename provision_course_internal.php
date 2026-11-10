@@ -56,15 +56,6 @@ for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker++) {
     }
 }
 
-// If only one server, simply provision with that server.
-// Setting these values will circumvent loading the selection form prior to provisioning.
-if (count($aserverarray) == 1) {
-    // Get first element from associative array. aServerArray and appKeyArray will have same key values.
-    $key = array_keys($aserverarray);
-    $selectedserver = trim($aserverarray[$key[0]]);
-    $selectedkey = trim($appkeyarray[$key[0]]);
-}
-
 require_login();
 
 
@@ -91,6 +82,7 @@ $PAGE->set_heading($provisiontitle);
 
 // Course context.
 require_capability('block/panopto:provision_course', $context);
+
 $editcourseurl = new moodle_url($returnurl);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
 
@@ -100,11 +92,14 @@ $PAGE->navbar->add(get_string('blocks'), $manageblocks);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
 $PAGE->navbar->add($provisiontitle, new moodle_url($PAGE->url));
 
-echo $OUTPUT->header();
-
+// Before any output, so the redirect can still send its Location header.
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
-} else if ($data = $mform->get_data()) {
+}
+
+echo $OUTPUT->header();
+
+if ($data = $mform->get_data()) {
     // If data has been submitted use it then lose it for next time.
     $selectedserver = trim($aserverarray[$data->servers]);
     $selectedkey = trim($appkeyarray[$data->servers]);
@@ -129,53 +124,30 @@ if ($mform->is_cancelled()) {
         $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
         include(dirname(__FILE__) . '/views/provisioned_course.html.php');
-        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+        echo html_writer::link($returnurl, get_string('back_to_course', 'block_panopto'));
     } else {
         $mform->display();
     }
-} else {
+} else if (count($aserverarray) < 1) {
     // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
-    if (count($aserverarray) < 1) {
-        echo get_string('no_server', 'block_panopto') .
-        "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
-    } else if (count($aserverarray) === 1) {
-        // Get first element from associative array. aServerArray and appKeyArray will have same key values.
-        $key = array_keys($aserverarray);
-        $selectedserver = trim($aserverarray[$key[0]]);
-        $selectedkey = trim($appkeyarray[$key[0]]);
-
-        $panoptodata = new \panopto_data($courseid);
-
-        // If we are not using the same server remove the folder ID reference.
-        // NOTE: A Moodle course can only point to one Panopto server at a time.
-        // So reprovisioning to a different server erases the folder mapping to the original server.
-        if (
-            !isset($panoptodata->servername) || empty($panoptodata->servername) ||
-            ($panoptodata->servername !== $selectedserver)
-        ) {
-            $panoptodata->sessiongroupid = null;
-        }
-
-        $panoptodata->servername = $selectedserver;
-        $panoptodata->applicationkey = $selectedkey;
-
-        $provisioningdata = $panoptodata->get_provisioning_info();
-        $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
-
-        include(dirname(__FILE__) . '/views/provisioned_course.html.php');
-        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+    echo get_string('no_server', 'block_panopto') .
+    '<br/>' . html_writer::link($returnurl, get_string('back_to_course', 'block_panopto'));
+} else {
+    // Provisioning only runs from the submitted form above: the submission is the user's explicit
+    // confirmation and carries the sesskey. Preselect the obvious server - the only one configured,
+    // or the one this course is already mapped to - so that confirmation stays a single click.
+    if (count($aserverarray) === 1) {
+        $preselected = array_key_first($aserverarray);
     } else {
         $panoptodata = new \panopto_data($courseid);
-        if (in_array($panoptodata->servername, $aserverarray)) {
-            $provisioningdata = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
-
-            include(dirname(__FILE__) . '/views/provisioned_course.html.php');
-            echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
-        } else {
-            $mform->display();
-        }
+        $preselected = array_search($panoptodata->servername, $aserverarray, true);
     }
+
+    if ($preselected !== false) {
+        $mform->set_data(['servers' => $preselected]);
+    }
+
+    $mform->display();
 }
 
 echo $OUTPUT->footer();

@@ -28,6 +28,9 @@
  * @version 20150429-01
  * @date 2017-05-25
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This class stands for AuthManagementServiceLog originally named Log
  * @package AuthManagement
