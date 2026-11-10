@@ -105,7 +105,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $targetpanopto->servername Panopto server name
                      */
-                    echo $targetpanopto->servername;
+                    echo s($targetpanopto->servername);
                     ?>
                 </div>
                 <div class='attribute'>

@@ -28,7 +28,7 @@
  * @param int $oldversion the previous version Panopto is being upgraded from
  */
 function xmldb_block_panopto_upgrade($oldversion = 0) {
-    global $CFG, $DB, $USER;
+    global $CFG, $DB, $USER, $OUTPUT;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014121502) {
@@ -183,18 +183,19 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
             $dbman->create_table($creatortable);
 
+            $creatorrows = [];
             foreach ($existingcoursemappings as $existingmapping) {
                 if (isset($existingmapping->creator_mapping) && !empty($existingmapping->creator_mapping)) {
                     $creatorroles = explode(",", $existingmapping->creator_mapping);
 
                     foreach ($creatorroles as $creatorrole) {
                         if (!empty($creatorrole)) {
-                            $row = (object) ['moodle_id' => $existingmapping->moodleid, 'role_id' => $creatorrole];
-                            $DB->insert_record('block_panopto_creatormap', $row);
+                            $creatorrows[] = (object) ['moodle_id' => $existingmapping->moodleid, 'role_id' => $creatorrole];
                         }
                     }
                 }
             }
+            $DB->insert_records('block_panopto_creatormap', $creatorrows);
         }
 
         $publishertable = new xmldb_table('block_panopto_publishermap');
@@ -215,18 +216,19 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
             $dbman->create_table($publishertable);
 
+            $publisherrows = [];
             foreach ($existingcoursemappings as $existingmapping) {
                 if (isset($existingmapping->publisher_mapping) && !empty($existingmapping->publisher_mapping)) {
                     $pubroles = explode(",", $existingmapping->publisher_mapping);
 
                     foreach ($pubroles as $pubrole) {
                         if (!empty($pubrole)) {
-                            $row = (object) ['moodle_id' => $existingmapping->moodleid, 'role_id' => $pubrole];
-                            $DB->insert_record('block_panopto_publishermap', $row);
+                            $publisherrows[] = (object) ['moodle_id' => $existingmapping->moodleid, 'role_id' => $pubrole];
                         }
                     }
                 }
             }
+            $DB->insert_records('block_panopto_publishermap', $publisherrows);
         }
 
         // Panopto savepoint reached.
@@ -405,6 +407,41 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2021063000, 'panopto');
+    }
+
+    if ($oldversion < 2026081900) {
+        // The debug log used to be written to $CFG->dirroot, which is inside the web root and
+        // so was fetchable over HTTP. It now goes to $CFG->dataroot. Delete the old file if it
+        // is still sitting there - moving the write path does nothing for sites that already
+        // have one. dirroot is commonly read-only, so on failure tell the admin instead of
+        // failing the upgrade.
+        $legacylogpath = $CFG->dirroot . '/PanoptoLogs.txt';
+
+        if (file_exists($legacylogpath) && !@unlink($legacylogpath)) {
+            echo $OUTPUT->notification(
+                get_string('legacy_log_cleanup_failed', 'block_panopto', $legacylogpath),
+                'notifywarning'
+            );
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2026081900, 'panopto');
+    }
+
+    if ($oldversion < 2026092100) {
+        // Event-driven sync gained two switches. Existing sites were syncing on every event
+        // before, so write the "on" value explicitly rather than relying on the settings
+        // default, which Moodle only stores once an admin visits the settings page.
+        if (get_config('block_panopto', 'event_sync_enabled') === false) {
+            set_config('event_sync_enabled', 1, 'block_panopto');
+        }
+
+        if (get_config('block_panopto', 'sync_on_unenrolment') === false) {
+            set_config('sync_on_unenrolment', 1, 'block_panopto');
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2026092100, 'panopto');
     }
 
     return true;

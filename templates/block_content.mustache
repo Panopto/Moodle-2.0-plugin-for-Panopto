@@ -1,0 +1,159 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template block_panopto/block_content
+
+    The Panopto block's content for a course, from the block_panopto_get_content web service.
+
+    Every value is escaped here; the web service returns data, not markup. The links that open
+    Panopto pages carry data-action attributes, which block_panopto/asyncload handles.
+
+    Data attributes required for JS:
+    * data-region="panopto-sso-form" - the form posted to Panopto pages so the user arrives signed in
+    * data-action="panopto-sso" - a link opened through the SSO form in a new tab
+    * data-action="panopto-notes", data-notes-url - a live session's note taking link
+    * data-action="panopto-toggle-recordings" - the Show all / Show less link
+    * data-region="panopto-more-recordings", "panopto-show-all", "panopto-show-less"
+
+    Context variables required for this template:
+    * errors - list of {message}
+    * unprovisioned - whether the course has no Panopto folder yet
+    * provisionurl - link to provision the course, or empty
+    * showcontent - whether the folder was loaded
+    * instance - Panopto instance name for the SSO form
+    * livesessions - list of {name, notesurl, viewerurl, alt}
+    * recordings, morerecordings - lists of {name, viewerurl, alt}
+    * hasmorerecordings - whether morerecordings has entries
+    * audiopodcasturl, audiorssurl, videopodcasturl, videorssurl - podcast links, or empty
+    * feediconurl - the podcast feed icon
+    * settingsurl - folder settings link, or empty
+    * showrecorderlinks, windowsrecorderurl, macrecorderurl - recorder downloads
+
+    Example context (json):
+    {
+        "errors": [],
+        "unprovisioned": false,
+        "provisionurl": "",
+        "showcontent": true,
+        "instance": "moodle",
+        "livesessions": [
+            {
+                "name": "Week 5 lecture",
+                "notesurl": "https://demo.panopto.com/Panopto/Pages/Notes/Write.aspx?id=1",
+                "viewerurl": "https://demo.panopto.com/Panopto/Pages/Viewer.aspx?id=1",
+                "alt": false
+            }
+        ],
+        "recordings": [
+            {"name": "Week 1", "viewerurl": "https://demo.panopto.com/Panopto/Pages/Viewer.aspx?id=2", "alt": false},
+            {"name": "Week 2", "viewerurl": "https://demo.panopto.com/Panopto/Pages/Viewer.aspx?id=3", "alt": true},
+            {"name": "Week 3", "viewerurl": "https://demo.panopto.com/Panopto/Pages/Viewer.aspx?id=4", "alt": false}
+        ],
+        "morerecordings": [
+            {"name": "Week 4", "viewerurl": "https://demo.panopto.com/Panopto/Pages/Viewer.aspx?id=5", "alt": true}
+        ],
+        "hasmorerecordings": true,
+        "audiopodcasturl": "itpc://demo.panopto.com/Panopto/Podcast/Podcast.ashx?courseid=1&type=mp3",
+        "audiorssurl": "https://demo.panopto.com/Panopto/Podcast/Podcast.ashx?courseid=1&type=mp3",
+        "videopodcasturl": "",
+        "videorssurl": "",
+        "feediconurl": "https://example.com/moodle/blocks/panopto/images/feed_icon.gif",
+        "settingsurl": "https://demo.panopto.com/Panopto/Pages/Sessions/List.aspx#folderID=1",
+        "showrecorderlinks": true,
+        "windowsrecorderurl": "https://demo.panopto.com/Panopto/Cache/Recorder/PanoptoRecorder.exe",
+        "macrecorderurl": "https://demo.panopto.com/Panopto/Cache/Recorder/PanoptoRecorder.pkg"
+    }
+}}
+<div class="panopto-block-content">
+    {{#errors}}
+        <div><span class="error">{{message}}</span></div>
+    {{/errors}}
+    {{#unprovisioned}}
+        {{#str}}unprovisioned, block_panopto{{/str}}
+        {{#provisionurl}}
+            <br><a href="{{provisionurl}}">{{#str}}provision_course_link_text, block_panopto{{/str}}</a>
+        {{/provisionurl}}
+    {{/unprovisioned}}
+    {{#showcontent}}
+        <form name="SSO" method="post" data-region="panopto-sso-form">
+            <input type="hidden" name="instance" value="{{instance}}">
+        </form>
+
+        <div><b>{{#str}}live_sessions, block_panopto{{/str}}</b></div>
+        {{#livesessions}}
+            <div class="listItem{{#alt}} listItemAlt{{/alt}}">{{name}}<span class="nowrap">{{!
+                }}{{#notesurl}}[<a href="#" data-action="panopto-notes" data-notes-url="{{notesurl}}">{{#str}}take_notes, block_panopto{{/str}}</a>]{{/notesurl}}{{!
+                }}{{#viewerurl}}[<a href="{{viewerurl}}" data-action="panopto-sso">{{#str}}watch_live, block_panopto{{/str}}</a>]{{/viewerurl}}{{!
+            }}</span></div>
+        {{/livesessions}}
+        {{^livesessions}}
+            <div class="listItem">{{#str}}no_live_sessions, block_panopto{{/str}}</div>
+        {{/livesessions}}
+
+        <div class="sectionHeader"><b>{{#str}}completed_recordings, block_panopto{{/str}}</b></div>
+        {{#recordings}}
+            <div class="listItem{{#alt}} listItemAlt{{/alt}}">{{!
+                }}{{#viewerurl}}<a href="{{viewerurl}}" data-action="panopto-sso">{{name}}</a>{{/viewerurl}}{{^viewerurl}}{{name}}{{/viewerurl}}{{!
+            }}</div>
+        {{/recordings}}
+        {{^recordings}}
+            <div class="listItem">{{#str}}no_completed_recordings, block_panopto{{/str}}</div>
+        {{/recordings}}
+        {{#hasmorerecordings}}
+            <div id="hiddenLecturesDiv" data-region="panopto-more-recordings">
+                {{#morerecordings}}
+                    <div class="listItem{{#alt}} listItemAlt{{/alt}}">{{!
+                        }}{{#viewerurl}}<a href="{{viewerurl}}" data-action="panopto-sso">{{name}}</a>{{/viewerurl}}{{^viewerurl}}{{name}}{{/viewerurl}}{{!
+                    }}</div>
+                {{/morerecordings}}
+            </div>
+            <div id="showAllDiv">[<a id="showAllToggle" href="#" data-action="panopto-toggle-recordings" aria-expanded="false">{{!
+                }}<span data-region="panopto-show-all">{{#str}}show_all, block_panopto{{/str}}</span>{{!
+                }}<span data-region="panopto-show-less" hidden>{{#str}}show_less, block_panopto{{/str}}</span>{{!
+            }}</a>]</div>
+        {{/hasmorerecordings}}
+
+        {{#audiopodcasturl}}
+            <div class="sectionHeader"><b>{{#str}}podcast_feeds, block_panopto{{/str}}</b></div>
+            <div class="listItem">{{!
+                }}<img src="{{feediconurl}}" alt="">{{!
+                }}<a href="{{audiopodcasturl}}">{{#str}}podcast_audio, block_panopto{{/str}}</a>{{!
+                }}{{#audiorssurl}}<span class="rssParen">(</span><a href="{{audiorssurl}}" target="_blank" class="rssLink">RSS</a><span class="rssParen">)</span>{{/audiorssurl}}{{!
+            }}</div>
+            {{#videopodcasturl}}
+                <div class="listItem">{{!
+                    }}<img src="{{feediconurl}}" alt="">{{!
+                    }}<a href="{{videopodcasturl}}">{{#str}}podcast_video, block_panopto{{/str}}</a>{{!
+                    }}{{#videorssurl}}<span class="rssParen">(</span><a href="{{videorssurl}}" target="_blank" class="rssLink">RSS</a><span class="rssParen">)</span>{{/videorssurl}}{{!
+                }}</div>
+            {{/videopodcasturl}}
+        {{/audiopodcasturl}}
+
+        {{#settingsurl}}
+            <div class="sectionHeader"><b>{{#str}}links, block_panopto{{/str}}</b></div>
+            <div class="listItem"><a href="{{settingsurl}}" data-action="panopto-sso">{{#str}}course_settings, block_panopto{{/str}}</a></div>
+        {{/settingsurl}}
+
+        {{#showrecorderlinks}}
+            <div class="listItem">{{#str}}download_recorder, block_panopto{{/str}}<span class="nowrap">({{!
+                }}{{#windowsrecorderurl}}<a href="{{windowsrecorderurl}}">Windows</a>{{/windowsrecorderurl}}{{!
+                }}{{#windowsrecorderurl}}{{#macrecorderurl}} | {{/macrecorderurl}}{{/windowsrecorderurl}}{{!
+                }}{{#macrecorderurl}}<a href="{{macrecorderurl}}">Mac</a>{{/macrecorderurl}}{{!
+            }})</span></div>
+        {{/showrecorderlinks}}
+    {{/showcontent}}
+</div>

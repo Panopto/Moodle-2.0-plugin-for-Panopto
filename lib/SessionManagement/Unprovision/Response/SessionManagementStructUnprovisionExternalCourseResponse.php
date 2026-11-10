@@ -27,6 +27,9 @@
  * @author Panopto
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This class stands for SessionManagementStructUnprovisionExternalCourse originally named UnprovisionExternalCourse
  * Meta informations extracted from the WSDL

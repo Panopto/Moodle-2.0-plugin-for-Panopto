@@ -26,6 +26,8 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+defined('MOODLE_INTERNAL') || die();
+
 require_once dirname(__FILE__) . '/SessionManagementWsdlClass.php';
 require_once dirname(__FILE__) . '/Folder/Base/SessionManagementStructFolderBase.php';
 require_once dirname(__FILE__) . '/ExternalHierarchyInfo/SessionManagementStructExternalHierarchyInfo.php';

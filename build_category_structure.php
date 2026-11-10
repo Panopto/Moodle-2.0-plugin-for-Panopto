@@ -124,7 +124,7 @@ if ($mform->is_cancelled()) {
 
         build_category_structure($selectedserver, $selectedkey);
 
-        echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
+        echo html_writer::link($returnurl, get_string('back_to_config', 'block_panopto'));
     } else {
         $mform->display();
     }

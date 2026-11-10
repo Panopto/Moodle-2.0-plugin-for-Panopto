@@ -69,7 +69,13 @@ if ($mform->is_cancelled()) {
         // Course context.
         require_capability('block/panopto:provision_course', $context);
 
-        $courses = [$courseidparam];
+        // Unprovisioning is destructive, so a bare request only shows the confirmation below.
+        // Its continue button posts back with confirm set and the sesskey.
+        if (optional_param('confirm', 0, PARAM_BOOL)) {
+            require_sesskey();
+            $courses = [$courseidparam];
+        }
+
         $editcourseurl = new moodle_url($returnurl);
         $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
     } else {
@@ -92,13 +98,8 @@ if ($mform->is_cancelled()) {
     echo $OUTPUT->header();
 
     if ($courses) {
-        $coursecount = count($courses);
-
-        // Raise PHP time limit for bulk unprovisioning operations to prevent timeouts.
-        // Only needed for large batches (50+ courses) where cumulative time could exceed limits.
-        if ($coursecount >= 50) {
-            core_php_time_limit::raise();
-        }
+        // Each course is several Panopto calls, so even a handful can outlast the default time limit.
+        core_php_time_limit::raise();
 
         foreach ($courses as $courseid) {
             if (empty($courseid)) {
@@ -112,7 +113,20 @@ if ($mform->is_cancelled()) {
 
             include(dirname(__FILE__) . '/views/unprovisioned_course.html.php');
         }
-        echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
+        echo html_writer::link($returnurl, get_string('back_to_config', 'block_panopto'));
+    } else if ($courseidparam != 0) {
+        $course = get_course($courseidparam);
+        $confirmurl = new moodle_url($PAGE->url, [
+            'course_id' => $courseidparam,
+            'confirm' => 1,
+            'sesskey' => sesskey(),
+        ]);
+
+        echo $OUTPUT->confirm(
+            get_string('unprovision_course_confirm', 'block_panopto', format_string($course->fullname)),
+            $confirmurl,
+            new moodle_url($returnurl)
+        );
     } else {
         $mform->display();
     }

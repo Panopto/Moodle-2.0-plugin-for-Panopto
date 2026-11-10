@@ -71,7 +71,7 @@ if ($mform->is_cancelled()) {
     // Calling this with null parameter should upgrade everything.
     panopto_upgrade_all_folders(null);
 
-    echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
+    echo html_writer::link($returnurl, get_string('back_to_config', 'block_panopto'));
 } else {
     include(dirname(__FILE__) . '/views/bulk_task_reprovision_warning.html.php');
 

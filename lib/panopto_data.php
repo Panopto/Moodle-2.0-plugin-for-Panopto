@@ -432,10 +432,15 @@ class panopto_data {
      *
      * @param object $provisioninginfo info for course being provisioned
      * @param bool $skipusersync should we skip user sync or not
-     * @param bool $isbulkoperation whether this is part of a bulk operation
-     * @return object
+     * @param bool $isbulkoperation true when called from a bulk run over many courses. Only such a
+     *     run emits the keepalive below, because only it spends long enough in one course for a
+     *     proxy's idle timeout to drop the browser connection part way through.
+     * @param bool $keepexistingmapping keep a working mapping that another provision saved while this one
+     *     was talking to Panopto, instead of replacing it. Set by automatic provisioning, so that it never
+     *     overrides a course someone provisioned by hand in the meantime.
+     * @return object the provisioned folder; keptexistingmapping is set when an existing mapping was kept
      */
-    public function provision_course($provisioninginfo, $skipusersync, $isbulkoperation = false) {
+    public function provision_course($provisioninginfo, $skipusersync, $isbulkoperation = false, $keepexistingmapping = false) {
         global $CFG, $USER, $DB;
 
         if (
@@ -462,6 +467,29 @@ class panopto_data {
             }
 
             if (isset($courseinfo->Id) && !isset($courseinfo->errormessage)) {
+                $previousmapping = $DB->get_record(
+                    'block_panopto_foldermap',
+                    ['moodleid' => $this->moodlecourseid],
+                    'panopto_id,panopto_server'
+                );
+
+                // A working mapping that is not this folder was saved while this provision ran, for
+                // example a manual provision to another server. Keep it rather than overwrite it.
+                if (
+                    $keepexistingmapping && $previousmapping &&
+                    !empty($previousmapping->panopto_id) &&
+                    !empty(panopto_get_app_key($previousmapping->panopto_server)) &&
+                    (strcasecmp((string) $previousmapping->panopto_id, $courseinfo->Id) !== 0 ||
+                    strcasecmp((string) $previousmapping->panopto_server, (string) $this->servername) !== 0)
+                ) {
+                    self::print_log(
+                        "Course {$this->moodlecourseid} was provisioned to folder {$previousmapping->panopto_id} on " .
+                        "{$previousmapping->panopto_server} while automatic provisioning ran; keeping that mapping."
+                    );
+                    $courseinfo->keptexistingmapping = true;
+                    return $courseinfo;
+                }
+
                 // Store the Panopto folder Id in the foldermap table so we know it exists.
                 self::set_course_foldermap(
                     $this->moodlecourseid,
@@ -472,6 +500,20 @@ class panopto_data {
                 );
 
                 $this->sessiongroupid = $courseinfo->Id;
+
+                // Course Embed re-provisions on every form load, so only a new or changed mapping is logged.
+                $mappingchanged = !$previousmapping ||
+                    strcasecmp((string) $previousmapping->panopto_id, $courseinfo->Id) !== 0 ||
+                    strcasecmp((string) $previousmapping->panopto_server, (string) $this->servername) !== 0;
+                if ($mappingchanged) {
+                    \block_panopto\event\course_provisioned::create([
+                        'context' => context_course::instance($this->moodlecourseid),
+                        'other' => [
+                            'servername' => $this->servername,
+                            'folderid' => $courseinfo->Id,
+                        ],
+                    ])->trigger();
+                }
 
                 self::print_log_verbose(get_string('provision_successful', 'block_panopto', $this->moodlecourseid));
 
@@ -497,6 +539,15 @@ class panopto_data {
                 $courseinfo->creators = [];
                 $courseinfo->publishers = [];
 
+                // Whether to sync each user depends only on the setting and on the course being
+                // visible, neither of which changes inside the loop, so look them up once.
+                $syncenrolledusers = get_config('block_panopto', 'sync_after_provisioning') &&
+                    $DB->get_field('course', 'visible', ['id' => $this->moodlecourseid]);
+
+                // Counted so a long course can report that it is still alive, see the keepalive
+                // at the end of this loop.
+                $userswalked = 0;
+
                 // Sync every user enrolled in the course.
                 foreach ($enrolledusers as $enrolleduser) {
                     $userrole = self::get_role_from_context($coursecontext, $enrolleduser->id);
@@ -513,26 +564,20 @@ class panopto_data {
                         $courseinfo->viewers[] = $panoptousername;
                     }
 
-                    // Syncs every user enrolled in the course - apply throttling only for bulk operations.
-                    if (get_config('block_panopto', 'sync_after_provisioning')) {
-                        // Check if course is visible before syncing users.
-                        $course = $DB->get_record('course', ['id' => $this->moodlecourseid]);
-                        if ($course && $course->visible) {
-                            if ($isbulkoperation) {
-                                // Apply throttling for bulk operations to prevent 500 errors.
-                                require_once(dirname(__FILE__) . '/panopto_throttling.php');
-                                panopto_throttling::execute_with_throttling(
-                                    [$this, 'sync_external_user'],
-                                    [$enrolleduser->id],
-                                    'usermanagement_sync',
-                                    'sync_external_user_bulk',
-                                    $enrolleduser->id
-                                );
-                            } else {
-                                // Use direct sync for individual operations (original strict behavior).
-                                $this->sync_external_user($enrolleduser->id);
-                            }
-                        }
+                    // Syncs every user enrolled in the course. The user SOAP client already throttles
+                    // and retries each call, so wrapping this again would multiply retries.
+                    if ($syncenrolledusers) {
+                        $this->sync_external_user($enrolleduser->id);
+                    }
+
+                    // This loop writes nothing while it runs, and with sync_after_provisioning on
+                    // it makes one Panopto call per enrolled user, so a course with a few thousand
+                    // of them stays silent for minutes. That is long enough for the 60 second idle
+                    // timeout in a typical nginx, Apache or load balancer config to close a browser
+                    // run mid course. A single provision is short, and its page may still need its
+                    // headers, so only a bulk run sends this.
+                    if ($isbulkoperation && (++$userswalked % 25) === 0) {
+                        panopto_bulk_keepalive();
                     }
                 }
 
@@ -541,20 +586,7 @@ class panopto_data {
                     // so we only need to perform this if we aren't syncing all enrolled users.
 
                     // Update permissions so user can see everything they should.
-                    if ($isbulkoperation) {
-                        // Apply throttling for bulk operations.
-                        require_once(dirname(__FILE__) . '/panopto_throttling.php');
-                        panopto_throttling::execute_with_throttling(
-                            [$this, 'sync_external_user'],
-                            [$USER->id],
-                            'usermanagement_sync',
-                            'sync_external_user_bulk_teacher',
-                            $USER->id
-                        );
-                    } else {
-                        // Use direct sync for individual operations.
-                        $this->sync_external_user($USER->id);
-                    }
+                    $this->sync_external_user($USER->id);
                 }
 
                 if (get_config('block_panopto', 'sync_category_after_course_provision')) {
@@ -631,6 +663,18 @@ class panopto_data {
 
             // Delete the relation on Moodle if the Panopto side link was succesfully removed.
             self::delete_panopto_relation($this->moodlecourseid, true);
+
+            $coursecontext = !empty($this->moodlecourseid)
+                ? context_course::instance($this->moodlecourseid, IGNORE_MISSING)
+                : false;
+            \block_panopto\event\course_unprovisioned::create([
+                'context' => $coursecontext ?: context_system::instance(),
+                'other' => [
+                    'courseid' => (int) $this->moodlecourseid,
+                    'servername' => $this->servername,
+                ],
+            ])->trigger();
+
             return true;
         }
     }
@@ -1078,26 +1122,55 @@ class panopto_data {
 
             $currentcourses = enrol_get_users_courses($userid, true);
 
+            // One query for every course's mapping instead of a panopto_data per course.
+            $foldermaps = [];
+            if (!empty($currentcourses)) {
+                [$insql, $params] = $DB->get_in_or_equal(array_keys($currentcourses));
+                $rows = $DB->get_records_select(
+                    'block_panopto_foldermap',
+                    "moodleid $insql",
+                    $params,
+                    'id',
+                    'id,moodleid,panopto_server,panopto_id'
+                );
+                foreach ($rows as $row) {
+                    $foldermaps[$row->moodleid] = $foldermaps[$row->moodleid] ?? $row;
+                }
+            }
+            $thisserverappkey = panopto_get_app_key($this->servername);
+
             // Go through each course.
             $groupstosync = [];
             foreach ($currentcourses as $course) {
-                $coursecontext = context_course::instance($course->id);
+                $foldermap = $foldermaps[$course->id] ?? null;
+                if (!$foldermap) {
+                    continue;
+                }
 
-                $coursepanopto = new \panopto_data($course->id);
+                if (panopto_is_string_empty($foldermap->panopto_server)) {
+                    // A mapping without a server may still pick up the fallback server.
+                    $coursepanopto = new \panopto_data($course->id);
+                    $courseserver = $coursepanopto->servername;
+                    $courseappkey = $coursepanopto->applicationkey;
+                    $coursefolderid = $coursepanopto->sessiongroupid;
+                } else {
+                    $courseserver = $foldermap->panopto_server;
+                    $courseappkey = $courseserver === $this->servername ? $thisserverappkey : null;
+                    $coursefolderid = $foldermap->panopto_id;
+                }
 
                 // Check to see if we are already going to provision a specific Panopto server,
                 // if we are just add the groups to the already made array. If not add the server to the list of servers.
                 if (
-                    isset($coursepanopto->servername) && !empty($coursepanopto->servername) &&
-                    $coursepanopto->servername === $this->servername &&
-                    isset($coursepanopto->applicationkey) && !empty($coursepanopto->applicationkey) &&
-                    isset($coursepanopto->sessiongroupid) && !empty($coursepanopto->sessiongroupid)
+                    !empty($courseserver) && $courseserver === $this->servername &&
+                    !empty($courseappkey) && !empty($coursefolderid)
                 ) {
+                    $coursecontext = context_course::instance($course->id);
                     $role = self::get_role_from_context($coursecontext, $userid);
 
                     // Build a list of ExternalGroupIds using a specific format.
                     // E.g. moodle31:courseId_viewers/moodle31:courseId_creators.
-                    $groupname = $coursepanopto->instancename . ':' . $course->id;
+                    $groupname = $instancename . ':' . $course->id;
                     if (strpos($role, 'Viewer') !== false) {
                         $groupstosync[] = $groupname . "_viewers";
                     }
@@ -1334,6 +1407,28 @@ class panopto_data {
         $isblockdisabled = $DB->get_record_sql($sql, ['name' => 'panopto']);
 
         return $isblockdisabled ? true : false;
+    }
+
+    /**
+     * Single gate for every Moodle event observer in this plugin.
+     *
+     * Events must not reach Panopto when no server is configured, when Moodle is too old,
+     * when the block has been hidden in Site administration, or when the admin has turned
+     * event-driven sync off. The last check treats a missing setting as enabled so sites that
+     * upgrade keep syncing until they choose otherwise.
+     *
+     * @return bool true when observers may queue Panopto work
+     */
+    public static function should_handle_events(): bool {
+        if (!self::is_main_block_configured() || !self::has_minimum_version()) {
+            return false;
+        }
+
+        if (self::is_block_disabled()) {
+            return false;
+        }
+
+        return get_config('block_panopto', 'event_sync_enabled') !== '0';
     }
 
     /**
@@ -1673,6 +1768,20 @@ class panopto_data {
                 '>='
             );
 
+            // A creator can see thousands of folders, so find the mapped ones in a few queries, not one per folder.
+            $folderids = [];
+            foreach ($panoptofolders as $folderinfo) {
+                $folderids[] = $folderinfo->Id;
+            }
+            $mappedfolderids = [];
+            foreach (array_chunk(array_unique($folderids), 1000) as $folderidchunk) {
+                [$insql, $params] = $DB->get_in_or_equal($folderidchunk);
+                $mappedids = $DB->get_fieldset_select('block_panopto_foldermap', 'panopto_id', "panopto_id $insql", $params);
+                foreach ($mappedids as $mappedid) {
+                    $mappedfolderids[strtolower($mappedid)] = true;
+                }
+            }
+
             foreach ($panoptofolders as $folderinfo) {
                 // Filter folders based on the following criteria.
                 // 1/ Only add a folder to the course options if it is not already mapped to a course on moodle.
@@ -1684,7 +1793,7 @@ class panopto_data {
                     : false;
 
                 if (
-                    (!$DB->get_records('block_panopto_foldermap', ['panopto_id' => $folderinfo->Id])
+                    (!isset($mappedfolderids[strtolower($folderinfo->Id)])
                     || ($this->sessiongroupid === $folderinfo->Id))
                     && !$isassignmentfolder
                 ) {
@@ -2004,13 +2113,17 @@ class panopto_data {
         } else {
             if (get_config('block_panopto', 'print_log_to_file')) {
                 $currenttime = time();
+                // Written to dataroot rather than dirroot: dirroot is inside the web root, so
+                // the log was fetchable over HTTP and readable by any local process.
                 file_put_contents(
-                    $CFG->dirroot . '/PanoptoLogs.txt',
+                    $CFG->dataroot . '/PanoptoLogs.txt',
                     date("Y-m-d-h:i:sA", $currenttime) . ": " . $logmessage . "\n",
                     FILE_APPEND
                 );
             } else {
-                debugging($logmessage);
+                // Debugging() renders its message as HTML when debug display is on, and callers
+                // log course names and Panopto responses, so it has to be escaped here.
+                debugging(s($logmessage));
 
                 // These flush's are needed for longer processes like the Moodle upgrade process and import process.
 
@@ -2091,15 +2204,37 @@ class panopto_data {
     }
 
     /**
-     * Get the content for the Panopto block
+     * Get what the Panopto block shows for this course.
      *
-     * @return string HTML content for the block
+     * This is data for the block_panopto/block_content template, which escapes it, not markup:
+     * names and messages are plain text, and Panopto's URLs are only kept when they are safe to
+     * link to (see panopto_clean_link_url()).
+     *
+     * @return array the block's data, shaped as \block_panopto\external\get_content::execute_returns()
      */
-    public function get_block_content() {
-        global $CFG, $USER;
+    public function get_block_content_data() {
+        global $USER;
 
-        $content = new \stdClass();
-        $content->text = '';
+        $data = [
+            'errors' => [],
+            'unprovisioned' => false,
+            'provisionurl' => '',
+            'showcontent' => false,
+            'instance' => '',
+            'livesessions' => [],
+            'recordings' => [],
+            'morerecordings' => [],
+            'hasmorerecordings' => false,
+            'audiopodcasturl' => '',
+            'audiorssurl' => '',
+            'videopodcasturl' => '',
+            'videorssurl' => '',
+            'feediconurl' => (new \moodle_url('/blocks/panopto/images/feed_icon.gif'))->out(false),
+            'settingsurl' => '',
+            'showrecorderlinks' => false,
+            'windowsrecorderurl' => '',
+            'macrecorderurl' => '',
+        ];
         $failedautoprovisioning = false;
 
         try {
@@ -2123,7 +2258,7 @@ class panopto_data {
                     $task->execute();
                 } catch (Exception $e) {
                     $errormessage = $e->getMessage();
-                    $content->text .= "<span class='error'>" . $errormessage . '</span>';
+                    $data['errors'][] = ['message' => (string) $errormessage];
                     self::print_log($errormessage);
                     $failedautoprovisioning = true;
                 }
@@ -2133,45 +2268,35 @@ class panopto_data {
             }
 
             // Check if course needs provisioning.
-            if (
-                !$failedautoprovisioning && (empty($this->servername) ||
-                empty($this->instancename) || empty($this->applicationkey))
-            ) {
-                $content->text = get_string('unprovisioned', 'block_panopto');
+            $notprovisioned = !$failedautoprovisioning &&
+                (empty($this->servername) || empty($this->instancename) || empty($this->applicationkey));
+
+            if ($notprovisioned || !$this->sessiongroupid) {
+                $data['unprovisioned'] = true;
 
                 if ($usercanprovision) {
-                    $content->text .= '<br/>' .
-                        "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$this->moodlecourseid'>" .
-                        get_string('provision_course_link_text', 'block_panopto') . '</a>';
+                    $provisionurl = new \moodle_url(
+                        '/blocks/panopto/provision_course_internal.php',
+                        ['id' => $this->moodlecourseid]
+                    );
+                    $data['provisionurl'] = $provisionurl->out(false);
                 }
 
-                return $content->text;
-            }
-
-            if (!$this->sessiongroupid) {
-                $content->text = get_string('unprovisioned', 'block_panopto');
-
-                if ($usercanprovision) {
-                    $content->text .= '<br/>' .
-                        "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$this->moodlecourseid'>" .
-                        get_string('provision_course_link_text', 'block_panopto') . '</a>';
-                }
-
-                return $content->text;
+                return $data;
             } else if (!self::is_server_alive('https://' . $this->servername . '/Panopto')) {
                 $servernotavailableestring = get_string('server_not_available', 'block_panopto', $this->servername);
                 self::print_log($servernotavailableestring);
-                $content->text .= "<span class='error'>" . $servernotavailableestring . '</span>';
+                $data['errors'][] = ['message' => (string) $servernotavailableestring];
             } else {
                 $courseinfo = $this->get_folders_by_id();
 
                 if (isset($courseinfo->noaccess) && $courseinfo->noaccess === true) {
-                    $content->text .= "<span class='error'>" . get_string('no_access', 'block_panopto') . '</span>';
+                    $data['errors'][] = ['message' => get_string('no_access', 'block_panopto')];
                 } else if (!empty($courseinfo->errormessage)) {
-                    $content->text .= "<span class='error'>" . $courseinfo->errormessage . '</span>';
+                    $data['errors'][] = ['message' => (string) $courseinfo->errormessage];
                 } else {
-                    $content->text .= "<form name='SSO' method='post'>" .
-                        "<input type='hidden' name='instance' value='$this->instancename' /></form>";
+                    $data['showcontent'] = true;
+                    $data['instance'] = (string) $this->instancename;
 
                     $sessionlist = $this->get_session_list($courseinfo->DeliveriesHaveSpecifiedOrder);
                     $livesessions = [];
@@ -2191,98 +2316,54 @@ class panopto_data {
                         }
                     }
 
-                    $content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
-
-                    if (!empty($livesessions)) {
-                        $i = 0;
-                        foreach ($livesessions as $livesession) {
+                    foreach ($livesessions as $i => $livesession) {
+                        $data['livesessions'][] = [
+                            'name' => (string) $livesession->Name,
+                            'notesurl' => panopto_clean_link_url($livesession->NotesURL),
+                            'viewerurl' => panopto_clean_link_url($livesession->ViewerUrl),
                             // Alternate gray background for readability.
-                            $altclass = ($i % 2) ? 'listItemAlt' : '';
-
-                            $livesessiondisplayname = s($livesession->Name);
-                            $content->text .= "<div class='listItem $altclass'>" . $livesessiondisplayname .
-                                "<span class='nowrap'>" .
-                                "[<a href='javascript:panopto_launchNotes(\"$livesession->NotesURL\")'>" .
-                                get_string('take_notes', 'block_panopto') . '</a>]';
-
-                            if ($livesession->ViewerUrl) {
-                                $content->text .= "[<a href='$livesession->ViewerUrl' " .
-                                    "onclick='return panopto_startSSO(this)'>" .
-                                    get_string('watch_live', 'block_panopto') . '</a>]';
-                            }
-
-                            $content->text .= '</span></div>';
-                            $i++;
-                        }
-                    } else {
-                        $content->text .= '<div class="listItem">' .
-                            get_string('no_live_sessions', 'block_panopto') . '</div>';
+                            'alt' => (bool) ($i % 2),
+                        ];
                     }
 
-                    $content->text .= "<div class='sectionHeader'><b>" .
-                        get_string('completed_recordings', 'block_panopto') . '</b></div>';
+                    foreach ($completeddeliveries as $i => $completeddelivery) {
+                        $urlparts = parse_url((string) $completeddelivery->ViewerUrl);
+                        if (
+                            empty($urlparts['query']) ||
+                            (strpos($urlparts['query'], 'instance=') === false)
+                        ) {
+                            $completeddelivery->ViewerUrl .=
+                                (empty($urlparts['query']) ? '?' : '&') .
+                                'instance=' . urlencode($this->instancename);
+                        }
 
-                    if (!empty($completeddeliveries)) {
-                        $i = 0;
-                        foreach ($completeddeliveries as $completeddelivery) {
-                            if ($i == 3) {
-                                $content->text .= "<div id='hiddenLecturesDiv'>";
-                            }
-
-                            $urlparts = parse_url($completeddelivery->ViewerUrl);
-                            if (
-                                empty($urlparts['query']) ||
-                                (strpos($urlparts['query'], 'instance=') === false)
-                            ) {
-                                $completeddelivery->ViewerUrl .=
-                                    (empty($urlparts['query']) ? '?' : '&') .
-                                    'instance=' . $this->instancename;
-                            }
-
+                        $recording = [
+                            'name' => (string) $completeddelivery->Name,
+                            'viewerurl' => panopto_clean_link_url($completeddelivery->ViewerUrl),
                             // Alternate gray background for readability.
-                            $altclass = ($i % 2) ? 'listItemAlt' : '';
+                            'alt' => (bool) ($i % 2),
+                        ];
 
-                            $completeddeliverydisplayname = s($completeddelivery->Name);
-                            $content->text .= "<div class='listItem $altclass'>" .
-                                "<a href='$completeddelivery->ViewerUrl' onclick='return panopto_startSSO(this)'>" .
-                                $completeddeliverydisplayname .
-                                '</a></div>';
-                            $i++;
+                        // The first three are always shown; the rest wait behind "Show all".
+                        if ($i < 3) {
+                            $data['recordings'][] = $recording;
+                        } else {
+                            $data['morerecordings'][] = $recording;
                         }
-
-                        if ($i > 3) {
-                            $content->text .= '</div>' . "<div id='showAllDiv'>" .
-                                "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>" .
-                                get_string('show_all', 'block_panopto') . '</a>]</div>';
-                        }
-                    } else {
-                        $content->text .= "<div class='listItem'>" .
-                            get_string('no_completed_recordings', 'block_panopto') . '</div>';
                     }
+                    $data['hasmorerecordings'] = !empty($data['morerecordings']);
 
                     if ($courseinfo->AudioPodcastITunesUrl) {
-                        $content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') .
-                            '</b></div>' .
-                            "<div class='listItem'>" .
-                                "<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />" .
-                                "<a href='$courseinfo->AudioPodcastITunesUrl'>" .
-                                    get_string('podcast_audio', 'block_panopto') .
-                                '</a>' .
-                                "<span class='rssParen'>(</span>" .
-                                "<a href='$courseinfo->AudioRssUrl' target='_blank' class='rssLink'>RSS</a>" .
-                                "<span class='rssParen'>)</span>" .
-                            "</div>\n";
+                        $itunesschemes = ['http', 'https', 'itpc'];
+                        $data['audiopodcasturl'] = panopto_clean_link_url($courseinfo->AudioPodcastITunesUrl, $itunesschemes);
+                        $data['audiorssurl'] = panopto_clean_link_url($courseinfo->AudioRssUrl);
 
                         if ($courseinfo->VideoPodcastITunesUrl) {
-                            $content->text .= "<div class='listItem'>" .
-                                "<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />" .
-                                "<a href='$courseinfo->VideoPodcastITunesUrl'>" .
-                                    get_string('podcast_video', 'block_panopto') .
-                                '</a>' .
-                                "<span class='rssParen'>(</span>" .
-                                "<a href='$courseinfo->VideoRssUrl' target='_blank' class='rssLink'>RSS</a>" .
-                                "<span class='rssParen'>)</span>" .
-                                "</div>\n";
+                            $data['videopodcasturl'] = panopto_clean_link_url(
+                                $courseinfo->VideoPodcastITunesUrl,
+                                $itunesschemes
+                            );
+                            $data['videorssurl'] = panopto_clean_link_url($courseinfo->VideoRssUrl);
                         }
                     }
 
@@ -2294,13 +2375,7 @@ class panopto_data {
                         $hascreatoraccess && ($isteacheroradmin ||
                         get_config('block_panopto', 'any_creator_can_view_folder_settings'))
                     ) {
-                        $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') .
-                            '</b></div>' .
-                            "<div class='listItem'>" .
-                                "<a href='$courseinfo->SettingsUrl' onclick='return panopto_startSSO(this)'>" .
-                                    get_string('course_settings', 'block_panopto') .
-                                '</a>' .
-                            "</div>\n";
+                        $data['settingsurl'] = panopto_clean_link_url($courseinfo->SettingsUrl);
                     }
 
                     if (
@@ -2308,21 +2383,18 @@ class panopto_data {
                         $this->can_user_provision($this->moodlecourseid)
                     ) {
                         $systeminfo = $this->get_recorder_download_urls();
-                        $content->text .= "<div class='listItem'>" .
-                            get_string('download_recorder', 'block_panopto') .
-                            "<span class='nowrap'>(" .
-                            "<a href='$systeminfo->WindowsRecorderDownloadUrl'>Windows</a>" .
-                            " | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>" .
-                            "</div>\n";
+                        $data['windowsrecorderurl'] = panopto_clean_link_url($systeminfo->WindowsRecorderDownloadUrl);
+                        $data['macrecorderurl'] = panopto_clean_link_url($systeminfo->MacRecorderDownloadUrl);
+                        $data['showrecorderlinks'] = $data['windowsrecorderurl'] !== '' || $data['macrecorderurl'] !== '';
                     }
                 }
             }
         } catch (Exception $e) {
-            $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
+            $data['errors'][] = ['message' => get_string('error_retrieving', 'block_panopto')];
             self::print_log($e->getMessage());
         }
 
-        return $content->text;
+        return $data;
     }
 
     /**

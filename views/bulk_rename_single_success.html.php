@@ -75,7 +75,7 @@ defined('MOODLE_INTERNAL') || die();
              *
              * @var string $currentfoldernamecontainer->oldname Original folder name
              */
-            echo $currentfoldernamecontainer->oldname;
+            echo format_string($currentfoldernamecontainer->oldname);
             ?>
         </div>
         <div class='attribute'>
@@ -101,7 +101,7 @@ defined('MOODLE_INTERNAL') || die();
              *
              * @var string $currentfoldernamecontainer->newname New folder name
              */
-            echo $currentfoldernamecontainer->newname;
+            echo s($currentfoldernamecontainer->newname);
             ?>
         </div>
     </div>

@@ -28,6 +28,9 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This class stands for SessionManagementStructSessionAvailabilitySettings originally named SessionAvailabilitySettings
  * Meta informations extracted from the WSDL

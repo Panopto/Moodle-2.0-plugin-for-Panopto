@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+// phpcs:ignore moodle.Files.MoodleInternal.MoodleInternalNotNeeded
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Create form for server selection for per course provisioning
  *
@@ -32,6 +35,7 @@ class panopto_provision_course_form extends moodleform {
         $mform = & $this->_form;
 
         $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+        $mform->setType('servers', PARAM_INT);
 
         $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
     }

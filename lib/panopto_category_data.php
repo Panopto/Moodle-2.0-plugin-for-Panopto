@@ -51,9 +51,9 @@ class panopto_category_data {
     private $moodlecategoryid;
 
     /**
-     * @var int $sessiongroupid The id of the session group.
+     * @var array|null $categories id => course category (id, name, parent), preloaded for bulk builds.
      */
-    private $sessiongroupid;
+    private $categories = null;
 
     /**
      * @var string $uname The username of the current user.
@@ -118,7 +118,6 @@ class panopto_category_data {
         // Get servername and application key specific to Moodle course if ID is specified.
         if (isset($moodlecategoryid) && !empty($moodlecategoryid)) {
             $this->moodlecategoryid = $moodlecategoryid;
-            $this->sessiongroupid = self::get_panopto_category_id($moodlecategoryid, $selectedserver);
         }
 
         $this->servername = $selectedserver;
@@ -177,18 +176,19 @@ class panopto_category_data {
     }
 
     /**
-     * We need to retrieve the current category mapping in the constructor, so this must be static.
+     * Get a course category, from the bulk preload when there is one.
      *
-     * @param int $moodlecategoryid id of the current Moodle course
-     * @param int $targetserver target server id
+     * @param int $categoryid id of the category
+     * @return object|false the category with id, name and parent, or false if it does not exist
      */
-    public static function get_panopto_category_id($moodlecategoryid, $targetserver) {
+    private function get_category($categoryid) {
         global $DB;
-        return $DB->get_field(
-            'block_panopto_categorymap',
-            'panopto_id',
-            ['category_id' => $moodlecategoryid, 'panopto_id' => $targetserver]
-        );
+
+        if ($this->categories !== null) {
+            return $this->categories[$categoryid] ?? false;
+        }
+
+        return $DB->get_record('course_categories', ['id' => $categoryid], 'id,name,parent');
     }
 
     /**
@@ -209,7 +209,7 @@ class panopto_category_data {
      * @param object $leafcoursedata course data
      */
     public function ensure_category_branch($usehtmloutput, $leafcoursedata) {
-        global $CFG, $DB;
+        global $CFG;
 
         if (!$this->hasvalidpanoptoversion) {
             $panoptoversioninfo = [
@@ -224,7 +224,7 @@ class panopto_category_data {
             }
         } else {
             try {
-                $targetcategory = $DB->get_record('course_categories', ['id' => $this->moodlecategoryid]);
+                $targetcategory = $this->get_category($this->moodlecategoryid);
 
                 // Check if multilanguage categories are being used.
                 // If they are being used strip html from category name, and take first. If not just return category/folder name.
@@ -274,7 +274,7 @@ class panopto_category_data {
                     $targetcategory->id
                 );
 
-                $currentcategory = $DB->get_record('course_categories', ['id' => $targetcategory->parent]);
+                $currentcategory = $this->get_category($targetcategory->parent);
 
                 while (isset($currentcategory) && !empty($currentcategory)) {
                     $currentcategoryname = !empty(trim($currentcategory->name))
@@ -287,7 +287,7 @@ class panopto_category_data {
                         $currentcategory->id
                     );
 
-                    $currentcategory = $DB->get_record('course_categories', ['id' => $currentcategory->parent]);
+                    $currentcategory = $this->get_category($currentcategory->parent);
                 }
 
                 $this->ensure_session_manager();
@@ -393,11 +393,22 @@ class panopto_category_data {
                 'SELECT id FROM {course_categories} WHERE id NOT IN (SELECT parent FROM {course_categories})'
             );
 
+            // Every leaf walks up to the root, so load the categories once rather than per level per leaf.
+            $categorybuilder->categories = $DB->get_records('course_categories', null, '', 'id,name,parent');
+
             foreach ($leafcategories as $leafcategory) {
                 $categorybuilder->moodlecategoryid = $leafcategory->id;
-                $categorybuilder->sessiongroupid = self::get_panopto_category_id($leafcategory->id, $selectedserver);
                 $categorybuilder->ensure_category_branch($usehtmloutput, null);
+
+                // Every branch is a Panopto round trip that echoes its own result block, so push
+                // it out rather than leaving the admin on a blank page for the whole run.
+                panopto_bulk_flush_output();
             }
+
+            \block_panopto\event\bulk_operation_completed::create([
+                'context' => \context_system::instance(),
+                'other' => ['operation' => 'build_category_structure'],
+            ])->trigger();
         }
     }
 

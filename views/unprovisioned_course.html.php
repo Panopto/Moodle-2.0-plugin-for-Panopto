@@ -53,7 +53,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $unprovisioninginfo->fullname Course full name
                      */
-                    echo $unprovisioninginfo->fullname;
+                    echo format_string($unprovisioninginfo->fullname);
                     ?>
                 </div>
                 <div class='attribute'>

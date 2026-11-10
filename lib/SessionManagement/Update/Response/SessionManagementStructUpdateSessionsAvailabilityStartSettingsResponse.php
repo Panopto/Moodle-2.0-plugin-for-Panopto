@@ -28,6 +28,9 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This class stands for SessionManagementStructUpdateSessionsAvailabilityStartSettingsResponse originally named UpdateSessionsAvailabilityStartSettingsResponse
  * Meta informations extracted from the WSDL

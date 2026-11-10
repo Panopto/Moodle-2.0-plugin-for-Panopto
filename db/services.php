@@ -32,6 +32,5 @@ $functions = [
         'description' => 'Get Panopto content for a course',
         'type' => 'read',
         'ajax' => true,
-        'capabilities' => 'block/panopto:view',
     ],
 ];

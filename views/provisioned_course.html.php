@@ -48,7 +48,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $provisioneddata->errormessage Error message text
                      */
-                    echo $provisioneddata->errormessage;
+                    echo s($provisioneddata->errormessage);
                     ?>
                 </div>
                 <br />
@@ -101,7 +101,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $provisioneddata->servername Panopto server name
                      */
-                    echo $provisioneddata->servername;
+                    echo s($provisioneddata->servername);
                     ?>
                 </div>
                 <?php
@@ -169,7 +169,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $provisioneddata->servername Panopto server name
                      */
-                    echo $provisioneddata->servername;
+                    echo s($provisioneddata->servername);
                     ?>
                 </div>
                 <?php
@@ -237,7 +237,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $provisioneddata->servername Panopto server name
                      */
-                    echo $provisioneddata->servername;
+                    echo s($provisioneddata->servername);
                     ?>
                 </div>
                 <?php
@@ -266,7 +266,7 @@ defined('MOODLE_INTERNAL') || die();
                      *
                      * @var string $provisioningdata->fullname Course full name
                      */
-                    echo $provisioningdata->fullname;
+                    echo format_string($provisioningdata->fullname);
                     ?>
                 </div>
 
@@ -358,7 +358,7 @@ defined('MOODLE_INTERNAL') || die();
                      * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
                      */
                     if (!empty($provisioneddata->publishers)) {
-                        echo join(', ', $provisioneddata->publishers);
+                        echo s(join(', ', $provisioneddata->publishers));
                     } else {
                         ?><div class='errorMessage'><?php
                         /**
@@ -395,7 +395,7 @@ defined('MOODLE_INTERNAL') || die();
                      * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
                      */
                     if (!empty($provisioneddata->creators)) {
-                        echo join(', ', $provisioneddata->creators);
+                        echo s(join(', ', $provisioneddata->creators));
                     } else {
                         ?><div class='errorMessage'><?php
                         /**
@@ -432,7 +432,7 @@ defined('MOODLE_INTERNAL') || die();
                      * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
                      */
                     if (!empty($provisioneddata->viewers)) {
-                        echo join(', ', $provisioneddata->viewers);
+                        echo s(join(', ', $provisioneddata->viewers));
                     } else {
                         ?><div class='errorMessage'><?php
                         /**
@@ -472,7 +472,7 @@ defined('MOODLE_INTERNAL') || die();
                          *
                          * @var string $provisioneddata->Id Provisioning ID
                          */
-                        echo get_string('provision_successful', 'block_panopto', $provisioneddata->Id);
+                        echo get_string('provision_successful', 'block_panopto', s($provisioneddata->Id));
                         ?>
                     </div>
                 </div>

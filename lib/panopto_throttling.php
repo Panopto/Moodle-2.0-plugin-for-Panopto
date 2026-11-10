@@ -74,7 +74,7 @@ class panopto_throttling {
                 'usermanagement_min_interval' => 0.05, // 50ms - fast but safe.
                 'bulk_throttle_batch_size' => 50, // Pause every 50 operations.
                 'bulk_throttle_interval' => 1, // 1 second pause.
-                'api_max_retries' => 3, // Retry on 429/5xx errors.
+                'api_max_retries' => 2, // Retry on 429/5xx errors.
                 'error_backoff_multiplier' => 2.0,
                 'max_concurrent_operations' => 5,
                 'enable_adaptive_throttling' => 1, // Slows down on errors.
@@ -178,13 +178,8 @@ class panopto_throttling {
             $context = $totalcount ? " ({$processedcount}/{$totalcount})" : " ({$processedcount} processed)";
 
             if ($interval >= 1) {
-                // Use sleep for intervals >= 1 second.
                 \panopto_data::print_log("Bulk throttling: {$operationtype} - sleeping {$interval}s{$context}");
                 sleep($interval);
-            } else if ($interval > 0) {
-                // Use usleep for sub-second intervals.
-                \panopto_data::print_log("Bulk throttling: {$operationtype} - sleeping " . ($interval * 1000) . "ms{$context}");
-                usleep($interval * 1000000);
             }
         }
 

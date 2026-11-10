@@ -65,6 +65,7 @@ $PAGE->set_heading($unprovisiontitle);
 
 // Course context.
 require_capability('block/panopto:provision_course', $context);
+
 $editcourseurl = new moodle_url($returnurl);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
 
@@ -74,17 +75,29 @@ $PAGE->navbar->add(get_string('blocks'), $manageblocks);
 $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
 $PAGE->navbar->add($unprovisiontitle, new moodle_url($PAGE->url));
 
-echo $OUTPUT->header();
-
+// Before any output, so the redirect can still send its Location header.
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
-} else {
+}
+
+echo $OUTPUT->header();
+
+if ($mform->get_data()) {
+    // Unprovisioning is destructive, so it only runs from the confirmation form below. Submitting
+    // that form is the confirmation, and the form checks the sesskey itself.
     $panoptodata = new \panopto_data($courseid);
     $unprovisioninginfo = $panoptodata->get_provisioning_info();
     $unprovisionwassuccess = $panoptodata->unprovision_course();
 
     include(dirname(__FILE__) . '/views/unprovisioned_course.html.php');
-    echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+    echo html_writer::link($returnurl, get_string('back_to_course', 'block_panopto'));
+} else {
+    $course = get_course($courseid);
+    echo html_writer::tag(
+        'p',
+        get_string('unprovision_course_confirm', 'block_panopto', format_string($course->fullname))
+    );
+    $mform->display();
 }
 
 echo $OUTPUT->footer();

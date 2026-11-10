@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+// phpcs:ignore moodle.Files.MoodleInternal.MoodleInternalNotNeeded
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Create form for course unprovision.
  *
@@ -55,6 +58,7 @@ class panopto_unprovision_form extends moodleform {
 
         $select = $mform->addElement('select', 'courses', get_string('unprovisioncourseselect', 'block_panopto'), $courses);
         $select->setMultiple(true);
+        $mform->setType('courses', PARAM_INT);
         $select->setSize(32);
         $mform->addHelpButton('courses', 'unprovisioncourseselect', 'block_panopto');
 

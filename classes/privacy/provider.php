@@ -238,11 +238,11 @@ class provider implements
 
             foreach ($enrolledusers as $enrolleduser) {
                 // Search for user in panopto, if they exist then export the below data, if they do not exist then skip.
-                $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $enrolleduser->username);
+                $panoptouser = $coursepanopto->get_user_by_key($instancename . '\\' . $enrolleduser->username);
 
                 if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                     // Overwrite all of the existing user's current info with '--Deleted--'.
-                    $currentpanopto->update_contact_info(
+                    $coursepanopto->update_contact_info(
                         $panoptouser->UserId,
                         "--Deleted--",
                         "--Deleted--",
