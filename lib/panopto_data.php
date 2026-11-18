@@ -1768,19 +1768,8 @@ class panopto_data {
                 '>='
             );
 
-            // A creator can see thousands of folders, so find the mapped ones in a few queries, not one per folder.
-            $folderids = [];
-            foreach ($panoptofolders as $folderinfo) {
-                $folderids[] = $folderinfo->Id;
-            }
-            $mappedfolderids = [];
-            foreach (array_chunk(array_unique($folderids), 1000) as $folderidchunk) {
-                [$insql, $params] = $DB->get_in_or_equal($folderidchunk);
-                $mappedids = $DB->get_fieldset_select('block_panopto_foldermap', 'panopto_id', "panopto_id $insql", $params);
-                foreach ($mappedids as $mappedid) {
-                    $mappedfolderids[strtolower($mappedid)] = true;
-                }
-            }
+            // A creator can see thousands of folders, find the mapped ones in one query, not one per folder.
+            $mappedfolderids = $DB->get_records_sql_menu("SELECT DISTINCT LOWER(panopto_id), 1 FROM {block_panopto_foldermap}");
 
             foreach ($panoptofolders as $folderinfo) {
                 // Filter folders based on the following criteria.
